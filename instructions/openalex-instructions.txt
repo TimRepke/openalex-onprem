@@ -1,0 +1,39 @@
+# Step 1 #
+##########
+
+Initialize Schema by running openalex-pg-schema.sql
+
+Example code snippet
+
+psql -d openalex -f openalex-pg-schema.sql-d openalex -f openalex-pg-schema.sql
+
+# Step 2 #
+##########
+
+Convert JSON Files to flat CSV
+
+Run flatten-openalex-jsonl.py. This script assumes that you are reading from file './openalex-snapshot'
+and want to write into './csv-files'. Can be changed in the script (but will need to be changed for subsequent
+scripts). This could potentially take several hours so best to run it in nohup.
+
+HINT: by copying the script you can run conversions in parallel which could reduce the time to complete. This
+can be done by commenting out the functions in the __main__() function at the bottom of the script. Then simply
+run the scripts simultaneously.
+
+Example code snippet
+
+nohup python3 flatten-openalex-jsonl.py &
+
+# Step 3 #
+##########
+
+Load flat CSVs to Database
+
+Run copy-openalex-csv.sql to copy each csv-file subfolder into the appropriate table. This assumes that
+you are running it from the folder directly above the csv-files/ subfolder. If you changed the name you
+will have to change the location in each instance of the copy script. If you are loading e.g. works objects
+it will take several hours and so it is HIGHLY recommended to nohup it.
+
+Example code snippet
+
+nohup psql -d openalex < copy-openalex-csv.sql &
