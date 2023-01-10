@@ -1,0 +1,55 @@
+# Step 1 #
+##########
+
+Extract downloaded `tar.xz` into `/core/data/input/`. This will fill the directory with
+several thousand subsequent `tar.xz`, each representing a provider for core.
+
+Example code snippet
+
+tar -xf core_archive.tar.xz -C core/data/input/
+
+# Step 2 #
+##########
+
+Convert .json files and separate `fulltext`.
+
+Run `unpack_core_parallel.sh`. This will iterate through `input`;
+unpacking the zip files, separating `fulltext` from the rest of metadata;
+repackaging the metadata into one file per provider; and adding `provider_id` for completeness;
+creating a compressed archive of `fulltext`; and then deleting the original archive.
+
+If you save the file in a different location from Step 1, you will need to modify the `ROOTPATH`
+variable in the bash script.
+
+-- TODO: Even though it is parallelized, still pretty slow. Can I use the manifest?
+
+Example code snippet
+
+nohup bash unpack_core_parallel.sh &
+
+# Step 3 #
+##########
+
+Initialize schema by running `core-pg-schema.sql`
+
+Example code snippet
+
+nohup psql -d {dbName} -f dbSchemas/core-pg-schema.sql &
+
+# Step 4 #
+##########
+
+Load files to schema
+
+Example code snippet
+
+nohup psql -d {dbName} -f loadData/copy-core.sql
+
+# Step 5 #
+##########
+
+Index schema
+
+Example code snippet
+
+nohup psql -d {dbName} -f dbSchemas/core-pg-index.sql

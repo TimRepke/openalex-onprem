@@ -1,20 +1,12 @@
+## Init ##
+
 # Step 1 #
-##########
-
-Initialize Schema by running openalex-pg-schema.sql
-
-Example code snippet
-
-psql -d openalex -f openalex-pg-schema.sql-d openalex -f openalex-pg-schema.sql
-
-# Step 2 #
 ##########
 
 Convert JSON Files to flat CSV
 
 Run flatten-openalex-jsonl.py. This script assumes that you are reading from file './openalex-snapshot'
-and want to write into './csv-files'. Can be changed in the script (but will need to be changed for subsequent
-scripts). This could potentially take several hours so best to run it in nohup.
+and want to write into './csv-files'. Can be changed in the script but will also require downstream changes.
 
 HINT: by copying the script you can run conversions in parallel which could reduce the time to complete. This
 can be done by commenting out the functions in the __main__() function at the bottom of the script. Then simply
@@ -22,18 +14,51 @@ run the scripts simultaneously.
 
 Example code snippet
 
-nohup python3 flatten-openalex-jsonl.py &
+nohup python3 transformData/flatten-openalex-jsonl.py &
+
+# Step 2 #
+##########
+
+Initialize schema by running openalex-pg-schema.sql
+
+Example code snippet
+
+nohup psql -d {dbName} -f dbSchemas/openalex-pg-schema.sql &
 
 # Step 3 #
 ##########
 
-Load flat CSVs to Database
+Load files to database
 
 Run copy-openalex-csv.sql to copy each csv-file subfolder into the appropriate table. This assumes that
 you are running it from the folder directly above the csv-files/ subfolder. If you changed the name you
-will have to change the location in each instance of the copy script. If you are loading e.g. works objects
-it will take several hours and so it is HIGHLY recommended to nohup it.
+will have to change the location in each instance of the copy script.
 
 Example code snippet
 
-nohup psql -d openalex < copy-openalex-csv.sql &
+nohup psql -d {dbName} -f loadData/copy-openalex-csv.sql &
+
+# Step 4 #
+##########
+
+Initialize indexes
+
+Run openalex-pg-index.sql to create indexes for schema. It's generally advisable to load the indexes after loading
+the data to prevent independent load -> index operations that will increase run time signficantly.
+
+Example code snippet
+
+nohup psql -d {dbName} -f dbSchemas/openalex-pg-index.sql &
+
+# Step 5 #
+##########
+
+Create `abstracts` table
+
+OpenAlex only contains an inverted index of the abstracts, for search and readability, we want to recreate the
+indexes as best as possible. Run `transformData/openalex-abstract.sql` to create the new `abstracts` table
+containing this information.
+
+Example code snippet
+
+nohup psql -d {dbName} -f transformData/openalex-abstract.sql

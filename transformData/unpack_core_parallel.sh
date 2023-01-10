@@ -8,7 +8,7 @@ process_file() {
     PROVIDER=$(basename -- "${FILE%.*.*}")
     echo "unpack $PROVIDER"
 
-    TMP_DIR="$ROOTPATH/core_tmp/$PROVIDER"
+    TMP_DIR="$ROOTPATH/tmp/$PROVIDER"
     TMP_FULLTEXT="$TMP_DIR/fulltext/"
 
     DEST_DIR="$ROOTPATH/output/"
@@ -41,13 +41,13 @@ process_file() {
     echo "$PROVIDER finish"
 }
 
-ROOTPATH=/var/data/core/output/
+ROOTPATH=/var/data/core/data/
 
-SOURCE_DIR="$ROOTPATH/core_output/"
+SOURCE_DIR="$ROOTPATH/input/"
 DEST_DIR="$ROOTPATH/output/"
 DEST_FULLTEXT="$DEST_DIR/fulltext/"
 
-max_num_processes=500
+max_num_processes=50000
 limited_factor=1
 num_processes=$((max_num_processes/limited_factor))
 
@@ -58,5 +58,5 @@ do
 done
 wait
 
-#tar czf "$DEST_DIR/core_fulltext.gz" -C $DEST_FULLTEXT .
-#rm -r $DEST_FULLTEXT
+tar czf "$DEST_DIR/core_fulltext.gz" -C $DEST_FULLTEXT .
+rm -r $DEST_FULLTEXT

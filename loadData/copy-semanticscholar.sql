@@ -8,7 +8,7 @@ CREATE TEMP TABLE tmp_abstracts (
     );
 
 COPY tmp_abstracts(data)
-FROM '/var/data/semanticscholar/json_outputs/abstracts.jsonl'
+FROM '/var/data/semanticscholar/data/input/abstracts.jsonl'
 csv quote e'\x01' delimiter e'\x02';
 
 WITH tmp as (
@@ -45,7 +45,7 @@ CREATE TEMP TABLE tmp_authors (
 );
 
 COPY tmp_authors(data)
-FROM '/var/data/semanticscholar/json_outputs/authors.jsonl'
+FROM '/var/data/semanticscholar/data/input/authors.jsonl'
 csv quote e'\x01' delimiter e'\x02';
 
 with tmp as (
@@ -88,7 +88,7 @@ CREATE TEMP TABLE tmp_papers (
     );
 
 COPY tmp_papers(data)
-FROM '/var/data/semanticscholar/json_outputs/papers.jsonl'
+FROM '/var/data/semanticscholar/data/input/papers.jsonl'
 csv quote e'\x01' delimiter e'\x02';
 
 WITH tmp AS (SELECT
@@ -135,7 +135,7 @@ CREATE TEMP TABLE tmp_s2orc (
     );
 
 COPY tmp_s2orc(data)
-FROM '/var/data/semanticscholar/json_outputs/s2orc.jsonl'
+FROM '/var/data/semanticscholar/data/input/s2orc.jsonl'
 csv quote e'\x01' delimiter e'\x02';
 
 with tmp as (SELECT
@@ -168,7 +168,7 @@ CREATE TEMP TABLE tmp_tldrs (
     );
 
 COPY tmp_tldrs(data)
-FROM '/var/data/semanticscholar/json_outputs/tldrs.jsonl'
+FROM '/var/data/semanticscholar/data/input/tldrs.jsonl'
 csv quote e'\x01' delimiter e'\x02';
 
 with tmp as (

@@ -1,0 +1,34 @@
+# Step 1 #
+##########
+
+Extract Semantic Scholar archive to `/semanticscholar/data/input/`. In this folder
+should be several unzipped `.jsonl` files named [`abstracts`,`authors`,`papers`,`s2orc`,`tldrs`].
+
+# Step 2 #
+##########
+
+Initialize schema by running `semanticscholar-pg-schema.sql`.
+
+For convenience, the schema name defaults for s2 (SemanticScholar).
+
+Example code snippet
+
+nohup psql -d {dbName} -f dbSchemas/semanticscholar-pg-schema.sql
+
+# Step 3 #
+##########
+
+Load data to schema
+
+Example code snippet
+
+nohup psql -d {dbName} -f loadData/copy-semanticscholar.sql
+
+# Step 4 #
+##########
+
+Index schema
+
+Example code snippet
+
+nohup psql -d {dbName} -f dbSchemas/semanticscholar-pg-index.sql

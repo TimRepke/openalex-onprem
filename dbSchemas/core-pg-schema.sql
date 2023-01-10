@@ -29,3 +29,6 @@ CREATE TABLE IF NOT EXISTS core.works (
     full_text_url text,
     PRIMARY KEY (core_id)
 );
+
+COMMENT ON TABLE core.works
+IS 'Base table for core database';
