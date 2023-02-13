@@ -14,37 +14,34 @@ logger.info(f'Reading from directory {SOURCE}')
 
 with open(SOURCE, 'r') as fin:
     with engine.connect() as conn:
-        stmt = text('UPDATE openalex.works_all SET lang = :lang WHERE id = :wid;')
+        stmt = text('UPDATE openalex.works_all SET lang = v.vlang '
+                    'FROM ('
+                    '  SELECT unnest(array[:wids]) as wid,'
+                    '         unnest(array[:langs]) as vlang'
+                    ') AS v '
+                    'WHERE id = v.wid AND lang is null;')
         cnt = 0
+        acc_wid = []
+        acc_lang = []
         for line in fin:
             s = line.split('\t')
+            acc_wid.append(s[0])
+            acc_lang.append(s[1])
 
-            conn.execute(stmt, {'wid': s[0], 'lang': s[1]})
             cnt += 1
 
             if (cnt % 10000) == 0:
-                logger.debug(f'Updated {cnt:,} records, committing!')
+                logger.debug(f'Read {len(acc_wid):,} lines, pushing to DB!')
+                conn.execute(stmt, {'wids': acc_wid, 'langs': acc_lang})
                 conn.commit()
+                logger.debug(f'Updated {cnt:,} records so far!')
+                acc_wid = []
+                acc_lang = []
 
         logger.info('final commit')
+        logger.debug(f'Have {len(acc_wid):,} lines left, pushing to DB!')
+        conn.execute(stmt, {'wids': acc_wid, 'langs': acc_lang})
         conn.commit()
-
-# with open(SOURCE, 'r') as fin:
-#     with engine.connect() as conn:
-#         stmt = text('UPDATE openalex.works_all SET language = :lang WHERE id = :wid;')
-#         batch_i = 0
-#         batch = []
-#         for line in fin:
-#             if len(batch) > 10000:
-#                 logger.debug(f'Uploading batch {batch_i}')
-#                 conn.execute(stmt, batch)
-#                 logger.debug(f'Uploaded batch {batch_i}')
-#                 batch = []
-#                 batch_i += 1
-#             s = line.split('\t')
-#             batch.append({'wid': s[0], 'lang': s[1]})
-#
-#         logger.debug(f'Uploading final batch')
-#         conn.execute(stmt, batch)
+        logger.debug(f'Updated {cnt:,} records so far!')
 
 logger.info('All done!')

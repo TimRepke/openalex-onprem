@@ -8,4 +8,15 @@
 # Local Directories #
 #####################
 
+**.env
+**.bin
+**.ftz
+**.csv
+
 local/
+scratch/
+.idea/
+data/
+venv/
+
+**__pycache__**
