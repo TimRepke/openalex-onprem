@@ -4,8 +4,9 @@ CREATE EXTENSION IF NOT EXISTS btree_gin;
 
 -- Works
 
-CREATE INDEX idx_works_title ON openalex.works USING btree (title);
+--CREATE INDEX idx_works_title ON openalex.works USING btree (title);
 CREATE INDEX idx_works_title_tsv ON openalex.works USING gin (to_tsvector('english',title));
+CREATE INDEX idx_works_title_tri ON openalex.works_filtered USING gin (title gin_trgm_ops);
 CREATE INDEX idx_works_pubyear ON openalex.works USING btree (publication_year);
 CREATE INDEX idx_works_type ON openalex.works USING btree (type);
 CREATE INDEX idx_works_doi ON openalex.works USING btree (doi);
@@ -43,6 +44,7 @@ CREATE INDEX idx_works_related_works_related_id ON openalex.works_related_works 
 -- Authors
 
 CREATE INDEX idx_authors_author_name ON openalex.authors USiNG btree (display_name);
+CREATE INDEX idx_authors_author_name_tri ON openalex.authors USING gin (display_name gin_trgm_ops);
 CREATE INDEX idx_authors_last_institution ON openalex.authors USING btree (last_known_institution);
 
 -- Concepts

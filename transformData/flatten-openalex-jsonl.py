@@ -4,8 +4,8 @@ import gzip
 import json
 import os
 
-SNAPSHOT_DIR = 'openalex-snapshot'
-CSV_DIR = 'csv-files'
+SNAPSHOT_DIR = '/Users/josepherlanger/Projects/mcc/local'
+CSV_DIR = '/Users/josepherlanger/Projects/mcc/local/csv-files'
 
 FILES_PER_ENTITY = int(os.environ.get('OPENALEX_DEMO_FILES_PER_ENTITY', '0'))
 
@@ -14,7 +14,7 @@ csv_files = {
         'institutions': {
             'name': os.path.join(CSV_DIR, 'institutions.csv.gz'),
             'columns': [
-                'id', 'ror', 'display_name', 'country_code', 'type', 'homepage_url', 'image_url', 'image_thumbnail_url',
+                'id', 'ror', 'display_name', 'type', 'country_code', 'homepage_url', 'image_url', 'image_thumbnail_url',
                 'display_name_acroynyms', 'display_name_alternatives', 'works_count', 'cited_by_count', 'works_api_url',
                 'updated_date'
             ]
@@ -50,7 +50,7 @@ csv_files = {
             'name': os.path.join(CSV_DIR, 'authors.csv.gz'),
             'columns': [
                 'id', 'orcid', 'display_name', 'display_name_alternatives', 'works_count', 'cited_by_count',
-                'last_known_institution', 'works_api_url', 'updated_date'
+                'last_known_institution', 'updated_date'
             ]
         },
         'ids': {
@@ -112,8 +112,8 @@ csv_files = {
         'works': {
             'name': os.path.join(CSV_DIR, 'works.csv.gz'),
             'columns': [
-                'id', 'doi', 'title', 'display_name', 'publication_year', 'publication_date', 'type', 'cited_by_count',
-                'is_retracted', 'is_paratext', 'cited_by_api_url', 'abstract_inverted_index'
+                'id', 'doi', 'mag', 'pmid', 'pmcid', 'title', 'publication_year', 'publication_date', 'type', 'cited_by_count',
+                'is_retracted', 'is_paratext', 'open_access', 'abstract_inverted_index'
             ]
         },
         'host_venues': {
@@ -146,22 +146,10 @@ csv_files = {
                 'work_id', 'concept_id', 'score'
             ]
         },
-        'ids': {
-            'name': os.path.join(CSV_DIR, 'works_ids.csv.gz'),
-            'columns': [
-                'work_id', 'openalex', 'doi', 'mag', 'pmid', 'pmcid'
-            ]
-        },
         'mesh': {
             'name': os.path.join(CSV_DIR, 'works_mesh.csv.gz'),
             'columns': [
                 'work_id', 'descriptor_ui', 'descriptor_name', 'qualifier_ui', 'qualifier_name', 'is_major_topic'
-            ]
-        },
-        'open_access': {
-            'name': os.path.join(CSV_DIR, 'works_open_access.csv.gz'),
-            'columns': [
-                'work_id', 'is_oa', 'oa_status', 'oa_url'
             ]
         },
         'referenced_works': {
@@ -179,6 +167,8 @@ csv_files = {
     },
 }
 
+def strip_id(src):
+    return src["id"].removeprefix("https://openalex.org/")
 
 def flatten_concepts():
     with gzip.open(csv_files['concepts']['concepts']['name'], 'wt', encoding='utf-8') as concepts_csv, \
@@ -215,6 +205,7 @@ def flatten_concepts():
                         continue
 
                     concept = json.loads(concept_json)
+                    concept["id"] = strip_id(concept)
 
                     if not (concept_id := concept.get('id')) or concept_id in seen_concept_ids:
                         continue
@@ -283,6 +274,7 @@ def flatten_venues():
                         continue
 
                     venue = json.loads(venue_json)
+                    venue["id"] = strip_id(venue)
 
                     if not (venue_id := venue.get('id')) or venue_id in seen_venue_ids:
                         continue
@@ -346,8 +338,9 @@ def flatten_institutions():
                         continue
 
                     institution = json.loads(institution_json)
+                    institution["id"] = strip_id(institution)
 
-                    if not (institution_id := institution.get('id')) or institution_id in seen_institution_ids:
+                    if not (institution_id := strip_id(institution)) or institution_id in seen_institution_ids:
                         continue
 
                     seen_institution_ids.add(institution_id)
@@ -417,6 +410,7 @@ def flatten_authors():
                         continue
 
                     author = json.loads(author_json)
+                    author["id"] = strip_id(author)
 
                     if not (author_id := author.get('id')):
                         continue
@@ -451,9 +445,7 @@ def flatten_works():
             gzip.open(file_spec['authorships']['name'], 'wt', encoding='utf-8') as authorships_csv, \
             gzip.open(file_spec['biblio']['name'], 'wt', encoding='utf-8') as biblio_csv, \
             gzip.open(file_spec['concepts']['name'], 'wt', encoding='utf-8') as concepts_csv, \
-            gzip.open(file_spec['ids']['name'], 'wt', encoding='utf-8') as ids_csv, \
             gzip.open(file_spec['mesh']['name'], 'wt', encoding='utf-8') as mesh_csv, \
-            gzip.open(file_spec['open_access']['name'], 'wt', encoding='utf-8') as open_access_csv, \
             gzip.open(file_spec['referenced_works']['name'], 'wt', encoding='utf-8') as referenced_works_csv, \
             gzip.open(file_spec['related_works']['name'], 'wt', encoding='utf-8') as related_works_csv:
 
@@ -463,9 +455,7 @@ def flatten_works():
         authorships_writer = init_dict_writer(authorships_csv, file_spec['authorships'])
         biblio_writer = init_dict_writer(biblio_csv, file_spec['biblio'])
         concepts_writer = init_dict_writer(concepts_csv, file_spec['concepts'])
-        ids_writer = init_dict_writer(ids_csv, file_spec['ids'], extrasaction='ignore')
         mesh_writer = init_dict_writer(mesh_csv, file_spec['mesh'])
-        open_access_writer = init_dict_writer(open_access_csv, file_spec['open_access'])
         referenced_works_writer = init_dict_writer(referenced_works_csv, file_spec['referenced_works'])
         related_works_writer = init_dict_writer(related_works_csv, file_spec['related_works'])
 
@@ -478,6 +468,7 @@ def flatten_works():
                         continue
 
                     work = json.loads(work_json)
+                    work["id"] = strip_id(work)
 
                     if not (work_id := work.get('id')):
                         continue
@@ -485,6 +476,10 @@ def flatten_works():
                     # works
                     if (abstract := work.get('abstract_inverted_index')) is not None:
                         work['abstract_inverted_index'] = json.dumps(abstract)
+
+                    work["mag"] = work.get('ids').get('mag')
+                    work["pmid"] = work.get('ids').get('pmid')
+                    work["pmcid"] = work.get('ids').get('pmcid')
 
                     works_writer.writerow(work)
 
@@ -545,20 +540,10 @@ def flatten_works():
                                 'score': concept.get('score'),
                             })
 
-                    # ids
-                    if ids := work.get('ids'):
-                        ids['work_id'] = work_id
-                        ids_writer.writerow(ids)
-
                     # mesh
                     for mesh in work.get('mesh'):
                         mesh['work_id'] = work_id
                         mesh_writer.writerow(mesh)
-
-                    # open_access
-                    if open_access := work.get('open_access'):
-                        open_access['work_id'] = work_id
-                        open_access_writer.writerow(open_access)
 
                     # referenced_works
                     for referenced_work in work.get('referenced_works'):
@@ -590,8 +575,11 @@ def init_dict_writer(csv_file, file_spec, **kwargs):
 
 
 if __name__ == '__main__':
-    flatten_concepts()
-    flatten_venues()
-    flatten_institutions()
-    flatten_authors()
+    if not os.path.isdir(CSV_DIR):
+        os.mkdir(CSV_DIR)
+
+#    flatten_concepts()
+#    flatten_venues()
+#    flatten_institutions()
+#    flatten_authors()
     flatten_works()
