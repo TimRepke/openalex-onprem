@@ -36,10 +36,10 @@ CREATE INDEX idx_works_host_venues_venue_id ON openalex.works_host_venues USING 
 CREATE INDEX idx_works_referenced_works_work_id ON openalex.works_referenced_works USING btree (work_id);
 CREATE INDEX idx_works_referenced_Works_referenced_id ON openalex.works_referenced_works USING btree (referenced_work_id);
 
--- Works Related Works
+-- Works Related Works (Removed as Per GL19)
 
-CREATE INDEX idx_works_related_works_work_id ON openalex.works_related_works USING btree (work_id);
-CREATE INDEX idx_works_related_works_related_id ON openalex.works_related_works USING btree (related_work_id);
+--CREATE INDEX idx_works_related_works_work_id ON openalex.works_related_works USING btree (work_id);
+--CREATE INDEX idx_works_related_works_related_id ON openalex.works_related_works USING btree (related_work_id);
 
 -- Authors
 
