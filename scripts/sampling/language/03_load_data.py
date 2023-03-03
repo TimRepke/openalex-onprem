@@ -1,4 +1,4 @@
-import re
+import time
 from pathlib import Path
 from engine import engine
 from sqlalchemy import text
@@ -14,12 +14,12 @@ logger.info(f'Reading from directory {SOURCE}')
 
 with open(SOURCE, 'r') as fin:
     with engine.connect() as conn:
-        stmt = text('UPDATE openalex.works_all SET lang = v.vlang '
+        stmt = text('UPDATE openalex.works_all w SET lang = v.vlang '
                     'FROM ('
-                    '  SELECT unnest(array[:wids]) as wid,'
-                    '         unnest(array[:langs]) as vlang'
+                    '  SELECT unnest(:wids ::text[]) as wid,'
+                    '         unnest(:langs ::text[]) as vlang'
                     ') AS v '
-                    'WHERE id = v.wid AND lang is null;')
+                    'WHERE w.id = v.wid AND w.lang is null;')
         cnt = 0
         acc_wid = []
         acc_lang = []
@@ -30,11 +30,13 @@ with open(SOURCE, 'r') as fin:
 
             cnt += 1
 
-            if (cnt % 10000) == 0:
+            if (cnt % 1000) == 0:
                 logger.debug(f'Read {len(acc_wid):,} lines, pushing to DB!')
+                start = time.time()
                 conn.execute(stmt, {'wids': acc_wid, 'langs': acc_lang})
                 conn.commit()
-                logger.debug(f'Updated {cnt:,} records so far!')
+                end = time.time()
+                logger.debug(f'Updated {cnt:,} records so far, last commit took {end-start/60:,.2f}min!')
                 acc_wid = []
                 acc_lang = []
 

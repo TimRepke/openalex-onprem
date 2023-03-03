@@ -20,3 +20,6 @@ data/
 venv/
 
 **__pycache__**
+/scripts/alt_engine/solr/
+/scripts/alt_engine/tantivy-py/
+/scripts/alt_engine/openalex_shard1_replica_n1/
