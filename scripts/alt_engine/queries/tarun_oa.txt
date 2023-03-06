@@ -1,0 +1,164 @@
+   (
+     household OR
+     households OR
+     householding OR
+     householder OR
+     householders OR
+     residential OR
+     building OR
+     dormitory OR
+     dormitories OR
+     individual OR
+     consumer OR
+     consumers OR
+     participant OR
+     participants OR
+     customer OR
+     customers OR
+     domestic OR
+     homeowners OR
+     homeowner OR
+     homeownership
+   ) AND
+   (
+     feedback OR
+     price OR
+     prices OR
+     pricing OR
+     priced OR
+     pricelist
+     "time-of-use" OR
+     "time-of-day" OR
+     "real time" OR
+     "real-time" OR
+     "peak" OR
+     "dynamic pricing" OR
+     "smart meter" OR
+     "smart meters" OR
+     "smart metering" OR
+     "smart grid" OR
+     "smart grids" OR
+     "behavioral economic" OR
+     "behavioral economics" OR
+     "behavioral economical" OR
+     "behavioral intervention" OR
+     "behavioral interventions" OR
+     "behavioral interventional" OR
+     "behavioral guideline" OR
+     "behavioral guidelines" OR
+     "behaviorally economic" OR
+     "behaviorally economics" OR
+     "behaviorally economical" OR
+     "behaviorally intervention" OR
+     "behaviorally interventions" OR
+     "behaviorally interventional" OR
+     "behaviorally guideline" OR
+     "behaviorally guidelines" OR
+     "behavioural economic" OR
+     "behavioural economics" OR
+     "behavioural economical" OR
+     "behavioural intervention" OR
+     "behavioural interventions" OR
+     "behavioural interventional" OR
+     "behavioural guideline" OR
+     "behavioural guidelines" OR
+     "behaviourally economic" OR
+     "behaviourally economics" OR
+     "behaviourally economical" OR
+     "behaviourally intervention" OR
+     "behaviourally interventions" OR
+     "behaviourally interventional" OR
+     "behaviourally guideline" OR
+     "behaviourally guidelines" OR
+     nudge OR
+     nudges OR
+     "choice architecture" OR
+     norm OR
+     norms OR
+     "normative" OR
+     "social influence" OR
+     "block leader" OR
+     "public commitment" OR
+     "social comparison" OR
+     "social learning" OR
+     "social modeling" OR
+     "peer comparison" OR
+     "peer information" OR
+     salience OR
+     "commitment device" OR
+     "commitment devices" OR
+     "pre-commitment" OR
+     "precommitment" OR
+     pledge OR
+     "behavioral contract" OR
+     "behavioural contract" OR
+     "commitment contract" OR
+     "commitment approach" OR
+     "commitment approaches" OR
+     "personal commitment" OR
+     audit OR
+     rebate OR
+     reward OR
+     incentives OR
+     "goal setting" OR
+     "home energy report" OR
+     "in-home display" OR
+     "information provision"~3 OR
+     "information strategies"~3 OR
+     "information acquisition"~3 OR
+     "information system"~3 OR
+     "information systems"~3 OR
+     "information campaign"~3 OR
+     "information campaigns"~3 OR
+     "information campaigning"~3 OR
+     "information campaigner"~3 OR
+     "information campaigners"~3 OR
+     "information intervention"~3 OR
+     "information interventions"~3 OR
+     "information interventional"~3 OR
+     "foot-in-the-door" OR
+     "minimal justification" OR
+     "applied game" OR
+     "applied games" OR
+     "applied gamer" OR
+     "applied gamers" OR
+     "applied gameplay" OR
+     "serious game" OR
+     "serious games" OR
+     "serious gamer" OR
+     "serious gamers" OR
+     "serious gameplay" OR
+     gamif* OR
+     "dissonance" OR
+     tariff OR
+     "time-varying pricing"
+   ) AND
+   (
+     {!surround v="
+         (
+           energy OR
+           electric OR
+           electrical OR
+           electricity OR
+           electrically OR
+           electrician OR
+           electronic OR
+           electronics OR
+           gas
+         ) 15W
+         (
+           consumption OR
+           conservation OR
+           efficiency OR
+           use OR
+           demand OR
+           usage
+         )
+     "} OR
+     "price responsiveness"
+   )
+
+
+
+
+http://10.10.13.46:8983/solr/#/openalex/query?q=(%0A%20%20%20%20%20household%20OR%0A%20%20%20%20%20households%20OR%0A%20%20%20%20%20householding%20OR%0A%20%20%20%20%20householder%20OR%0A%20%20%20%20%20householders%20OR%0A%20%20%20%20%20residential%20OR%0A%20%20%20%20%20building%20OR%0A%20%20%20%20%20dormitory%20OR%0A%20%20%20%20%20dormitories%20OR%0A%20%20%20%20%20individual%20OR%0A%20%20%20%20%20consumer%20OR%0A%20%20%20%20%20consumers%20OR%0A%20%20%20%20%20participant%20OR%0A%20%20%20%20%20participants%20OR%0A%20%20%20%20%20customer%20OR%0A%20%20%20%20%20customers%20OR%0A%20%20%20%20%20domestic%20OR%0A%20%20%20%20%20homeowners%20OR%0A%20%20%20%20%20homeowner%20OR%0A%20%20%20%20%20homeownership%0A%20%20%20)%20AND%0A%20%20%20(%0A%20%20%20%20%20feedback%20OR%0A%20%20%20%20%20price%20OR%0A%20%20%20%20%20prices%20OR%0A%20%20%20%20%20pricing%20OR%0A%20%20%20%20%20priced%20OR%0A%20%20%20%20%20pricelist%0A%20%20%20%20%20%22time-of-use%22%20OR%0A%20%20%20%20%20%22time-of-day%22%20OR%0A%20%20%20%20%20%22real%20time%22%20OR%0A%20%20%20%20%20%22real-time%22%20OR%0A%20%20%20%20%20%22peak%22%20OR%0A%20%20%20%20%20%22dynamic%20pricing%22%20OR%0A%20%20%20%20%20%22smart%20meter%22%20OR%0A%20%20%20%20%20%22smart%20meters%22%20OR%0A%20%20%20%20%20%22smart%20metering%22%20OR%0A%20%20%20%20%20%22smart%20grid%22%20OR%0A%20%20%20%20%20%22smart%20grids%22%20OR%0A%20%20%20%20%20%22behavioral%20economic%22%20OR%0A%20%20%20%20%20%22behavioral%20economics%22%20OR%0A%20%20%20%20%20%22behavioral%20economical%22%20OR%0A%20%20%20%20%20%22behavioral%20intervention%22%20OR%0A%20%20%20%20%20%22behavioral%20interventions%22%20OR%0A%20%20%20%20%20%22behavioral%20interventional%22%20OR%0A%20%20%20%20%20%22behavioral%20guideline%22%20OR%0A%20%20%20%20%20%22behavioral%20guidelines%22%20OR%0A%20%20%20%20%20%22behaviorally%20economic%22%20OR%0A%20%20%20%20%20%22behaviorally%20economics%22%20OR%0A%20%20%20%20%20%22behaviorally%20economical%22%20OR%0A%20%20%20%20%20%22behaviorally%20intervention%22%20OR%0A%20%20%20%20%20%22behaviorally%20interventions%22%20OR%0A%20%20%20%20%20%22behaviorally%20interventional%22%20OR%0A%20%20%20%20%20%22behaviorally%20guideline%22%20OR%0A%20%20%20%20%20%22behaviorally%20guidelines%22%20OR%0A%20%20%20%20%20%22behavioural%20economic%22%20OR%0A%20%20%20%20%20%22behavioural%20economics%22%20OR%0A%20%20%20%20%20%22behavioural%20economical%22%20OR%0A%20%20%20%20%20%22behavioural%20intervention%22%20OR%0A%20%20%20%20%20%22behavioural%20interventions%22%20OR%0A%20%20%20%20%20%22behavioural%20interventional%22%20OR%0A%20%20%20%20%20%22behavioural%20guideline%22%20OR%0A%20%20%20%20%20%22behavioural%20guidelines%22%20OR%0A%20%20%20%20%20%22behaviourally%20economic%22%20OR%0A%20%20%20%20%20%22behaviourally%20economics%22%20OR%0A%20%20%20%20%20%22behaviourally%20economical%22%20OR%0A%20%20%20%20%20%22behaviourally%20intervention%22%20OR%0A%20%20%20%20%20%22behaviourally%20interventions%22%20OR%0A%20%20%20%20%20%22behaviourally%20interventional%22%20OR%0A%20%20%20%20%20%22behaviourally%20guideline%22%20OR%0A%20%20%20%20%20%22behaviourally%20guidelines%22%20OR%0A%20%20%20%20%20nudge%20OR%0A%20%20%20%20%20nudges%20OR%0A%20%20%20%20%20%22choice%20architecture%22%20OR%0A%20%20%20%20%20norm%20OR%0A%20%20%20%20%20norms%20OR%0A%20%20%20%20%20%22normative%22%20OR%0A%20%20%20%20%20%22social%20influence%22%20OR%0A%20%20%20%20%20%22block%20leader%22%20OR%0A%20%20%20%20%20%22public%20commitment%22%20OR%0A%20%20%20%20%20%22social%20comparison%22%20OR%0A%20%20%20%20%20%22social%20learning%22%20OR%0A%20%20%20%20%20%22social%20modeling%22%20OR%0A%20%20%20%20%20%22peer%20comparison%22%20OR%0A%20%20%20%20%20%22peer%20information%22%20OR%0A%20%20%20%20%20salience%20OR%0A%20%20%20%20%20%22commitment%20device%22%20OR%0A%20%20%20%20%20%22commitment%20devices%22%20OR%0A%20%20%20%20%20%22pre-commitment%22%20OR%0A%20%20%20%20%20%22precommitment%22%20OR%0A%20%20%20%20%20pledge%20OR%0A%20%20%20%20%20%22behavioral%20contract%22%20OR%0A%20%20%20%20%20%22behavioural%20contract%22%20OR%0A%20%20%20%20%20%22commitment%20contract%22%20OR%0A%20%20%20%20%20%22commitment%20approach%22%20OR%0A%20%20%20%20%20%22commitment%20approaches%22%20OR%0A%20%20%20%20%20%22personal%20commitment%22%20OR%0A%20%20%20%20%20audit%20OR%0A%20%20%20%20%20rebate%20OR%0A%20%20%20%20%20reward%20OR%0A%20%20%20%20%20incentives%20OR%0A%20%20%20%20%20%22goal%20setting%22%20OR%0A%20%20%20%20%20%22home%20energy%20report%22%20OR%0A%20%20%20%20%20%22in-home%20display%22%20OR%0A%20%20%20%20%20%22information%20provision%22~3%20OR%0A%20%20%20%20%20%22information%20strategies%22~3%20OR%0A%20%20%20%20%20%22information%20acquisition%22~3%20OR%0A%20%20%20%20%20%22information%20system%22~3%20OR%0A%20%20%20%20%20%22information%20systems%22~3%20OR%0A%20%20%20%20%20%22information%20campaign%22~3%20OR%0A%20%20%20%20%20%22information%20campaigns%22~3%20OR%0A%20%20%20%20%20%22information%20campaigning%22~3%20OR%0A%20%20%20%20%20%22information%20campaigner%22~3%20OR%0A%20%20%20%20%20%22information%20campaigners%22~3%20OR%0A%20%20%20%20%20%22information%20intervention%22~3%20OR%0A%20%20%20%20%20%22information%20interventions%22~3%20OR%0A%20%20%20%20%20%22information%20interventional%22~3%20OR%0A%20%20%20%20%20%22foot-in-the-door%22%20OR%0A%20%20%20%20%20%22minimal%20justification%22%20OR%0A%20%20%20%20%20%22applied%20game%22%20OR%0A%20%20%20%20%20%22applied%20games%22%20OR%0A%20%20%20%20%20%22applied%20gamer%22%20OR%0A%20%20%20%20%20%22applied%20gamers%22%20OR%0A%20%20%20%20%20%22applied%20gameplay%22%20OR%0A%20%20%20%20%20%22serious%20game%22%20OR%0A%20%20%20%20%20%22serious%20games%22%20OR%0A%20%20%20%20%20%22serious%20gamer%22%20OR%0A%20%20%20%20%20%22serious%20gamers%22%20OR%0A%20%20%20%20%20%22serious%20gameplay%22%20OR%0A%20%20%20%20%20gamif*%20OR%0A%20%20%20%20%20%22dissonance%22%20OR%0A%20%20%20%20%20tariff%20OR%0A%20%20%20%20%20%22time-varying%20pricing%22%0A%20%20%20)%20AND%0A%20%20%20(%0A%20%20%20%20%20%7B!surround%20v%3D%22%0A%20%20%20%20%20%20%20%20%20(%0A%20%20%20%20%20%20%20%20%20%20%20energy%20OR%0A%20%20%20%20%20%20%20%20%20%20%20electric%20OR%0A%20%20%20%20%20%20%20%20%20%20%20electrical%20OR%0A%20%20%20%20%20%20%20%20%20%20%20electricity%20OR%0A%20%20%20%20%20%20%20%20%20%20%20electrically%20OR%0A%20%20%20%20%20%20%20%20%20%20%20electrician%20OR%0A%20%20%20%20%20%20%20%20%20%20%20electronic%20OR%0A%20%20%20%20%20%20%20%20%20%20%20electronics%20OR%0A%20%20%20%20%20%20%20%20%20%20%20gas%0A%20%20%20%20%20%20%20%20%20)%2015W%0A%20%20%20%20%20%20%20%20%20(%0A%20%20%20%20%20%20%20%20%20%20%20consumption%20OR%0A%20%20%20%20%20%20%20%20%20%20%20conservation%20OR%0A%20%20%20%20%20%20%20%20%20%20%20efficiency%20OR%0A%20%20%20%20%20%20%20%20%20%20%20use%20OR%0A%20%20%20%20%20%20%20%20%20%20%20demand%20OR%0A%20%20%20%20%20%20%20%20%20%20%20usage%0A%20%20%20%20%20%20%20%20%20)%0A%20%20%20%20%20%22%7D%20OR%0A%20%20%20%20%20%22price%20responsiveness%22%0A%20%20%20)&q.op=AND&indent=true&rows=10&df=ta&debugQuery=false&debug.explain.structured=true&facet=true&fq=publication_year:%5B1990%20TO%202023%5D&facet.range=publication_year&facet.range.start=1990&facet.range.end=2023&facet.range.gap=1&useParams=
