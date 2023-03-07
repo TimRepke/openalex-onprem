@@ -5,7 +5,7 @@ import json
 import os
 
 SNAPSHOT_DIR = '/var/data/openalex'
-CSV_DIR = '/var/data/openalex/csv-files-r'
+CSV_DIR = '/var/data/openalex/csv-files'
 
 FILES_PER_ENTITY = int(os.environ.get('OPENALEX_DEMO_FILES_PER_ENTITY', '0'))
 
@@ -168,12 +168,12 @@ csv_files = {
 
 
 def strip_id(src):
-    if src.get('id'):
-        id = src.get('id')
+    if isinstance(src, dict) and src.get('id'):
+        src_id = src.get('id')
     else:
-        id = src
+        src_id = src
 
-    return id.removeprefix("https://openalex.org/")
+    return src_id.removeprefix("https://openalex.org/")
 
 
 def build_abstract(src):

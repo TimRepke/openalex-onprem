@@ -5,11 +5,17 @@ CREATE EXTENSION IF NOT EXISTS btree_gin;
 -- Works
 
 --CREATE INDEX idx_works_title ON openalex.works USING btree (title);
-CREATE INDEX idx_works_title_tsv ON openalex.works USING gin (to_tsvector('english',title));
-CREATE INDEX idx_works_title_tri ON openalex.works_filtered USING gin (title gin_trgm_ops);
+--CREATE INDEX idx_works_title_tsv ON openalex.works USING gin (to_tsvector('simple',title));
+CREATE INDEX idx_works_title_tsv ON openalex.works USING gin (ts_title);
+CREATE INDEX idx_works_title_tri ON openalex.works USING gin (title gin_trgm_ops);
 CREATE INDEX idx_works_pubyear ON openalex.works USING btree (publication_year);
 CREATE INDEX idx_works_type ON openalex.works USING btree (type);
 CREATE INDEX idx_works_doi ON openalex.works USING btree (doi);
+
+CREATE INDEX idx_works_abstract_tsv ON openalex.works USING gin (ts_abstract);
+CREATE INDEX idx_works_abstract_tri ON openalex.works USING gin (abstract gin_trgm_ops);
+
+CREATE INDEX idx_works_ta_tsv ON openalex.works USING gin (ts_ta);
 
 -- Works Alternative Host Venues
 
@@ -28,18 +34,13 @@ CREATE INDEX idx_works_concepts_concept_id ON openalex.works_concepts USING btre
 
 -- Works Host Venues
 
-CREATE INDEX idx_works_host_venues_work_id_idx ON openalex.works_host_venues USING btree (work_id);
+CREATE INDEX idx_works_host_venues_work_id ON openalex.works_host_venues USING btree (work_id);
 CREATE INDEX idx_works_host_venues_venue_id ON openalex.works_host_venues USING btree (venue_id);
 
 -- Works Referenced Works
 
 CREATE INDEX idx_works_referenced_works_work_id ON openalex.works_referenced_works USING btree (work_id);
 CREATE INDEX idx_works_referenced_Works_referenced_id ON openalex.works_referenced_works USING btree (referenced_work_id);
-
--- Works Related Works (Removed as Per GL19)
-
---CREATE INDEX idx_works_related_works_work_id ON openalex.works_related_works USING btree (work_id);
---CREATE INDEX idx_works_related_works_related_id ON openalex.works_related_works USING btree (related_work_id);
 
 -- Authors
 

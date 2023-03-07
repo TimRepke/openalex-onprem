@@ -27,14 +27,12 @@
 \copy openalex.venues_counts_by_year (venue_id, year, works_count, cited_by_count) from program 'gunzip -c csv-files/venues_counts_by_year.csv.gz' csv header
 
 --works
-\copy openalex.works (id, doi, mag, pmid, pmcid, title, publication_year, publication_date, type, cited_by_count, is_retracted, is_paratext, is_open_access, abstract) from program 'gunzip -c csv-files/works.csv.gz' csv header
+\copy openalex.works (id, doi, mag, pmid, pmcid, title, publication_year, publication_date, type, cited_by_count, is_retracted, is_paratext, is_open_access, abstract) from program 'gunzip -c csv-files/works.csv.gz' csv header with escape ''\''
 \copy openalex.works_host_venues (work_id, venue_id, url, is_oa, version, license) from program 'gunzip -c csv-files/works_host_venues.csv.gz' csv header
 \copy openalex.works_alternate_host_venues (work_id, venue_id, url, is_oa, version, license) from program 'gunzip -c csv-files/works_alternate_host_venues.csv.gz' csv header
 \copy openalex.works_authorships (work_id, author_position, author_id, institution_id, raw_affiliation_string) from program 'gunzip -c csv-files/works_authorships.csv.gz' csv header
 \copy openalex.works_biblio (work_id, volume, issue, first_page, last_page) from program 'gunzip -c csv-files/works_biblio.csv.gz' csv header
 \copy openalex.works_concepts (work_id, concept_id, score) from program 'gunzip -c csv-files/works_concepts.csv.gz' csv header
---\copy openalex.works_ids (work_id, openalex, doi, mag, pmid, pmcid) from program 'gunzip -c csv-files/works_ids.csv.gz' csv header
 \copy openalex.works_mesh (work_id, descriptor_ui, descriptor_name, qualifier_ui, qualifier_name, is_major_topic) from program 'gunzip -c csv-files/works_mesh.csv.gz' csv header
 \copy openalex.works_open_access (work_id, is_oa, oa_status, oa_url) from program 'gunzip -c csv-files/works_open_access.csv.gz' csv header
 \copy openalex.works_referenced_works (work_id, referenced_work_id) from program 'gunzip -c csv-files/works_referenced_works.csv.gz' csv header
---\copy openalex.works_related_works (work_id, related_work_id) from program 'gunzip -c csv-files/works_related_works.csv.gz' csv header
