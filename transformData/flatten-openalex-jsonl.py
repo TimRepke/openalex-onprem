@@ -182,12 +182,12 @@ def build_abstract(src):
 
     for k, v in eval(src).items():
         if k == chr(34):
-            k = "\\"+k
+            k = k+k
         for index in v:
             word_index.append([k, index])
 
     word_index = sorted(word_index, key=lambda x: x[1])
-    abstract = ' '.join([val[0] for val in word_index]).encode('utf-8', 'replace').decode()
+    abstract = ' '.join([val[0] for val in word_index]).encode('utf-8', 'replace')
 
     return abstract
 
@@ -552,9 +552,10 @@ def flatten_works():
                     if authorships := work.get('authorships'):
                         for authorship in authorships:
                             if author_id := authorship.get('author', {}).get('id'):
+                                author_id = strip_id(author_id)
                                 institutions = authorship.get('institutions')
                                 institution_ids = [i.get('id') for i in institutions]
-                                institution_ids = [i for i in institution_ids if i]
+                                institution_ids = [strip_id(i) for i in institution_ids if i]
                                 institution_ids = institution_ids or [None]
 
                                 for institution_id in institution_ids:

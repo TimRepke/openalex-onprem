@@ -259,7 +259,7 @@ COMMENT ON TABLE openalex.works
 IS 'documents like journal articles, books, datasets, and theses. sources include crossref, pubmed, institutional and discipline-specific repositories (eg, arxiv). older works come from the now-defunct microsoft academic graph. works are clustered together using fuzzy matching on publication date, title, and author list';
 
 CREATE TABLE IF NOT EXISTS openalex.works_alternate_host_venues (
-    row_id SERIAL PRIMARY KEY,
+    row_id BIGSERIAL PRIMARY KEY,
     work_id text,
     venue_id text,
     url text,
@@ -273,7 +273,7 @@ COMMENT ON TABLE openalex.works_alternate_host_venues
 IS 'relationship table between works and secondary venues';
 
 CREATE TABLE IF NOT EXISTS openalex.works_authorships (
-    row_id SERIAL PRIMARY KEY,
+    row_id BIGSERIAL PRIMARY KEY,
     work_id text,
     author_position text,
     author_id text,
@@ -320,27 +320,14 @@ CREATE TABLE IF NOT EXISTS openalex.works_host_venues (
 COMMENT ON TABLE openalex.works_host_venues
 IS 'relationship table between works and primary venue';
 
---CREATE TABLE IF NOT EXISTS openalex.works_ids (
---    work_id text NOT NULL,
---    openalex text,
---    doi text, -- canonical external id
---    mag bigint,
---    pmid text,
---    pmcid text,
---    PRIMARY KEY (work_id)
---);
-
---COMMENT ON TABLE openalex.works_ids
---IS 'contains external ids for works';
-
 CREATE TABLE IF NOT EXISTS openalex.works_mesh (
-    work_id text,
+    row_id BIGSERIAL PRIMARY KEY,
+    work_id text NOT NULL,
     descriptor_ui text,
     descriptor_name text,
     qualifier_ui text,
     qualifier_name text,
-    is_major_topic boolean,
-    PRIMARY KEY (work_id, descriptor_ui, qualifier_ui)
+    is_major_topic boolean
 );
 
 COMMENT ON TABLE openalex.works_mesh
@@ -348,7 +335,6 @@ IS 'pubmed works only. list of medical subject headings. for more information se
 
 CREATE TABLE IF NOT EXISTS openalex.works_open_access (
     work_id text NOT NULL,
-    is_oa boolean,
     oa_status text,
     oa_url text,
     PRIMARY KEY (work_id)
@@ -358,9 +344,10 @@ COMMENT ON TABLE openalex.works_open_access
 IS 'open access status of works';
 
 CREATE TABLE IF NOT EXISTS openalex.works_referenced_works (
+    row_id BIGSERIAL PRIMARY KEY,
     work_id text,
-    referenced_work_id text,
-    PRIMARY KEY (work_id, referenced_work_id)
+    referenced_work_id text
+--    PRIMARY KEY (work_id, referenced_work_id)
 );
 
 COMMENT ON TABLE openalex.works_referenced_works
