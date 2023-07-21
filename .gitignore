@@ -4,6 +4,8 @@
 **/.DS_Store?
 **/._*
 **/.ipynb_checkpoints
+**/__pycache__/**
+*.pyc
 
 # Local Directories #
 #####################
