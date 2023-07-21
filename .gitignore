@@ -9,3 +9,7 @@
 #####################
 
 local/
+.idea/
+venv/
+scripts/
+data/
