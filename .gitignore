@@ -7,6 +7,10 @@
 **/__pycache__/**
 *.pyc
 
+*.so
+*.c
+*.env
+
 # Local Directories #
 #####################
 
@@ -15,3 +19,6 @@ local/
 venv/
 scripts/
 data/
+build/
+solr/
+configset/
