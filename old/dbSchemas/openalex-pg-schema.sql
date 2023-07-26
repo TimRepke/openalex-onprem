@@ -27,7 +27,6 @@ CREATE TABLE IF NOT EXISTS openalex.authors (
     works_count integer,
     cited_by_count integer,
     last_known_institution text,
-    works_api_url text,
     updated_date timestamp without time zone,
     PRIMARY KEY (id)
 );
@@ -70,9 +69,6 @@ CREATE TABLE IF NOT EXISTS openalex.concepts (
     description text,
     works_count integer,
     cited_by_count integer,
-    image_url text,
-    image_thumbnail_url text,
-    works_api_url text,
     updated_date timestamp without time zone,
     PRIMARY KEY (id)
 );
@@ -130,8 +126,8 @@ CREATE TABLE IF NOT EXISTS openalex.institutions (
     id text NOT NULL,
     ror text, -- canonical external id
     display_name text,
-    country_code text,
     type text,
+    country_code text,
     homepage_url text,
     image_url text,
     image_thumbnail_url text,
@@ -139,7 +135,6 @@ CREATE TABLE IF NOT EXISTS openalex.institutions (
     display_name_alternatives json,
     works_count integer,
     cited_by_count integer,
-    works_api_url text,
     updated_date timestamp without time zone,
     PRIMARY KEY (id)
 );
@@ -210,7 +205,6 @@ CREATE TABLE IF NOT EXISTS openalex.venues (
     is_oa boolean, -- open access
     is_in_doaj boolean, -- directory of open access journals
     homepage_url text,
-    works_api_url text,
     updated_date timestamp without time zone,
     PRIMARY KEY (id)
 );
@@ -246,16 +240,18 @@ IS 'contains external ids for venues';
 CREATE TABLE IF NOT EXISTS openalex.works (
     id text NOT NULL,
     doi text, -- canonical external id
+    mag text,
+    pmid text,
+    pmcid text,
     title text,
-    display_name text,
     publication_year integer,
     publication_date text,
     type text,
     cited_by_count integer,
     is_retracted boolean,
     is_paratext boolean,
-    cited_by_api_url text,
-    abstract_inverted_index json
+    is_open_access boolean,
+    abstract text,
     PRIMARY KEY (id)
 );
 
@@ -263,25 +259,27 @@ COMMENT ON TABLE openalex.works
 IS 'documents like journal articles, books, datasets, and theses. sources include crossref, pubmed, institutional and discipline-specific repositories (eg, arxiv). older works come from the now-defunct microsoft academic graph. works are clustered together using fuzzy matching on publication date, title, and author list';
 
 CREATE TABLE IF NOT EXISTS openalex.works_alternate_host_venues (
+    row_id BIGSERIAL PRIMARY KEY,
     work_id text,
     venue_id text,
     url text,
     is_oa boolean,
     version text,
-    license text,
-    PRIMARY KEY (work_id, venue_id)
+    license text
+--   PRIMARY KEY (work_id, venue_id)
 );
 
 COMMENT ON TABLE openalex.works_alternate_host_venues
 IS 'relationship table between works and secondary venues';
 
 CREATE TABLE IF NOT EXISTS openalex.works_authorships (
+    row_id BIGSERIAL PRIMARY KEY,
     work_id text,
     author_position text,
     author_id text,
     institution_id text,
-    raw_affiliation_string text,
-    PRIMARY KEY (work_id, author_id)
+    raw_affiliation_string text
+--    PRIMARY KEY (work_id, author_id)
 );
 
 COMMENT ON TABLE openalex.works_authorships
@@ -322,28 +320,14 @@ CREATE TABLE IF NOT EXISTS openalex.works_host_venues (
 COMMENT ON TABLE openalex.works_host_venues
 IS 'relationship table between works and primary venue';
 
-CREATE TABLE IF NOT EXISTS openalex.works_ids (
-    work_id text NOT NULL,
-    openalex text,
-    doi text, -- canonical external id
-    mag bigint,
-    pmid text,
-    pmcid text,
-    PRIMARY KEY (work_id)
-);
-
-COMMENT ON TABLE openalex.works_ids
-IS 'contains external ids for works';
-
--- I don't have a good understanding of the data in this table. Need to look into
 CREATE TABLE IF NOT EXISTS openalex.works_mesh (
-    work_id text,
+    row_id BIGSERIAL PRIMARY KEY,
+    work_id text NOT NULL,
     descriptor_ui text,
     descriptor_name text,
     qualifier_ui text,
     qualifier_name text,
     is_major_topic boolean
-    -- todo: primary key
 );
 
 COMMENT ON TABLE openalex.works_mesh
@@ -351,7 +335,6 @@ IS 'pubmed works only. list of medical subject headings. for more information se
 
 CREATE TABLE IF NOT EXISTS openalex.works_open_access (
     work_id text NOT NULL,
-    is_oa boolean,
     oa_status text,
     oa_url text,
     PRIMARY KEY (work_id)
@@ -361,30 +344,11 @@ COMMENT ON TABLE openalex.works_open_access
 IS 'open access status of works';
 
 CREATE TABLE IF NOT EXISTS openalex.works_referenced_works (
+    row_id BIGSERIAL PRIMARY KEY,
     work_id text,
-    referenced_work_id text,
-    PRIMARY KEY (work_id, referenced_work_id)
+    referenced_work_id text
+--    PRIMARY KEY (work_id, referenced_work_id)
 );
 
 COMMENT ON TABLE openalex.works_referenced_works
 IS 'relationship table between works and other works it references';
-
-CREATE TABLE IF NOT EXISTS openalex.works_related_works (
-    work_id text,
-    related_work_id text,
-    PRIMARY KEY (work_id, related_work_id)
-);
-
-COMMENT ON TABLE openalex.works_related_works
-IS 'relationship table for related works. computed algorithmically; the algorithm finds recent papers with the most concepts in common with the work_id';
-
-CREATE TABLE IF NOT EXISTS openalex.abstracts (
-    id text,
-    doi text,
-    abstract text,
-    ts_abstract tsvector,
-    PRIMARY KEY (id)
-    );
-
-COMMENT ON TABLE openalex.abstracts
-IS 'Generated abstracts table from abstract_inverted_index column in openalex.works.'''

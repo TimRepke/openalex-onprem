@@ -1,25 +1,17 @@
-CREATE TABLE IF NOT EXISTS openalex.abstracts (
-    id text,
-    doi text,
-    abstract text,
-    ts_abstract tsvector,
-    PRIMARY KEY (id)
-);
+ALTER TABLE openalex.works
+ADD COLUMN abstract text;
 
 WITH upd AS (
-    SELECT
-    id,
-    doi,
-    array_to_string(ARRAY_AGG(b.key ORDER BY c.value::INT),' ') abstract,
-    to_tsvector('english',array_to_string(ARRAY_AGG(b.key ORDER BY c.value::INT),' ')) ts_abstract
-    FROM openalex.works a
-    JOIN json_each(abstract_inverted_index) b ON TRUE
-    JOIN json_array_elements_text(b.value) c ON TRUE
-    GROUP BY 1,2;
-    )
+  SELECT id, array_to_string(ARRAY_AGG(b.key ORDER BY c.value::INT),' ') abstract
+  FROM openalex.works a
+  JOIN json_each(abstract_inverted_index) b ON TRUE
+  JOIN json_array_elements_text(b.value) c ON TRUE
+  GROUP BY 1 )
 
-INSERT INTO openalex.abstracts SELECT * FROM upd
-ON CONFLICT (id) DO NOTHING;
+UPDATE openalex.works
+SET abstract = upd.abstract
+FROM upd
+WHERE openalex.works.id = upd.id;
 
-CREATE INDEX IF NOT EXISTS idx_oa_abstracts_tsv ON openalex.abstracts USING gin (ts_abstract);
-CREATE INDEX IF NOT EXISTS idx_oa_abstracts_doi ON openalex.abstracts USING btree (doi);
+CREATE INDEX IF NOT EXISTS idx_works_abstract_tsv ON openalex.works USING gin (to_tsvector('english',abstract));
+CREATE INDEX IF NOT EXISTS idx_works_abstract_tri ON openalex.works USING gin (abstract gin_trgm_ops);
