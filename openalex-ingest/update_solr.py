@@ -4,13 +4,14 @@ from pathlib import Path
 
 import typer
 
-from config import settings
-from util import get_globs, get_ids_to_delete, batched
-from transform_partition_solr import transform_partition
+from shared.config import settings
+from shared.util import get_globs, get_ids_to_delete, batched
+from processors.solr.transform_partition import transform_partition
 
 
 def update_solr(tmp_dir: Path,  # Directory where we can write temporary parsed partition files
-                loglevel='INFO'):
+                skip_deletion: bool = False,
+                loglevel: str = 'INFO'):
     logging.basicConfig(format='%(asctime)s [%(levelname)s] %(name)s (%(process)d): %(message)s', level=loglevel)
 
     logging.info('Please ensure you compiled the cython sources via\n'
@@ -18,13 +19,13 @@ def update_solr(tmp_dir: Path,  # Directory where we can write temporary parsed 
     logging.info('Please ensure you synced the snapshot via\n'
                  '   $ aws s3 sync "s3://openalex" "openalex-snapshot" --no-sign-request')
 
-    works, merged = get_globs(settings.snapshot, settings.last_update, 'works')
+    works, merged = get_globs(settings.snapshot, settings.last_update, 'work')
 
     logging.info(f'Looks like there are {len(works)} works partitions '
                  f'and {len(merged)} merged_ids partitions since last update.')
 
     for partition in works:
-        out_file = tmp_dir / partition.parent.name / f'{partition.stem}.json'
+        out_file = tmp_dir / f'solr-{partition.parent.name}-{partition.stem}.json'
         out_file.parent.mkdir(exist_ok=True, parents=True)
 
         logging.debug(f'Reading partition from "{partition}" and writing to "{out_file}"')
@@ -40,13 +41,10 @@ def update_solr(tmp_dir: Path,  # Directory where we can write temporary parsed 
 
         logging.info('Partition posted to solr!')
 
-        # Cleaning up (this may leave empty directories though)
+        # Cleaning up
         out_file.unlink()
 
-    # Final cleanup
-    tmp_dir.unlink()  # FIXME this is not good for parallelisation
-
-    if len(merged) > 0:
+    if not skip_deletion and len(merged) > 0:
         logging.info('Going to delete merged works objects in batches...')
         for del_batch in batched(get_ids_to_delete(merged), 1000):
             ids = '</id><id>'.join(del_batch)
@@ -59,7 +57,7 @@ def update_solr(tmp_dir: Path,  # Directory where we can write temporary parsed 
                             '-port', settings.solr_port,
                             '-d', payload])
     else:
-        logging.info('Found no merged work objects since last update!')
+        logging.info('Found no merged work objects since last update and/or was asked to skip deletions!')
 
     logging.info('Solr collection is up to date.')
     logging.warning(f'Remember to update the date in "{settings.last_update_file}"')

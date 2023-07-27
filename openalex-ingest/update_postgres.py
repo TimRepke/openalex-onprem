@@ -1,27 +1,35 @@
 import logging
 from pathlib import Path
-from util import get_globs
+
 import typer
 
+from processors.postgres.flatten import flatten_authors
+from shared.config import settings
+from shared.util import get_globs
 
-def update_pg(snapshot: Path,  # /path/to/openalex-snapshot/
-              last_update: str,  # formatted as YYYY-MM-DD
-              loglevel='INFO'):
+
+def update_postgres(tmp_dir: Path,  # Directory where we can write temporary parsed partition files
+                    parallelism: int = 8,
+                    loglevel: str = 'INFO'):
     logging.basicConfig(format='%(asctime)s [%(levelname)s] %(name)s (%(process)d): %(message)s', level=loglevel)
 
+    logging.info('Please ensure you compiled the cython sources via\n'
+                 '   $ python setup.py build_ext --inplace')
     logging.info('Please ensure you synced the snapshot via\n'
                  '   $ aws s3 sync "s3://openalex" "openalex-snapshot" --no-sign-request')
 
-    works, merged = get_globs(snapshot, last_update, 'works')
+    flatten_authors(tmp_dir=tmp_dir, parallelism=parallelism)
 
-    logging.info(f'Looks like there are {len(works)} works partitions '
-                 f'and {len(merged)} merged_ids partitions since last update.')
+    works, merged_works = get_globs(settings.snapshot, settings.last_update, 'work')
+    funders, merged_funders = get_globs(settings.snapshot, settings.last_update, 'funder')
+    sources, merged_sources = get_globs(settings.snapshot, settings.last_update, 'source')
+    concepts, merged_concepts = get_globs(settings.snapshot, settings.last_update, 'concept')
+    publishers, merged_publishers = get_globs(settings.snapshot, settings.last_update, 'publisher')
+    institutions, merged_institutions = get_globs(settings.snapshot, settings.last_update, 'institution')
 
-    for partition in works:
-        pass
-
-    # merge_date,id,merge_into_id
+    logging.info('Postgres is up to date.')
+    logging.warning(f'Remember to update the date in "{settings.last_update_file}"')
 
 
 if __name__ == "__main__":
-    typer.run(update_pg)
+    typer.run(update_postgres)

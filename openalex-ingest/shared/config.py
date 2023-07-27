@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     pg_user: str = 'openalex'  # username for the database
     pg_pw: str  # password for the database user
     pg_db: str = 'openalex'  # name of the database
+    pg_schema: str = 'openalex'  # name of database schema
 
     postgres: PostgresDsn | None = None
 
@@ -49,11 +50,15 @@ class Settings(BaseSettings):
         if isinstance(v, str):
             return v
 
-        with open(info.data.get('last_update_file'), 'r') as f:
-            return f.read().strip()
+        fname: Path = info.data.get('last_update_file')
+        if fname is not None and fname.exists():
+            with open(fname, 'r') as f:
+                return f.read().strip()
+        else:
+            return '1970-01-01'
 
     @field_validator('solr_url', mode='before')
-    def load_last_updated(cls, v: str | None, info: FieldValidationInfo) -> str:
+    def create_solr_url(cls, v: str | None, info: FieldValidationInfo) -> str:
         assert info.config is not None
 
         if isinstance(v, str):
@@ -63,9 +68,8 @@ class Settings(BaseSettings):
                f'/solr/{info.data.get("solr_collection")}'
 
     model_config = SettingsConfigDict(env_prefix='oa_',
-                                      env_file='.env',
                                       env_file_encoding='utf-8')
 
 
-conf_file = os.environ.get('OA_CONFIG', 'default.env')
+conf_file = os.environ.get('OA_CONFIG', './default.env')
 settings = Settings(_env_file=conf_file, _env_file_encoding='utf-8')
