@@ -8,18 +8,20 @@ sync_s3=true
 compile=true
 update_solr=true
 update_pg=true
+cleanup=true
 del_prior=""
 
 # Function to display script usage
 usage() {
  echo "Usage: $0 TMP_DIR [OPTIONS]"
- echo "   TMP_DIR is the directory where we can temporarily put files"
+ echo "   TMP_DIR is the absolute path to a directory where we can temporarily put files"
  echo "Options:"
  echo " --skip-sync     Skip synchronisation with OpenAlex S3 bucket"
  echo " --skip-compile  Skip (re-)compilation of Cython code"
  echo " --skip-solr     Skip update of Solr collection"
  echo " --skip-pg       Skip update of postgres"
- echo " --skip-del      Skip deletion of existing data"
+ echo " --skip-del      Skip deletion of existing data in db/solr"
+ echo " --skip-clean    Skip deleting all temporary files"
  echo ""
  echo " -h, --help      Display this help message"
 }
@@ -55,6 +57,9 @@ while [ $# -gt 0 ]; do
       ;;
     --skip-del)
       del_prior="--skip-deletion"
+      ;;
+    --skip-clean)
+      cleanup=false
       ;;
     *)
       echo "Invalid option: $1" >&2
@@ -104,14 +109,31 @@ fi
 
 if [ "$update_solr" = true ]; then
   echo "Updating solr..."
-  python update_solr.py "$del_prior" --loglevel INFO "$tmp_dir"
+  python update_solr.py "$del_prior" --loglevel INFO "$tmp_dir/solr"
+  echo "Clearing $tmp_dir/solr"
+  rm -r "$tmp_dir/solr"
 else
   echo "Skipping update of Solr collection!"
 fi
 
 if [ "$update_pg" = true ]; then
   echo "Updating PostgreSQL..."
-  python update_postgres.py "$del_prior" --loglevel INFO "$tmp_dir" --parallelism 8
+  python update_postgres.py "$del_prior" --loglevel INFO "$tmp_dir/postgres" --parallelism 8
+
+  cd "$tmp_dir"
+  echo "Deleting merged objects"
+  psql -f postgres/*merged_del.sql
+  echo "Deleting existing new objects"
+  psql -f postgres/*-del.sql
+  echo "Import new or updated objects"
+  psql -f postgres/*-cpy.sql
+
+  if [ "$update_solr" = true ]; then
+    echo "Deleting all temporary flattened files and scripts"
+    rm -r "$tmp_dir/postgres"
+  fi
+
+  cd "$SCRIPT_DIR"
 else
   echo "Skipping update of Postgres database!"
 fi

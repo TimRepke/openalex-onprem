@@ -20,5 +20,6 @@ venv/
 scripts/
 data/
 build/
-solr/
 configset/
+solr/
+!openalex-ingest/processors/solr

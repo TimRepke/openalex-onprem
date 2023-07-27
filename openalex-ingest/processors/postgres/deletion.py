@@ -5,9 +5,10 @@ from shared.config import settings
 
 table_map: dict[ObjectType, list[str]] = {
     'author': [
-        ('authors', 'id'),
-        ('authors_counts_by_year', 'author_id'),
-        ('authors_ids', 'author_id'),
+        # ('authors', 'id'),
+        # ('authors_counts_by_year', 'author_id'),
+        # ('authors_ids', 'author_id'),
+        # TODO
     ],
     'institution': [
         # TODO

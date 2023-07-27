@@ -3,9 +3,9 @@ from pathlib import Path
 
 import typer
 
-from processors.postgres.flatten import flatten_authors
+from processors.postgres.flatten import flatten_authors, flatten_concepts, flatten_funders, flatten_institutions, \
+    flatten_publishers, flatten_sources, flatten_works
 from shared.config import settings
-from shared.util import get_globs
 
 
 def update_postgres(tmp_dir: Path,  # Directory where we can write temporary parsed partition files
@@ -18,14 +18,20 @@ def update_postgres(tmp_dir: Path,  # Directory where we can write temporary par
     logging.info('Please ensure you synced the snapshot via\n'
                  '   $ aws s3 sync "s3://openalex" "openalex-snapshot" --no-sign-request')
 
+    logging.info('Flattening publishers')
+    flatten_publishers(tmp_dir=tmp_dir, parallelism=parallelism)
+    logging.info('Flattening sources')
+    flatten_sources(tmp_dir=tmp_dir, parallelism=parallelism)
+    logging.info('Flattening institutions')
+    flatten_institutions(tmp_dir=tmp_dir, parallelism=parallelism)
+    logging.info('Flattening concepts')
+    flatten_concepts(tmp_dir=tmp_dir, parallelism=parallelism)
+    logging.info('Flattening funders')
+    flatten_funders(tmp_dir=tmp_dir, parallelism=parallelism)
+    logging.info('Flattening authors')
     flatten_authors(tmp_dir=tmp_dir, parallelism=parallelism)
-
-    works, merged_works = get_globs(settings.snapshot, settings.last_update, 'work')
-    funders, merged_funders = get_globs(settings.snapshot, settings.last_update, 'funder')
-    sources, merged_sources = get_globs(settings.snapshot, settings.last_update, 'source')
-    concepts, merged_concepts = get_globs(settings.snapshot, settings.last_update, 'concept')
-    publishers, merged_publishers = get_globs(settings.snapshot, settings.last_update, 'publisher')
-    institutions, merged_institutions = get_globs(settings.snapshot, settings.last_update, 'institution')
+    logging.info('Flattening works')
+    flatten_works(tmp_dir=tmp_dir, parallelism=parallelism)
 
     logging.info('Postgres is up to date.')
     logging.warning(f'Remember to update the date in "{settings.last_update_file}"')
