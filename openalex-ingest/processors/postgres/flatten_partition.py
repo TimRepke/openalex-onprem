@@ -589,16 +589,17 @@ def flatten_works_partition(partition: Path | str,
                     'raw_affiliation': author.raw_affiliation_string,
                     'is_corresponding': author.is_corresponding
                 })
-            for location in work.locations:
-                writer_locations.writerow({
-                    'work_id': wid,
-                    'source_id': strip_id(location.source.id),
-                    'is_oa': location.is_oa,
-                    'landing_page_url': location.landing_page_url,
-                    'license': location.license,
-                    'pdf_url': location.pdf_url,
-                    'version': location.version
-                })
+            if work.locations is not None:
+                for location in work.locations:
+                    writer_locations.writerow({
+                        'work_id': wid,
+                        'source_id': strip_id(location.source.id),
+                        'is_oa': location.is_oa,
+                        'landing_page_url': location.landing_page_url,
+                        'license': location.license,
+                        'pdf_url': location.pdf_url,
+                        'version': location.version
+                    })
             for concept in work.concepts:
                 writer_concepts.writerow({
                     'work_id': wid,
