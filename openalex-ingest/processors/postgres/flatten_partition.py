@@ -1,5 +1,6 @@
 import csv
 import gzip
+import time
 import logging
 from pathlib import Path
 from typing import TextIO
@@ -48,6 +49,7 @@ def flatten_authors_partition(partition: Path | str,
     out_sql_cpy: Path = Path(out_sql_cpy)
     out_sql_del: Path = Path(out_sql_del)
     out_authors: Path = Path(out_authors)
+    startTime = time.time()
 
     with (gzip.open(out_authors, 'wt', encoding='utf-8') as f_authors,
           open(out_sql_del, 'w') as f_sql_del,
@@ -95,7 +97,10 @@ def flatten_authors_partition(partition: Path | str,
         f_sql_cpy.write(f"COPY {settings.pg_schema}.authors "
                         f"FROM PROGRAM 'gunzip -c {out_authors.absolute()}' csv header;\n\n")
 
-        logging.info(f'Flattened {n_authors:,} authors in {partition}')
+        executionTime = (time.time() - startTime)
+
+        logging.info(f'Flattened {n_authors:,} authors in '
+                     f'{int(executionTime / 60)}:{executionTime:.0f}mm:ss from {partition}')
 
 
 def flatten_institutions_partition(partition: Path | str,
@@ -111,6 +116,7 @@ def flatten_institutions_partition(partition: Path | str,
     out_institutions: Path = Path(out_institutions)
     out_m2m_association: Path = Path(out_m2m_association)
     out_m2m_concepts: Path = Path(out_m2m_concepts)
+    startTime = time.time()
 
     with (gzip.open(out_institutions, 'wt', encoding='utf-8') as f_inst,
           gzip.open(out_m2m_association, 'wt', encoding='utf-8') as f_m2m_ass,
@@ -190,7 +196,9 @@ def flatten_institutions_partition(partition: Path | str,
         f_sql_cpy.write(f"COPY {settings.pg_schema}.institutions_concepts "
                         f"FROM PROGRAM 'gunzip -c {out_m2m_concepts.absolute()}' csv header;\n\n")
 
-        logging.info(f'Flattened {n_institutions:,} institutions in {partition}')
+        executionTime = (time.time() - startTime)
+        logging.info(f'Flattened {n_institutions:,} institutions in '
+                     f'{int(executionTime / 60)}:{executionTime:.0f}mm:ss from {partition}')
 
 
 def flatten_publisher_partition(partition: Path | str,
@@ -202,6 +210,7 @@ def flatten_publisher_partition(partition: Path | str,
     out_sql_cpy: Path = Path(out_sql_cpy)
     out_sql_del: Path = Path(out_sql_del)
     out_publishers: Path = Path(out_publishers)
+    startTime = time.time()
 
     with (gzip.open(out_publishers, 'wt', encoding='utf-8') as f_pub,
           open(out_sql_del, 'w') as f_sql_del,
@@ -251,7 +260,9 @@ def flatten_publisher_partition(partition: Path | str,
         f_sql_cpy.write(f"COPY {settings.pg_schema}.publishers "
                         f"FROM PROGRAM 'gunzip -c {out_publishers.absolute()}' csv header;\n\n")
 
-        logging.info(f'Flattened {n_pubs:,} publishers in {partition}')
+        executionTime = (time.time() - startTime)
+        logging.info(f'Flattened {n_pubs:,} publishers in '
+                     f'{int(executionTime / 60)}:{executionTime:.0f}mm:ss from {partition}')
 
 
 def flatten_funder_partition(partition: Path | str,
@@ -263,6 +274,7 @@ def flatten_funder_partition(partition: Path | str,
     out_sql_cpy: Path = Path(out_sql_cpy)
     out_sql_del: Path = Path(out_sql_del)
     out_funders: Path = Path(out_funders)
+    startTime = time.time()
 
     with (gzip.open(out_funders, 'wt', encoding='utf-8') as f_funders,
           open(out_sql_del, 'w') as f_sql_del,
@@ -312,7 +324,9 @@ def flatten_funder_partition(partition: Path | str,
         f_sql_cpy.write(f"COPY {settings.pg_schema}.funders "
                         f"FROM PROGRAM 'gunzip -c {out_funders.absolute()}' csv header;\n\n")
 
-        logging.info(f'Flattened {n_funders:,} funders in {partition}')
+        executionTime = (time.time() - startTime)
+        logging.info(f'Flattened {n_funders:,} funders in '
+                     f'{int(executionTime / 60)}:{executionTime:.0f}mm:ss from {partition}')
 
 
 def flatten_concept_partition(partition: Path | str,
@@ -328,6 +342,7 @@ def flatten_concept_partition(partition: Path | str,
     out_concepts: Path = Path(out_concepts)
     out_m2m_ancestor: Path = Path(out_m2m_ancestor)
     out_m2m_related: Path = Path(out_m2m_related)
+    startTime = time.time()
 
     with (gzip.open(out_concepts, 'wt', encoding='utf-8') as f_concepts,
           gzip.open(out_m2m_related, 'wt', encoding='utf-8') as f_m2m_related,
@@ -395,7 +410,9 @@ def flatten_concept_partition(partition: Path | str,
         f_sql_cpy.write(f"COPY {settings.pg_schema}.concepts_related "
                         f"FROM PROGRAM 'gunzip -c {out_m2m_related.absolute()}' csv header;\n\n")
 
-        logging.info(f'Flattened {n_concepts:,} concepts in {partition}')
+        executionTime = (time.time() - startTime)
+        logging.info(f'Flattened {n_concepts:,} concepts in '
+                     f'{int(executionTime / 60)}:{executionTime:.0f}mm:ss from {partition}')
 
 
 def flatten_sources_partition(partition: Path | str,
@@ -407,6 +424,7 @@ def flatten_sources_partition(partition: Path | str,
     out_sql_cpy: Path = Path(out_sql_cpy)
     out_sql_del: Path = Path(out_sql_del)
     out_sources: Path = Path(out_sources)
+    startTime = time.time()
 
     with (gzip.open(out_sources, 'wt', encoding='utf-8') as f_sources,
           open(out_sql_del, 'w') as f_sql_del,
@@ -474,7 +492,9 @@ def flatten_sources_partition(partition: Path | str,
         f_sql_cpy.write(f"COPY {settings.pg_schema}.sources "
                         f"FROM PROGRAM 'gunzip -c {out_sources.absolute()}' csv header;\n\n")
 
-        logging.info(f'Flattened {n_sources:,} sources in {partition}')
+        executionTime = (time.time() - startTime)
+        logging.info(f'Flattened {n_sources:,} sources in'
+                     f' {int(executionTime / 60)}:{executionTime:.0f}mm:ss from {partition}')
 
 
 def flatten_works_partition(partition: Path | str,
@@ -496,6 +516,7 @@ def flatten_works_partition(partition: Path | str,
     out_m2m_authorships: Path = Path(out_m2m_authorships)
     out_m2m_references: Path = Path(out_m2m_references)
     out_m2m_related: Path = Path(out_m2m_related)
+    startTime = time.time()
 
     with (gzip.open(out_works, 'wt', encoding='utf-8') as f_works,
           gzip.open(out_m2m_locations, 'wt', encoding='utf-8') as f_locations,
@@ -642,7 +663,9 @@ def flatten_works_partition(partition: Path | str,
         f_sql_cpy.write(f"COPY {settings.pg_schema}.works_related "
                         f"FROM PROGRAM 'gunzip -c {out_m2m_related.absolute()}' csv header;\n\n")
 
-    logging.info(f'Flattened {n_works:,} works with {n_abstracts:,} abstracts in {partition}')
+    executionTime = (time.time() - startTime)
+    logging.info(f'Flattened {n_works:,} works with {n_abstracts:,} abstracts in'
+                 f' {int(executionTime / 60)}:{executionTime:.0f}mm:ss from {partition}')
 
 
 def flatten_authors_partition_kw(kwargs):
