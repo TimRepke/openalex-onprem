@@ -43,7 +43,8 @@ def get_writer(buffer: TextIO, fields: list[str]) -> csv.DictWriter:
 def flatten_authors_partition(partition: Path | str,
                               out_sql_cpy: Path | str,
                               out_sql_del: Path | str,
-                              out_authors: Path | str):
+                              out_authors: Path | str,
+                              preserve_ram: bool):
     logging.info(f'Flattening partition file {partition}')
     partition: Path = Path(partition)
     out_sql_cpy: Path = Path(out_sql_cpy)
@@ -66,7 +67,12 @@ def flatten_authors_partition(partition: Path | str,
         n_authors = 0
         author_ids = []
 
-        for line in f_in:
+        if preserve_ram:
+            lines = f_in
+        else:
+            lines = f_in.readlines()
+
+        for line in lines:
             n_authors += 1
             author = decoder.decode(line)
             aid = author.id[21:]
@@ -108,7 +114,8 @@ def flatten_institutions_partition(partition: Path | str,
                                    out_sql_del: Path | str,
                                    out_institutions: Path | str,
                                    out_m2m_association: Path | str,
-                                   out_m2m_concepts: Path | str):
+                                   out_m2m_concepts: Path | str,
+                                   preserve_ram: bool):
     logging.info(f'Flattening partition file {partition}')
     partition: Path = Path(partition)
     out_sql_cpy: Path = Path(out_sql_cpy)
@@ -139,7 +146,12 @@ def flatten_institutions_partition(partition: Path | str,
         n_institutions = 0
         institution_ids = []
 
-        for line in f_in:
+        if preserve_ram:
+            lines = f_in
+        else:
+            lines = f_in.readlines()
+
+        for line in lines:
             n_institutions += 1
             institution: structs.Institution = decoder.decode(line)
             iid = institution.id[21:]
@@ -204,7 +216,8 @@ def flatten_institutions_partition(partition: Path | str,
 def flatten_publisher_partition(partition: Path | str,
                                 out_sql_cpy: Path | str,
                                 out_sql_del: Path | str,
-                                out_publishers: Path | str):
+                                out_publishers: Path | str,
+                                preserve_ram: bool):
     logging.info(f'Flattening partition file {partition}')
     partition: Path = Path(partition)
     out_sql_cpy: Path = Path(out_sql_cpy)
@@ -230,7 +243,12 @@ def flatten_publisher_partition(partition: Path | str,
         n_pubs = 0
         publisher_ids = []
 
-        for line in f_in:
+        if preserve_ram:
+            lines = f_in
+        else:
+            lines = f_in.readlines()
+
+        for line in lines:
             n_pubs += 1
             publisher = decoder.decode(line)
             pid = strip_id(publisher.id[21:])
@@ -268,7 +286,8 @@ def flatten_publisher_partition(partition: Path | str,
 def flatten_funder_partition(partition: Path | str,
                              out_sql_cpy: Path | str,
                              out_sql_del: Path | str,
-                             out_funders: Path | str):
+                             out_funders: Path | str,
+                             preserve_ram: bool):
     logging.info(f'Flattening partition file {partition}')
     partition: Path = Path(partition)
     out_sql_cpy: Path = Path(out_sql_cpy)
@@ -294,7 +313,12 @@ def flatten_funder_partition(partition: Path | str,
         n_funders = 0
         funder_ids = []
 
-        for line in f_in:
+        if preserve_ram:
+            lines = f_in
+        else:
+            lines = f_in.readlines()
+
+        for line in lines:
             n_funders += 1
             funder = decoder.decode(line)
             fid = strip_id(funder.id)
@@ -334,7 +358,8 @@ def flatten_concept_partition(partition: Path | str,
                               out_sql_del: Path | str,
                               out_concepts: Path | str,
                               out_m2m_ancestor: Path | str,
-                              out_m2m_related: Path | str):
+                              out_m2m_related: Path | str,
+                              preserve_ram: bool):
     logging.info(f'Flattening partition file {partition}')
     partition: Path = Path(partition)
     out_sql_cpy: Path = Path(out_sql_cpy)
@@ -364,7 +389,12 @@ def flatten_concept_partition(partition: Path | str,
         n_concepts = 0
         concept_ids = []
 
-        for line in f_in:
+        if preserve_ram:
+            lines = f_in
+        else:
+            lines = f_in.readlines()
+
+        for line in lines:
             n_concepts += 1
             concept = decoder.decode(line)
             cid = strip_id(concept.id)
@@ -418,7 +448,8 @@ def flatten_concept_partition(partition: Path | str,
 def flatten_sources_partition(partition: Path | str,
                               out_sql_cpy: Path | str,
                               out_sql_del: Path | str,
-                              out_sources: Path | str):
+                              out_sources: Path | str,
+                              preserve_ram: bool):
     logging.info(f'Flattening partition file {partition}')
     partition: Path = Path(partition)
     out_sql_cpy: Path = Path(out_sql_cpy)
@@ -448,7 +479,12 @@ def flatten_sources_partition(partition: Path | str,
         n_sources = 0
         source_ids = []
 
-        for line in f_in:
+        if preserve_ram:
+            lines = f_in
+        else:
+            lines = f_in.readlines()
+
+        for line in lines:
             n_sources += 1
             source = decoder.decode(line)
             sid = strip_id(source.id)
@@ -505,7 +541,8 @@ def flatten_works_partition(partition: Path | str,
                             out_m2m_concepts: Path | str,
                             out_m2m_authorships: Path | str,
                             out_m2m_references: Path | str,
-                            out_m2m_related: Path | str):
+                            out_m2m_related: Path | str,
+                            preserve_ram: bool):
     logging.info(f'Flattening partition file {partition}')
     partition: Path = Path(partition)
     out_sql_cpy: Path = Path(out_sql_cpy)
@@ -551,7 +588,12 @@ def flatten_works_partition(partition: Path | str,
         n_abstracts = 0
         work_ids = []
 
-        for line in f_in:
+        if preserve_ram:
+            lines = f_in
+        else:
+            lines = f_in.readlines()
+
+        for line in lines:
             n_works += 1
             work = decoder.decode(line)
             wid = strip_id(work.id)
@@ -583,8 +625,9 @@ def flatten_works_partition(partition: Path | str,
                 'issue': work.biblio.issue,
                 'first_page': work.biblio.first_page,
                 'last_page': work.biblio.last_page,
-                'primary_location': strip_id(work.primary_location.source.id) \
-                    if work.primary_location is not None and work.primary_location.source is not None else None,
+                'primary_location': (strip_id(work.primary_location.source.id)
+                                     if work.primary_location is not None
+                                        and work.primary_location.source is not None else None),
                 'type': work.type,
                 'type_crossref': work.type_crossref,
                 'cited_by_count': work.cited_by_count,
@@ -596,8 +639,10 @@ def flatten_works_partition(partition: Path | str,
                 'oa_status': work.open_access.oa_status,
                 'oa_url': work.open_access.oa_url,
                 'oa_any_repository_has_fulltext': work.open_access.any_repository_has_fulltext,
-                'apc_paid': work.apc_paid.value_usd if work.apc_paid is not None else None,
-                'apc_list': work.apc_list.value_usd if work.apc_list is not None else None,
+                'apc_paid': (work.apc_paid.value_usd
+                             if work.apc_paid is not None and not isinstance(work.apc_paid, list) else None),
+                'apc_list': (work.apc_list.value_usd
+                             if work.apc_list is not None else None),
                 'license': work.license,
                 'is_paratext': work.is_paratext,
                 'is_retracted': work.is_retracted,

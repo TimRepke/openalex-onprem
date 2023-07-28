@@ -12,6 +12,7 @@ def update_postgres(tmp_dir: Path,  # Directory where we can write temporary par
                     skip_deletion: bool = False,
                     parallelism: int = 8,
                     override: bool = False,
+                    preserve_ram: bool = True,
                     loglevel: str = 'INFO'):
     logging.basicConfig(format='%(asctime)s [%(levelname)s] %(name)s (%(process)d): %(message)s', level=loglevel)
 
@@ -24,25 +25,25 @@ def update_postgres(tmp_dir: Path,  # Directory where we can write temporary par
 
     logging.info('Flattening works')
     flatten_works(tmp_dir=tmp_dir, parallelism=parallelism, skip_deletion=skip_deletion,
-                  override=override)
+                  override=override, preserve_ram=preserve_ram)
     logging.info('Flattening authors')
     flatten_authors(tmp_dir=tmp_dir, parallelism=parallelism, skip_deletion=skip_deletion,
-                    override=override)
+                    override=override, preserve_ram=preserve_ram)
     logging.info('Flattening publishers')
     flatten_publishers(tmp_dir=tmp_dir, parallelism=parallelism, skip_deletion=skip_deletion,
-                       override=override)
+                       override=override, preserve_ram=preserve_ram)
     logging.info('Flattening sources')
     flatten_sources(tmp_dir=tmp_dir, parallelism=parallelism, skip_deletion=skip_deletion,
-                    override=override)
+                    override=override, preserve_ram=preserve_ram)
     logging.info('Flattening institutions')
     flatten_institutions(tmp_dir=tmp_dir, parallelism=parallelism, skip_deletion=skip_deletion,
-                         override=override)
+                         override=override, preserve_ram=preserve_ram)
     logging.info('Flattening concepts')
     flatten_concepts(tmp_dir=tmp_dir, parallelism=parallelism, skip_deletion=skip_deletion,
-                     override=override)
+                     override=override, preserve_ram=preserve_ram)
     logging.info('Flattening funders')
     flatten_funders(tmp_dir=tmp_dir, parallelism=parallelism, skip_deletion=skip_deletion,
-                    override=override)
+                    override=override, preserve_ram=preserve_ram)
     logging.info('Postgres is up to date.')
     logging.warning(f'Remember to update the date in "{settings.last_update_file}"')
 

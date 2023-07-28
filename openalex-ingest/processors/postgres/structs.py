@@ -366,7 +366,7 @@ class Work(Struct, kw_only=True, omit_defaults=True):
     abstract_inverted_index: str | None = None
     authorships: list[Authorship] | None = None
     apc_list: APC | None = None
-    apc_paid: APC | None = None
+    apc_paid: APC | list[APC] | None = None
     best_oa_location: Location | None = None
     biblio: Biblio | None = None
     cited_by_api_url: str | None = None

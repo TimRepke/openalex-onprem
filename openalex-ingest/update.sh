@@ -10,6 +10,7 @@ update_solr=true
 update_pg=true
 cleanup=true
 override="--no-override"
+preserve_ram="--preserve-ram"
 jobs=1
 del_prior="--no-skip-deletion"
 
@@ -26,6 +27,7 @@ usage() {
  echo " --skip-clean    Skip deleting all temporary files"
  echo " --override      Ignore existing flattened files and override them"
  echo " --jobs N        Number of processes for parallel processing"
+ echo " --use-ram       Will not try to preserve RAM for small performance boost"
  echo ""
  echo " -h, --help      Display this help message"
 }
@@ -75,6 +77,9 @@ while [ $# -gt 0 ]; do
       ;;
     --override)
       override="--override"
+      ;;
+    --use-ram)
+      preserve_ram="--no-preserve-ram"
       ;;
     *)
       echo "Invalid option: $1" >&2
@@ -133,7 +138,7 @@ fi
 
 if [ "$update_pg" = true ]; then
   echo "Updating PostgreSQL..."
-  python update_postgres.py --loglevel INFO --parallelism "$jobs" "$del_prior" "$override" "$tmp_dir/postgres"
+  python update_postgres.py --loglevel INFO --parallelism "$jobs" "$preserve_ram" "$del_prior" "$override" "$tmp_dir/postgres"
 
   cd "$tmp_dir"
   if [ "$del_prior" = "--skip-deletion" ]; then
