@@ -248,7 +248,7 @@ def flatten_publisher_partition(partition: Path | str,
                 'id_ror': publisher.ids.ror,
                 'id_wikidata': publisher.ids.wikidata,
                 'hierarchy_level': publisher.hierarchy_level,
-                'parent': strip_id(publisher.parent_publisher),
+                'parent': strip_id(publisher.parent_publisher.id),
                 'lineage': prepare_list(publisher.lineage, strip=True),
                 'created_date': publisher.created_date,
                 'updated_date': publisher.updated_date
