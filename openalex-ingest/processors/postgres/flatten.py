@@ -29,7 +29,7 @@ def run(func, params, parallelism: int):
             func(kwargs)
     else:
         with multiprocessing.Pool(parallelism) as pool:
-            pool.apply(func, picklify(params))
+            pool.map_async(func, picklify(params))
 
 
 def name_part(partition: Path):
