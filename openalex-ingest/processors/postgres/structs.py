@@ -280,7 +280,7 @@ class Author(Struct, kw_only=True, omit_defaults=True):
     display_name_alternatives: list[str] | None = None
     id: str | None = None
     ids: AuthorIds | None = None
-    last_known_institution: list[DehydratedInstitution] | None = None
+    last_known_institution: DehydratedInstitution | None = None
     orcid: str | None = None
     summary_stats: SummaryStats | None = None
     updated_date: str | None = None

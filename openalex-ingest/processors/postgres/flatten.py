@@ -50,8 +50,7 @@ def flatten_authors(tmp_dir: Path, parallelism: int = 8, skip_deletion: bool = F
                 'partition': partition,
                 'out_sql_cpy': tmp_dir / f'pg-author-{name_part(partition)}-cpy.sql',
                 'out_sql_del': tmp_dir / f'pg-author-{name_part(partition)}-del.sql',
-                'out_authors': tmp_dir / f'pg-author-{name_part(partition)}_authors.csv.gz',
-                'out_m2m_institution': tmp_dir / f'pg-author-{name_part(partition)}_author_institutions.csv.gz'
+                'out_authors': tmp_dir / f'pg-author-{name_part(partition)}_authors.csv.gz'
             }
             for partition in authors
         ], parallelism=parallelism)

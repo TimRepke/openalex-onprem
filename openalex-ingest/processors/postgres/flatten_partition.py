@@ -41,17 +41,14 @@ def get_writer(buffer: TextIO, fields: list[str]) -> csv.DictWriter:
 def flatten_authors_partition(partition: Path | str,
                               out_sql_cpy: Path | str,
                               out_sql_del: Path | str,
-                              out_authors: Path | str,
-                              out_m2m_institution: Path | str):
+                              out_authors: Path | str):
     logging.info(f'Flattening partition file {partition}')
     partition: Path = Path(partition)
     out_sql_cpy: Path = Path(out_sql_cpy)
     out_sql_del: Path = Path(out_sql_del)
     out_authors: Path = Path(out_authors)
-    out_m2m_institution: Path = Path(out_m2m_institution)
 
     with (gzip.open(out_authors, 'wt', encoding='utf-8') as f_authors,
-          gzip.open(out_m2m_institution, 'wt', encoding='utf-8') as f_m2m,
           open(out_sql_del, 'w') as f_sql_del,
           open(out_sql_cpy, 'w') as f_sql_cpy,
           gzip.open(partition, 'rb') as f_in):
@@ -60,7 +57,6 @@ def flatten_authors_partition(partition: Path | str,
                                                 'display_name', 'display_name_alternatives',
                                                 'id_mag', 'id_orcid', 'id_scopus', 'id_twitter', 'id_wikipedia',
                                                 'created_date', 'updated_date'])
-        writer_m2m = get_writer(f_m2m, ['author_id', 'institution_id'])
 
         decoder = Decoder(structs.Author)
 
@@ -81,6 +77,7 @@ def flatten_authors_partition(partition: Path | str,
                 'i10_index': author.summary_stats.i10_index,
                 'display_name': author.display_name,
                 'display_name_alternatives': prepare_list(author.display_name_alternatives),
+                'last_known_institution': strip_id(author.last_known_institution),
                 'id_mag': author.ids.mag,
                 'id_orcid': author.ids.orcid,
                 'id_scopus': author.ids.scopus,
@@ -89,12 +86,6 @@ def flatten_authors_partition(partition: Path | str,
                 'created_date': author.created_date,
                 'updated_date': author.updated_date
             })
-
-            for institution in author.last_known_institution:
-                writer_m2m.writerow({
-                    'author_id': aid,
-                    'institution_id': institution.id[21:]
-                })
 
         for del_row in generate_deletions(ids=author_ids, object_type='author', batch_size=1000):
             f_sql_del.write(del_row + '\n')
