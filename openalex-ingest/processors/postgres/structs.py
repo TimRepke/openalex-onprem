@@ -12,7 +12,7 @@ class FunderIds(Struct, kw_only=True, omit_defaults=True):
     openalex: str | None = None
     ror: str | None = None
     wikidata: str | None = None
-    crossref: str | None = None
+    crossref: str | int | None = None
     doi: str | None = None
 
 
