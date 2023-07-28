@@ -9,6 +9,7 @@ from shared.config import settings
 
 
 def update_postgres(tmp_dir: Path,  # Directory where we can write temporary parsed partition files
+                    skip_deletion: bool=False,
                     parallelism: int = 8,
                     loglevel: str = 'INFO'):
     logging.basicConfig(format='%(asctime)s [%(levelname)s] %(name)s (%(process)d): %(message)s', level=loglevel)
@@ -19,19 +20,19 @@ def update_postgres(tmp_dir: Path,  # Directory where we can write temporary par
                  '   $ aws s3 sync "s3://openalex" "openalex-snapshot" --no-sign-request')
 
     logging.info('Flattening publishers')
-    flatten_publishers(tmp_dir=tmp_dir, parallelism=parallelism)
+    flatten_publishers(tmp_dir=tmp_dir, parallelism=parallelism, skip_deletion=skip_deletion)
     logging.info('Flattening sources')
-    flatten_sources(tmp_dir=tmp_dir, parallelism=parallelism)
+    flatten_sources(tmp_dir=tmp_dir, parallelism=parallelism, skip_deletion=skip_deletion)
     logging.info('Flattening institutions')
-    flatten_institutions(tmp_dir=tmp_dir, parallelism=parallelism)
+    flatten_institutions(tmp_dir=tmp_dir, parallelism=parallelism, skip_deletion=skip_deletion)
     logging.info('Flattening concepts')
-    flatten_concepts(tmp_dir=tmp_dir, parallelism=parallelism)
+    flatten_concepts(tmp_dir=tmp_dir, parallelism=parallelism, skip_deletion=skip_deletion)
     logging.info('Flattening funders')
-    flatten_funders(tmp_dir=tmp_dir, parallelism=parallelism)
+    flatten_funders(tmp_dir=tmp_dir, parallelism=parallelism, skip_deletion=skip_deletion)
     logging.info('Flattening authors')
-    flatten_authors(tmp_dir=tmp_dir, parallelism=parallelism)
+    flatten_authors(tmp_dir=tmp_dir, parallelism=parallelism, skip_deletion=skip_deletion)
     logging.info('Flattening works')
-    flatten_works(tmp_dir=tmp_dir, parallelism=parallelism)
+    flatten_works(tmp_dir=tmp_dir, parallelism=parallelism, skip_deletion=skip_deletion)
 
     logging.info('Postgres is up to date.')
     logging.warning(f'Remember to update the date in "{settings.last_update_file}"')
