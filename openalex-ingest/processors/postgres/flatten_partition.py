@@ -16,9 +16,9 @@ from shared.cyth.invert_index import invert
 def prepare_list(lst: list[str] | None, strip: bool = False) -> str | None:
     if lst is not None and len(lst) > 0:
         if strip:
-            s = ','.join([strip_id(li.replace(',', '')) for li in lst])
+            s = ','.join([strip_id(li.replace(',', '')) for li in lst if li is not None])
         else:
-            s = ','.join([li.replace(',', '') for li in lst])
+            s = ','.join([li.replace(',', '') for li in lst if li is not None])
         return '{' + s + '}'
     return None
 
