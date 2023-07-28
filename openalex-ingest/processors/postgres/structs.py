@@ -23,13 +23,13 @@ class Role(Struct, kw_only=True, omit_defaults=True):
 
 
 class SummaryStats(Struct, kw_only=True, omit_defaults=True):
-    yr_mean_citedness: float
+    yr_mean_citedness: float | None = None
     h_index: int | None = None
     i10_index: int | None = None
 
 
 class Funder(Struct, kw_only=True, omit_defaults=True):
-    alternate_titles: list[str]
+    alternate_titles: list[str] | None = None
     cited_by_count: int | None = None
     country_code: str | None = None
     counts_by_year: list[CountsByYear]
@@ -42,8 +42,8 @@ class Funder(Struct, kw_only=True, omit_defaults=True):
     ids: FunderIds
     image_thumbnail_url: str | None = None
     image_url: str | None = None
-    roles: list[Role]
-    summary_stats: SummaryStats
+    roles: list[Role] | None = None
+    summary_stats: SummaryStats | None = None
     updated_date: str | None = None
     works_count: int | None = None
 
@@ -55,22 +55,22 @@ class PublisherIds(Struct, kw_only=True, omit_defaults=True):
 
 
 class Publisher(Struct, kw_only=True, omit_defaults=True):
-    alternate_titles: list[str]
+    alternate_titles: list[str] | None = None
     cited_by_count: int | None = None
-    country_codes: list[str]
+    country_codes: list[str] | None = None
     counts_by_year: list[CountsByYear]
     created_date: str | None = None
     display_name: str | None = None
     hierarchy_level: int | None = None
     id: str | None = None
-    ids: PublisherIds
+    ids: PublisherIds | None = None
     image_thumbnail_url: str | None = None
     image_url: str | None = None
-    lineage: list[str]
+    lineage: list[str] | None = None
     parent_publisher: str | None = None
-    roles: list[Role]
+    roles: list[Role] | None = None
     sources_api_url: str | None = None
-    summary_stats: SummaryStats
+    summary_stats: SummaryStats | None = None
     updated_date: str | None = None
     works_count: int | None = None
 
@@ -93,27 +93,27 @@ class RatedDehydratedConcept(Struct, kw_only=True, omit_defaults=True):
 class ConceptIds(Struct, kw_only=True, omit_defaults=True):
     mag: int | None = None
     openalex: str | None = None
-    umls_cui: list[str]
-    umls_aui: list[str]
+    umls_cui: list[str] | None = None
+    umls_aui: list[str] | None = None
     wikidata: str | None = None
     wikipedia: str | None = None
 
 
 class Concept(Struct, kw_only=True, omit_defaults=True):
-    ancestors: list[DehydratedConcept]
+    ancestors: list[DehydratedConcept] | None = None
     cited_by_count: int | None = None
     counts_by_year: list[CountsByYear]
     created_date: str | None = None
     description: str | None = None
     display_name: str | None = None
     id: str | None = None
-    ids: ConceptIds
+    ids: ConceptIds | None = None
     image_thumbnail_url: str | None = None
     image_url: str | None = None
     # international
     level: int | None = None
-    related_concepts: list[RatedDehydratedConcept]
-    summary_stats: SummaryStats
+    related_concepts: list[RatedDehydratedConcept] | None = None
+    summary_stats: SummaryStats | None = None
     updated_date: str | None = None
     wikidata: str | None = None
     works_api_url: str | None = None
@@ -143,8 +143,8 @@ class Geo(Struct, kw_only=True, omit_defaults=True):
     region: str | None = None
     country_code: str | None = None
     country: str | None = None
-    latitude: float
-    longitude: float
+    latitude: float | None = None
+    longitude: float | None = None
 
 
 class InstitutionIds(Struct, kw_only=True, omit_defaults=True):
@@ -167,24 +167,24 @@ class Institution(Struct, kw_only=True, omit_defaults=True):
     counts_by_year: list[CountsByYear]
     created_date: str | None = None
     display_name: str | None = None
-    display_name_acronyms: list[str]
-    display_name_alternatives: list[str]
-    geo: Geo
+    display_name_acronyms: list[str] | None = None
+    display_name_alternatives: list[str] | None = None
+    geo: Geo | None = None
     homepage_url: str | None = None
     id: str | None = None
-    ids: InstitutionIds
+    ids: InstitutionIds | None = None
     image_thumbnail_url: str | None = None
     image_url: str | None = None
     # international
     # repositories
-    roles: list[Role]
+    roles: list[Role] | None = None
     ror: str | None = None
-    summary_stats: SummaryStats
+    summary_stats: SummaryStats | None = None
     type: InstitutionType | None = None
     updated_date: str | None = None
     works_api_url: str | None = None
     works_count: int | None = None
-    x_concepts: list[RatedDehydratedConcept]
+    x_concepts: list[RatedDehydratedConcept] | None = None
 
 
 class APCPrice(Struct, kw_only=True, omit_defaults=True):
@@ -194,7 +194,7 @@ class APCPrice(Struct, kw_only=True, omit_defaults=True):
 
 class SourceIds(Struct, kw_only=True, omit_defaults=True):
     fatcat: str | None = None
-    issn: list[str]
+    issn: list[str] | None = None
     issn_l: str | None = None
     mag: int | None = None
     openalex: str | None = None
@@ -224,31 +224,31 @@ class DehydratedSource(Struct, kw_only=True, omit_defaults=True):
 
 class Source(Struct, kw_only=True, omit_defaults=True):
     abbreviated_title: str | None = None
-    alternate_titles: list[str]
-    apc_prices: list[APCPrice]
+    alternate_titles: list[str] | None = None
+    apc_prices: list[APCPrice] | None = None
     apc_usd: int | None = None
     cited_by_count: int | None = None
     country_code: str | None = None
-    counts_by_year: list[CountsByYear]
+    counts_by_year: list[CountsByYear] | None = None
     created_date: str | None = None
     display_name: str | None = None
     homepage_url: str | None = None
     host_organization: str | None = None
-    host_organization_lineage: list[str]
+    host_organization_lineage: list[str] | None = None
     host_organization_name: str | None = None
     id: str | None = None
-    ids: SourceIds
+    ids: SourceIds | None = None
     is_in_doaj: bool | None = None
     is_oa: bool | None = None
-    issn: list[str]
+    issn: list[str] | None = None
     issn_l: str | None = None
-    societies: list[Society]
-    summary_stats: SummaryStats
-    type: SourceType
+    societies: list[Society] | None = None
+    summary_stats: SummaryStats | None = None
+    type: SourceType | None = None
     updated_date: str | None = None
     works_api_url: str | None = None
     works_count: int | None = None
-    x_concepts: list[RatedDehydratedConcept]
+    x_concepts: list[RatedDehydratedConcept] | None = None
 
 
 class AuthorIds(Struct, kw_only=True, omit_defaults=True):
@@ -268,19 +268,19 @@ class DehydratedAuthor(Struct, kw_only=True, omit_defaults=True):
 
 class Author(Struct, kw_only=True, omit_defaults=True):
     cited_by_count: int | None = None
-    counts_by_year: list[CountsByYear]
+    counts_by_year: list[CountsByYear] | None = None
     created_date: str | None = None
     display_name: str | None = None
-    display_name_alternatives: list[str]
+    display_name_alternatives: list[str] | None = None
     id: str | None = None
-    ids: AuthorIds
-    last_known_institution: list[DehydratedInstitution]
+    ids: AuthorIds | None = None
+    last_known_institution: list[DehydratedInstitution] | None = None
     orcid: str | None = None
-    summary_stats: SummaryStats
+    summary_stats: SummaryStats | None = None
     updated_date: str | None = None
     works_api_url: str | None = None
     works_count: int | None = None
-    x_concepts: RatedDehydratedConcept
+    x_concepts: RatedDehydratedConcept | None = None
 
 
 class Location(Struct, omit_defaults=True, kw_only=True):
@@ -358,7 +358,7 @@ class OpenAccess(Struct, kw_only=True, omit_defaults=True):
 
 class Work(Struct, kw_only=True, omit_defaults=True):
     abstract_inverted_index: str | None = None
-    authorships: list[Authorship]
+    authorships: list[Authorship] | None = None
     apc_list: list[APC] | None = None
     apc_paid: APC | None = None
     best_oa_location: Location | None = None
