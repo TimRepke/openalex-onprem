@@ -45,15 +45,6 @@ CREATE TABLE openalex.authors
     updated_date              timestamp without time zone
 );
 
-CREATE TABLE openalex.authors_institutions
-(
-    author_id      text NOT NULL,
-    institution_id text NOT NULL,
-
-    PRIMARY KEY (author_id, institution_id)
-);
-
-
 CREATE TABLE openalex.institutions
 (
     id                        text NOT NULL PRIMARY KEY,
