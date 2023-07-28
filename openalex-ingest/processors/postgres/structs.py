@@ -140,7 +140,7 @@ class RelatedDehydratedInstitution(Struct, kw_only=True, omit_defaults=True):
     id: str | None = None
     ror: str | None = None
     type: str | None = None
-    relationship: Literal['parent', 'child', 'related']
+    relationship: Literal['parent', 'child', 'related', 'other']
 
 
 class Geo(Struct, kw_only=True, omit_defaults=True):
