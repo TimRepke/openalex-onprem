@@ -286,7 +286,7 @@ class Author(Struct, kw_only=True, omit_defaults=True):
     updated_date: str | None = None
     works_api_url: str | None = None
     works_count: int | None = None
-    x_concepts: RatedDehydratedConcept | None = None
+    x_concepts: list[RatedDehydratedConcept] | None = None
 
 
 class Location(Struct, omit_defaults=True, kw_only=True):
