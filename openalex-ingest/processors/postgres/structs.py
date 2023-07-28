@@ -54,6 +54,10 @@ class PublisherIds(Struct, kw_only=True, omit_defaults=True):
     wikidata: str | None = None
 
 
+class ParentPublisher(Struct, kw_only=True, omit_defaults=True):
+    id: str | None = None
+
+
 class Publisher(Struct, kw_only=True, omit_defaults=True):
     alternate_titles: list[str] | None = None
     cited_by_count: int | None = None
@@ -67,7 +71,9 @@ class Publisher(Struct, kw_only=True, omit_defaults=True):
     image_thumbnail_url: str | None = None
     image_url: str | None = None
     lineage: list[str] | None = None
-    parent_publisher: str | None = None
+    # documentation says its a string
+    # parent_publisher: str | None = None
+    parent_publisher: ParentPublisher | None = None
     roles: list[Role] | None = None
     sources_api_url: str | None = None
     summary_stats: SummaryStats | None = None
