@@ -58,7 +58,7 @@ class Publisher(Struct, kw_only=True, omit_defaults=True):
     alternate_titles: list[str]
     cited_by_count: int | None = None
     country_codes: list[str]
-    counts_by_year: CountsByYear
+    counts_by_year: list[CountsByYear]
     created_date: str | None = None
     display_name: str | None = None
     hierarchy_level: int | None = None
@@ -102,7 +102,7 @@ class ConceptIds(Struct, kw_only=True, omit_defaults=True):
 class Concept(Struct, kw_only=True, omit_defaults=True):
     ancestors: list[DehydratedConcept]
     cited_by_count: int | None = None
-    counts_by_year: CountsByYear
+    counts_by_year: list[CountsByYear]
     created_date: str | None = None
     description: str | None = None
     display_name: str | None = None
@@ -164,7 +164,7 @@ class Institution(Struct, kw_only=True, omit_defaults=True):
     associated_institutions: list[RelatedDehydratedInstitution]
     cited_by_count: int | None = None
     country_code: str | None = None
-    counts_by_year: CountsByYear
+    counts_by_year: list[CountsByYear]
     created_date: str | None = None
     display_name: str | None = None
     display_name_acronyms: list[str]
@@ -229,7 +229,7 @@ class Source(Struct, kw_only=True, omit_defaults=True):
     apc_usd: int | None = None
     cited_by_count: int | None = None
     country_code: str | None = None
-    counts_by_year: CountsByYear
+    counts_by_year: list[CountsByYear]
     created_date: str | None = None
     display_name: str | None = None
     homepage_url: str | None = None
@@ -268,7 +268,7 @@ class DehydratedAuthor(Struct, kw_only=True, omit_defaults=True):
 
 class Author(Struct, kw_only=True, omit_defaults=True):
     cited_by_count: int | None = None
-    counts_by_year: CountsByYear
+    counts_by_year: list[CountsByYear]
     created_date: str | None = None
     display_name: str | None = None
     display_name_alternatives: list[str]
