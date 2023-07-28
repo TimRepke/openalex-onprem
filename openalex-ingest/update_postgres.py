@@ -21,6 +21,10 @@ def update_postgres(tmp_dir: Path,  # Directory where we can write temporary par
 
     (tmp_dir / 'postgres').mkdir(parents=True, exist_ok=True)
 
+    logging.info('Flattening works')
+    flatten_works(tmp_dir=tmp_dir, parallelism=parallelism, skip_deletion=skip_deletion)
+    logging.info('Flattening authors')
+    flatten_authors(tmp_dir=tmp_dir, parallelism=parallelism, skip_deletion=skip_deletion)
     logging.info('Flattening publishers')
     flatten_publishers(tmp_dir=tmp_dir, parallelism=parallelism, skip_deletion=skip_deletion)
     logging.info('Flattening sources')
@@ -31,11 +35,6 @@ def update_postgres(tmp_dir: Path,  # Directory where we can write temporary par
     flatten_concepts(tmp_dir=tmp_dir, parallelism=parallelism, skip_deletion=skip_deletion)
     logging.info('Flattening funders')
     flatten_funders(tmp_dir=tmp_dir, parallelism=parallelism, skip_deletion=skip_deletion)
-    logging.info('Flattening authors')
-    flatten_authors(tmp_dir=tmp_dir, parallelism=parallelism, skip_deletion=skip_deletion)
-    logging.info('Flattening works')
-    flatten_works(tmp_dir=tmp_dir, parallelism=parallelism, skip_deletion=skip_deletion)
-
     logging.info('Postgres is up to date.')
     logging.warning(f'Remember to update the date in "{settings.last_update_file}"')
 

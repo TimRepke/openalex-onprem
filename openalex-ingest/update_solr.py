@@ -9,6 +9,11 @@ from shared.util import get_globs, get_ids_to_delete, batched
 from processors.solr.transform_partition import transform_partition
 
 
+def name_part(partition: Path):
+    update = str(partition.parent.name).replace('updated_date=', '')
+    return f'{update}-{partition.stem}'
+
+
 def update_solr(tmp_dir: Path,  # Directory where we can write temporary parsed partition files
                 skip_deletion: bool = False,
                 loglevel: str = 'INFO'):
@@ -25,7 +30,7 @@ def update_solr(tmp_dir: Path,  # Directory where we can write temporary parsed 
                  f'and {len(merged)} merged_ids partitions since last update.')
 
     for partition in works:
-        out_file = tmp_dir / f'solr-{partition.parent.name}-{partition.stem}.json'
+        out_file = tmp_dir / f'solr-{name_part(partition)}.json'
         out_file.parent.mkdir(exist_ok=True, parents=True)
 
         logging.debug(f'Reading partition from "{partition}" and writing to "{out_file}"')

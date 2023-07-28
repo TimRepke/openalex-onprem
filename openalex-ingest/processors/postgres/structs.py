@@ -359,7 +359,7 @@ class OpenAccess(Struct, kw_only=True, omit_defaults=True):
     oa_status: OAStatus | None = None
     oa_url: str | None = None
     any_repository_has_fulltext: bool | None = None
-    is_oa: str | None = None
+    is_oa: bool | None = None
 
 
 class Work(Struct, kw_only=True, omit_defaults=True):
