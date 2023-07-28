@@ -26,7 +26,7 @@ usage() {
  echo " -h, --help      Display this help message"
 }
 
-if [ $# -lt 2 ]; then
+if [ $# -lt 1 ]; then
   usage
 fi
 
