@@ -16,6 +16,14 @@ def run(func, params, parallelism: int):
         for kwargs in params:
             func(**kwargs)
     else:
+        params = [
+            {
+                # Path cannot be pickled, so stringify them
+                k: (str(v) if isinstance(v, Path) else v)
+                for k, v in p.items()
+            }
+            for p in params
+        ]
         with multiprocessing.Pool(parallelism) as pool:
             pool.apply(lambda kwargs: func(**kwargs), params)
 

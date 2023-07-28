@@ -38,12 +38,18 @@ def get_writer(buffer: TextIO, fields: list[str]) -> csv.DictWriter:
     return writer
 
 
-def flatten_authors_partition(partition: Path,
-                              out_sql_cpy: Path,
-                              out_sql_del: Path,
-                              out_authors: Path,
-                              out_m2m_institution: Path):
+def flatten_authors_partition(partition: Path | str,
+                              out_sql_cpy: Path | str,
+                              out_sql_del: Path | str,
+                              out_authors: Path | str,
+                              out_m2m_institution: Path | str):
     logging.info(f'Flattening partition file {partition}')
+    partition: Path = Path(partition)
+    out_sql_cpy: Path = Path(out_sql_cpy)
+    out_sql_del: Path = Path(out_sql_del)
+    out_authors: Path = Path(out_authors)
+    out_m2m_institution: Path = Path(out_m2m_institution)
+
     with (gzip.open(out_authors, 'wt', encoding='utf-8') as f_authors,
           gzip.open(out_m2m_institution, 'wt', encoding='utf-8') as f_m2m,
           open(out_sql_del, 'w') as f_sql_del,
@@ -101,13 +107,20 @@ def flatten_authors_partition(partition: Path,
         logging.info(f'Flattened {n_authors} authors in {partition}')
 
 
-def flatten_institutions_partition(partition: Path,
-                                   out_sql_cpy: Path,
-                                   out_sql_del: Path,
-                                   out_institutions: Path,
-                                   out_m2m_association: Path,
-                                   out_m2m_concepts: Path):
+def flatten_institutions_partition(partition: Path | str,
+                                   out_sql_cpy: Path | str,
+                                   out_sql_del: Path | str,
+                                   out_institutions: Path | str,
+                                   out_m2m_association: Path | str,
+                                   out_m2m_concepts: Path | str):
     logging.info(f'Flattening partition file {partition}')
+    partition: Path = Path(partition)
+    out_sql_cpy: Path = Path(out_sql_cpy)
+    out_sql_del: Path = Path(out_sql_del)
+    out_institutions: Path = Path(out_institutions)
+    out_m2m_association: Path = Path(out_m2m_association)
+    out_m2m_concepts: Path = Path(out_m2m_concepts)
+
     with (gzip.open(out_institutions, 'wt', encoding='utf-8') as f_inst,
           gzip.open(out_m2m_association, 'wt', encoding='utf-8') as f_m2m_ass,
           gzip.open(out_m2m_concepts, 'wt', encoding='utf-8') as f_m2m_con,
@@ -189,11 +202,16 @@ def flatten_institutions_partition(partition: Path,
         logging.info(f'Flattened {n_institutions} institutions in {partition}')
 
 
-def flatten_publisher_partition(partition: Path,
-                                out_sql_cpy: Path,
-                                out_sql_del: Path,
-                                out_publishers: Path):
+def flatten_publisher_partition(partition: Path | str,
+                                out_sql_cpy: Path | str,
+                                out_sql_del: Path | str,
+                                out_publishers: Path | str):
     logging.info(f'Flattening partition file {partition}')
+    partition: Path = Path(partition)
+    out_sql_cpy: Path = Path(out_sql_cpy)
+    out_sql_del: Path = Path(out_sql_del)
+    out_publishers: Path = Path(out_publishers)
+
     with (gzip.open(out_publishers, 'wt', encoding='utf-8') as f_pub,
           open(out_sql_del, 'w') as f_sql_del,
           open(out_sql_cpy, 'w') as f_sql_cpy,
@@ -245,11 +263,16 @@ def flatten_publisher_partition(partition: Path,
         logging.info(f'Flattened {n_pubs} publishers in {partition}')
 
 
-def flatten_funder_partition(partition: Path,
-                             out_sql_cpy: Path,
-                             out_sql_del: Path,
-                             out_funders: Path):
+def flatten_funder_partition(partition: Path | str,
+                             out_sql_cpy: Path | str,
+                             out_sql_del: Path | str,
+                             out_funders: Path | str):
     logging.info(f'Flattening partition file {partition}')
+    partition: Path = Path(partition)
+    out_sql_cpy: Path = Path(out_sql_cpy)
+    out_sql_del: Path = Path(out_sql_del)
+    out_funders: Path = Path(out_funders)
+
     with (gzip.open(out_funders, 'wt', encoding='utf-8') as f_funders,
           open(out_sql_del, 'w') as f_sql_del,
           open(out_sql_cpy, 'w') as f_sql_cpy,
@@ -301,25 +324,32 @@ def flatten_funder_partition(partition: Path,
         logging.info(f'Flattened {n_funders} funders in {partition}')
 
 
-def flatten_concept_partition(partition: Path,
-                              out_sql_cpy: Path,
-                              out_sql_del: Path,
-                              out_concepts: Path,
-                              out_m2m_ancestor: Path,
-                              out_m2m_related: Path):
+def flatten_concept_partition(partition: Path | str,
+                              out_sql_cpy: Path | str,
+                              out_sql_del: Path | str,
+                              out_concepts: Path | str,
+                              out_m2m_ancestor: Path | str,
+                              out_m2m_related: Path | str):
     logging.info(f'Flattening partition file {partition}')
+    partition: Path = Path(partition)
+    out_sql_cpy: Path = Path(out_sql_cpy)
+    out_sql_del: Path = Path(out_sql_del)
+    out_concepts: Path = Path(out_concepts)
+    out_m2m_ancestor: Path = Path(out_m2m_ancestor)
+    out_m2m_related: Path = Path(out_m2m_related)
+
     with (gzip.open(out_concepts, 'wt', encoding='utf-8') as f_concepts,
           gzip.open(out_m2m_related, 'wt', encoding='utf-8') as f_m2m_related,
           gzip.open(out_m2m_ancestor, 'wt', encoding='utf-8') as f_m2m_ancestor,
           open(out_sql_del, 'w') as f_sql_del,
           open(out_sql_cpy, 'w') as f_sql_cpy,
           gzip.open(partition, 'rb') as f_in):
-        writer_concepts = get_writer(f_concepts,['id',
-                                                     'cited_by_count', 'works_count', 'h_index', 'i10_index',
-                                                     'display_name', 'description', 'level',
-                                                     'id_mag', 'id_umls_cui', 'id_umls_aui',
-                                                     'id_wikidata', 'id_wikipedia',
-                                                     'created_date', 'updated_date'])
+        writer_concepts = get_writer(f_concepts, ['id',
+                                                  'cited_by_count', 'works_count', 'h_index', 'i10_index',
+                                                  'display_name', 'description', 'level',
+                                                  'id_mag', 'id_umls_cui', 'id_umls_aui',
+                                                  'id_wikidata', 'id_wikipedia',
+                                                  'created_date', 'updated_date'])
         writer_m2m_related = get_writer(f_m2m_related, ['concept_a_id', 'concept_b_id', 'score'])
         writer_m2m_ancestor = get_writer(f_m2m_ancestor, ['concept_a_id', 'concept_b_id'])
 
@@ -377,11 +407,16 @@ def flatten_concept_partition(partition: Path,
         logging.info(f'Flattened {n_concepts} concepts in {partition}')
 
 
-def flatten_sources_partition(partition: Path,
-                              out_sql_cpy: Path,
-                              out_sql_del: Path,
-                              out_sources: Path):
+def flatten_sources_partition(partition: Path | str,
+                              out_sql_cpy: Path | str,
+                              out_sql_del: Path | str,
+                              out_sources: Path | str):
     logging.info(f'Flattening partition file {partition}')
+    partition: Path = Path(partition)
+    out_sql_cpy: Path = Path(out_sql_cpy)
+    out_sql_del: Path = Path(out_sql_del)
+    out_sources: Path = Path(out_sources)
+
     with (gzip.open(out_sources, 'wt', encoding='utf-8') as f_sources,
           open(out_sql_del, 'w') as f_sql_del,
           open(out_sql_cpy, 'w') as f_sql_cpy,
@@ -451,16 +486,26 @@ def flatten_sources_partition(partition: Path,
         logging.info(f'Flattened {n_sources} sources in {partition}')
 
 
-def flatten_works_partition(partition: Path,
-                            out_sql_cpy: Path,
-                            out_sql_del: Path,
-                            out_works: Path,
-                            out_m2m_locations: Path,
-                            out_m2m_concepts: Path,
-                            out_m2m_authorships: Path,
-                            out_m2m_references: Path,
-                            out_m2m_related: Path):
+def flatten_works_partition(partition: Path | str,
+                            out_sql_cpy: Path | str,
+                            out_sql_del: Path | str,
+                            out_works: Path | str,
+                            out_m2m_locations: Path | str,
+                            out_m2m_concepts: Path | str,
+                            out_m2m_authorships: Path | str,
+                            out_m2m_references: Path | str,
+                            out_m2m_related: Path | str):
     logging.info(f'Flattening partition file {partition}')
+    partition: Path = Path(partition)
+    out_sql_cpy: Path = Path(out_sql_cpy)
+    out_sql_del: Path = Path(out_sql_del)
+    out_works: Path = Path(out_works)
+    out_m2m_locations: Path = Path(out_m2m_locations)
+    out_m2m_concepts: Path = Path(out_m2m_concepts)
+    out_m2m_authorships: Path = Path(out_m2m_authorships)
+    out_m2m_references: Path = Path(out_m2m_references)
+    out_m2m_related: Path = Path(out_m2m_related)
+
     with (gzip.open(out_works, 'wt', encoding='utf-8') as f_works,
           gzip.open(out_m2m_locations, 'wt', encoding='utf-8') as f_locations,
           gzip.open(out_m2m_concepts, 'wt', encoding='utf-8') as f_concepts,
