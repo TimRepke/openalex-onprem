@@ -12,6 +12,7 @@
 *.env
 
 tmp.py
+tmp.md
 # Local Directories #
 #####################
 

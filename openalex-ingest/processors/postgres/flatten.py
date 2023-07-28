@@ -42,8 +42,8 @@ def name_part(partition: Path):
 def flatten_authors(tmp_dir: Path, parallelism: int = 8, skip_deletion: bool = False):
     authors, merged_authors = get_globs(settings.snapshot, settings.last_update, 'author')
 
-    logging.info(f'Looks like there are {len(authors)} author partitions '
-                 f'and {len(merged_authors)} merged_ids partitions since last update.')
+    logging.info(f'Looks like there are {len(authors):,} author partitions '
+                 f'and {len(merged_authors):,} merged_ids partitions since last update.')
     run(flatten_authors_partition_kw,
         [
             {
@@ -63,8 +63,8 @@ def flatten_authors(tmp_dir: Path, parallelism: int = 8, skip_deletion: bool = F
 
 def flatten_institutions(tmp_dir: Path, parallelism: int = 8, skip_deletion: bool = False):
     partitions, merged = get_globs(settings.snapshot, settings.last_update, 'institution')
-    logging.info(f'Looks like there are {len(partitions)} institution partitions '
-                 f'and {len(merged)} merged_ids partitions since last update.')
+    logging.info(f'Looks like there are {len(partitions):,} institution partitions '
+                 f'and {len(merged):,} merged_ids partitions since last update.')
     run(flatten_institutions_partition_kw,
         [
             {
@@ -87,8 +87,8 @@ def flatten_institutions(tmp_dir: Path, parallelism: int = 8, skip_deletion: boo
 
 def flatten_publishers(tmp_dir: Path, parallelism: int = 8, skip_deletion: bool = False):
     partitions, merged = get_globs(settings.snapshot, settings.last_update, 'publisher')
-    logging.info(f'Looks like there are {len(partitions)} publisher partitions '
-                 f'and {len(merged)} merged_ids partitions since last update.')
+    logging.info(f'Looks like there are {len(partitions):,} publisher partitions '
+                 f'and {len(merged):,} merged_ids partitions since last update.')
     run(flatten_publisher_partition_kw, [
         {
             'partition': partition,
@@ -108,8 +108,8 @@ def flatten_publishers(tmp_dir: Path, parallelism: int = 8, skip_deletion: bool 
 
 def flatten_funders(tmp_dir: Path, parallelism: int = 8, skip_deletion: bool = False):
     partitions, merged = get_globs(settings.snapshot, settings.last_update, 'funder')
-    logging.info(f'Looks like there are {len(partitions)} funder partitions '
-                 f'and {len(merged)} merged_ids partitions since last update.')
+    logging.info(f'Looks like there are {len(partitions):,} funder partitions '
+                 f'and {len(merged):,} merged_ids partitions since last update.')
     run(flatten_funder_partition_kw,
         [
             {
@@ -130,8 +130,8 @@ def flatten_funders(tmp_dir: Path, parallelism: int = 8, skip_deletion: bool = F
 
 def flatten_concepts(tmp_dir: Path, parallelism: int = 8, skip_deletion: bool = False):
     partitions, merged = get_globs(settings.snapshot, settings.last_update, 'concept')
-    logging.info(f'Looks like there are {len(partitions)} concepts partitions '
-                 f'and {len(merged)} merged_ids partitions since last update.')
+    logging.info(f'Looks like there are {len(partitions):,} concepts partitions '
+                 f'and {len(merged):,} merged_ids partitions since last update.')
     run(flatten_concept_partition_kw,
         [
             {
@@ -154,8 +154,8 @@ def flatten_concepts(tmp_dir: Path, parallelism: int = 8, skip_deletion: bool = 
 
 def flatten_sources(tmp_dir: Path, parallelism: int = 8, skip_deletion: bool = False):
     partitions, merged = get_globs(settings.snapshot, settings.last_update, 'source')
-    logging.info(f'Looks like there are {len(partitions)} source partitions '
-                 f'and {len(merged)} merged_ids partitions since last update.')
+    logging.info(f'Looks like there are {len(partitions):,} source partitions '
+                 f'and {len(merged):,} merged_ids partitions since last update.')
     run(flatten_sources_partition_kw,
         [
             {
@@ -176,8 +176,8 @@ def flatten_sources(tmp_dir: Path, parallelism: int = 8, skip_deletion: bool = F
 
 def flatten_works(tmp_dir: Path, parallelism: int = 8, skip_deletion: bool = False):
     partitions, merged = get_globs(settings.snapshot, settings.last_update, 'work')
-    logging.info(f'Looks like there are {len(partitions)} works partitions '
-                 f'and {len(merged)} merged_ids partitions since last update.')
+    logging.info(f'Looks like there are {len(partitions):,} works partitions '
+                 f'and {len(merged):,} merged_ids partitions since last update.')
     run(flatten_works_partition_kw,
         [
             {

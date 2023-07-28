@@ -311,7 +311,7 @@ def flatten_funder_partition(partition: Path | str,
         f_sql_cpy.write(f"COPY {settings.pg_schema}.funders "
                         f"FROM PROGRAM 'gunzip -c {out_funders.absolute()}' csv header;\n\n")
 
-        logging.info(f'Flattened {n_funders} funders in {partition}')
+        logging.info(f'Flattened {n_funders:,} funders in {partition}')
 
 
 def flatten_concept_partition(partition: Path | str,
