@@ -25,11 +25,15 @@ table_map: dict[ObjectType, list[str]] = {
 }
 
 
+def filter_none(lst):
+    return [l for l in lst if l is not None]
+
+
 def generate_deletions(ids: list[str],
                        object_type: ObjectType,
                        batch_size: int = 1000):
     for del_batch in batched(ids, batch_size):
-        id_lst = "','".join(del_batch)
+        id_lst = "','".join(filter_none(del_batch))
         for table, key in table_map[object_type]:
             yield f"DELETE FROM {settings.pg_schema}.{table} t WHERE t.{key} IN ('{id_lst}');"
 
@@ -41,6 +45,6 @@ def generate_deletions_from_merge_file(merge_files: list[Path],
     out_file.parent.mkdir(exist_ok=True, parents=True)
     with open(out_file, 'w') as f:
         for del_batch in batched(get_ids_to_delete(merge_files), batch_size):
-            id_lst = "','".join(del_batch)
+            id_lst = "','".join(filter_none(del_batch))
             for table, key in table_map[object_type]:
                 f.write(f"DELETE FROM {settings.pg_schema}.{table} t WHERE t.{key} IN ('{id_lst}');\n")
