@@ -6,9 +6,10 @@ from shared.config import settings
 from shared.util import get_globs
 
 from processors.postgres.deletion import generate_deletions_from_merge_file
-from processors.postgres.flatten_partition import flatten_authors_partition, flatten_institutions_partition, \
-    flatten_funder_partition, flatten_concept_partition, flatten_works_partition, flatten_publisher_partition, \
-    flatten_sources_partition
+from processors.postgres.flatten_partition import flatten_authors_partition_kw, flatten_institutions_partition_kw, \
+    flatten_funder_partition_kw, flatten_concept_partition_kw, flatten_works_partition_kw, \
+    flatten_publisher_partition_kw, \
+    flatten_sources_partition_kw
 
 
 def picklify(params):
@@ -25,10 +26,10 @@ def picklify(params):
 def run(func, params, parallelism: int):
     if parallelism == 1:
         for kwargs in params:
-            func(**kwargs)
+            func(kwargs)
     else:
         with multiprocessing.Pool(parallelism) as pool:
-            pool.apply(lambda kwargs: func(**kwargs), picklify(params))
+            pool.apply(func, picklify(params))
 
 
 def name_part(partition: Path):
@@ -43,7 +44,7 @@ def flatten_authors(tmp_dir: Path, parallelism: int = 8, skip_deletion: bool = F
 
     logging.info(f'Looks like there are {len(authors)} author partitions '
                  f'and {len(merged_authors)} merged_ids partitions since last update.')
-    run(flatten_authors_partition,
+    run(flatten_authors_partition_kw,
         [
             {
                 'partition': partition,
@@ -65,7 +66,7 @@ def flatten_institutions(tmp_dir: Path, parallelism: int = 8, skip_deletion: boo
     partitions, merged = get_globs(settings.snapshot, settings.last_update, 'institution')
     logging.info(f'Looks like there are {len(partitions)} institution partitions '
                  f'and {len(merged)} merged_ids partitions since last update.')
-    run(flatten_institutions_partition,
+    run(flatten_institutions_partition_kw,
         [
             {
                 'partition': partition,
@@ -89,7 +90,7 @@ def flatten_publishers(tmp_dir: Path, parallelism: int = 8, skip_deletion: bool 
     partitions, merged = get_globs(settings.snapshot, settings.last_update, 'publisher')
     logging.info(f'Looks like there are {len(partitions)} publisher partitions '
                  f'and {len(merged)} merged_ids partitions since last update.')
-    params = picklify([
+    run(flatten_publisher_partition_kw, [
         {
             'partition': partition,
             'out_sql_cpy': tmp_dir / f'pg-publisher-{name_part(partition)}-cpy.sql',
@@ -97,13 +98,7 @@ def flatten_publishers(tmp_dir: Path, parallelism: int = 8, skip_deletion: bool 
             'out_publishers': tmp_dir / f'pg-publisher-{name_part(partition)}_publishers.csv.gz',
         }
         for partition in partitions
-    ])
-    if parallelism == 1:
-        for kwargs in params:
-            flatten_institutions_partition(**kwargs)
-    else:
-        with multiprocessing.Pool(parallelism) as pool:
-            pool.apply(lambda kwargs: flatten_institutions_partition(**kwargs), picklify(params))
+    ], parallelism=parallelism)
 
     if not skip_deletion:
         generate_deletions_from_merge_file(merge_files=merged,
@@ -116,7 +111,7 @@ def flatten_funders(tmp_dir: Path, parallelism: int = 8, skip_deletion: bool = F
     partitions, merged = get_globs(settings.snapshot, settings.last_update, 'funder')
     logging.info(f'Looks like there are {len(partitions)} funder partitions '
                  f'and {len(merged)} merged_ids partitions since last update.')
-    run(flatten_funder_partition,
+    run(flatten_funder_partition_kw,
         [
             {
                 'partition': partition,
@@ -138,7 +133,7 @@ def flatten_concepts(tmp_dir: Path, parallelism: int = 8, skip_deletion: bool = 
     partitions, merged = get_globs(settings.snapshot, settings.last_update, 'concept')
     logging.info(f'Looks like there are {len(partitions)} concepts partitions '
                  f'and {len(merged)} merged_ids partitions since last update.')
-    run(flatten_concept_partition,
+    run(flatten_concept_partition_kw,
         [
             {
                 'partition': partition,
@@ -162,7 +157,7 @@ def flatten_sources(tmp_dir: Path, parallelism: int = 8, skip_deletion: bool = F
     partitions, merged = get_globs(settings.snapshot, settings.last_update, 'source')
     logging.info(f'Looks like there are {len(partitions)} source partitions '
                  f'and {len(merged)} merged_ids partitions since last update.')
-    run(flatten_sources_partition,
+    run(flatten_sources_partition_kw,
         [
             {
                 'partition': partition,
@@ -184,7 +179,7 @@ def flatten_works(tmp_dir: Path, parallelism: int = 8, skip_deletion: bool = Fal
     partitions, merged = get_globs(settings.snapshot, settings.last_update, 'work')
     logging.info(f'Looks like there are {len(partitions)} works partitions '
                  f'and {len(merged)} merged_ids partitions since last update.')
-    run(flatten_works_partition,
+    run(flatten_works_partition_kw,
         [
             {
                 'partition': partition,

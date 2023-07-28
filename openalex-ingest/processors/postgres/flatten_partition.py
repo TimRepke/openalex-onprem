@@ -642,3 +642,31 @@ def flatten_works_partition(partition: Path | str,
                         f"FROM PROGRAM 'gunzip -c {out_m2m_related.absolute()}' csv header;\n\n")
 
     logging.info(f'Flattened {n_works} works with {n_abstracts} abstracts in {partition}')
+
+
+def flatten_authors_partition_kw(**kwargs):
+    return flatten_authors_partition(**kwargs)
+
+
+def flatten_institutions_partition_kw(**kwargs):
+    return flatten_institutions_partition(**kwargs)
+
+
+def flatten_publisher_partition_kw(**kwargs):
+    return flatten_publisher_partition(**kwargs)
+
+
+def flatten_funder_partition_kw(**kwargs):
+    return flatten_funder_partition(**kwargs)
+
+
+def flatten_concept_partition_kw(**kwargs):
+    return flatten_concept_partition(**kwargs)
+
+
+def flatten_sources_partition_kw(**kwargs):
+    return flatten_sources_partition(**kwargs)
+
+
+def flatten_works_partition_kw(**kwargs):
+    return flatten_works_partition(**kwargs)
