@@ -23,7 +23,19 @@ def picklify(params):
     ]
 
 
-def run(func, params, parallelism: int):
+def all_exist(kwargs: dict):
+    # check if all kwargs of type Path already exist as a non-empty file
+    return all([
+        value.exists() and value.stat().st_size > 100
+        for arg, value in kwargs.items()
+        if isinstance(value, Path) and arg != 'partition'
+    ])
+
+
+def run(func, params: list[dict], parallelism: int, override: bool):
+    if not override:
+        params = [kwargs for kwargs in params if not all_exist(kwargs)]
+
     if parallelism == 1:
         for kwargs in params:
             func(kwargs)
@@ -37,9 +49,7 @@ def name_part(partition: Path):
     return f'{update}-{partition.stem}'
 
 
-# FIXME: propagate fix deletion param
-
-def flatten_authors(tmp_dir: Path, parallelism: int = 8, skip_deletion: bool = False):
+def flatten_authors(tmp_dir: Path, parallelism: int = 8, skip_deletion: bool = False, override: bool = False):
     authors, merged_authors = get_globs(settings.snapshot, settings.last_update, 'author')
 
     logging.info(f'Looks like there are {len(authors):,} author partitions '
@@ -53,7 +63,7 @@ def flatten_authors(tmp_dir: Path, parallelism: int = 8, skip_deletion: bool = F
                 'out_authors': tmp_dir / f'pg-author-{name_part(partition)}_authors.csv.gz'
             }
             for partition in authors
-        ], parallelism=parallelism)
+        ], parallelism=parallelism, override=override)
     if not skip_deletion:
         generate_deletions_from_merge_file(merge_files=merged_authors,
                                            out_file=tmp_dir / f'pg-author-{settings.last_update}-merged_del.sql',
@@ -61,7 +71,8 @@ def flatten_authors(tmp_dir: Path, parallelism: int = 8, skip_deletion: bool = F
                                            batch_size=1000)
 
 
-def flatten_institutions(tmp_dir: Path, parallelism: int = 8, skip_deletion: bool = False):
+def flatten_institutions(tmp_dir: Path, parallelism: int = 8, skip_deletion: bool = False,
+                         override: bool = False):
     partitions, merged = get_globs(settings.snapshot, settings.last_update, 'institution')
     logging.info(f'Looks like there are {len(partitions):,} institution partitions '
                  f'and {len(merged):,} merged_ids partitions since last update.')
@@ -76,7 +87,7 @@ def flatten_institutions(tmp_dir: Path, parallelism: int = 8, skip_deletion: boo
                 'out_m2m_concepts': tmp_dir / f'pg-institution-{name_part(partition)}_institution_concepts.csv.gz'
             }
             for partition in partitions
-        ], parallelism=parallelism)
+        ], parallelism=parallelism, override=override)
 
     if not skip_deletion:
         generate_deletions_from_merge_file(merge_files=merged,
@@ -85,7 +96,7 @@ def flatten_institutions(tmp_dir: Path, parallelism: int = 8, skip_deletion: boo
                                            batch_size=1000)
 
 
-def flatten_publishers(tmp_dir: Path, parallelism: int = 8, skip_deletion: bool = False):
+def flatten_publishers(tmp_dir: Path, parallelism: int = 8, skip_deletion: bool = False, override: bool = False):
     partitions, merged = get_globs(settings.snapshot, settings.last_update, 'publisher')
     logging.info(f'Looks like there are {len(partitions):,} publisher partitions '
                  f'and {len(merged):,} merged_ids partitions since last update.')
@@ -97,7 +108,7 @@ def flatten_publishers(tmp_dir: Path, parallelism: int = 8, skip_deletion: bool 
             'out_publishers': tmp_dir / f'pg-publisher-{name_part(partition)}_publishers.csv.gz',
         }
         for partition in partitions
-    ], parallelism=parallelism)
+    ], parallelism=parallelism, override=override)
 
     if not skip_deletion:
         generate_deletions_from_merge_file(merge_files=merged,
@@ -106,7 +117,7 @@ def flatten_publishers(tmp_dir: Path, parallelism: int = 8, skip_deletion: bool 
                                            batch_size=1000)
 
 
-def flatten_funders(tmp_dir: Path, parallelism: int = 8, skip_deletion: bool = False):
+def flatten_funders(tmp_dir: Path, parallelism: int = 8, skip_deletion: bool = False, override: bool = False):
     partitions, merged = get_globs(settings.snapshot, settings.last_update, 'funder')
     logging.info(f'Looks like there are {len(partitions):,} funder partitions '
                  f'and {len(merged):,} merged_ids partitions since last update.')
@@ -119,7 +130,7 @@ def flatten_funders(tmp_dir: Path, parallelism: int = 8, skip_deletion: bool = F
                 'out_funders': tmp_dir / f'pg-funder-{name_part(partition)}_funders.csv.gz',
             }
             for partition in partitions
-        ], parallelism=parallelism)
+        ], parallelism=parallelism, override=override)
 
     if not skip_deletion:
         generate_deletions_from_merge_file(merge_files=merged,
@@ -128,7 +139,7 @@ def flatten_funders(tmp_dir: Path, parallelism: int = 8, skip_deletion: bool = F
                                            batch_size=1000)
 
 
-def flatten_concepts(tmp_dir: Path, parallelism: int = 8, skip_deletion: bool = False):
+def flatten_concepts(tmp_dir: Path, parallelism: int = 8, skip_deletion: bool = False, override: bool = False):
     partitions, merged = get_globs(settings.snapshot, settings.last_update, 'concept')
     logging.info(f'Looks like there are {len(partitions):,} concepts partitions '
                  f'and {len(merged):,} merged_ids partitions since last update.')
@@ -143,7 +154,7 @@ def flatten_concepts(tmp_dir: Path, parallelism: int = 8, skip_deletion: bool = 
                 'out_m2m_related': tmp_dir / f'pg-concept-{name_part(partition)}_concepts_related.csv.gz',
             }
             for partition in partitions
-        ], parallelism=parallelism)
+        ], parallelism=parallelism, override=override)
 
     if not skip_deletion:
         generate_deletions_from_merge_file(merge_files=merged,
@@ -152,7 +163,7 @@ def flatten_concepts(tmp_dir: Path, parallelism: int = 8, skip_deletion: bool = 
                                            batch_size=1000)
 
 
-def flatten_sources(tmp_dir: Path, parallelism: int = 8, skip_deletion: bool = False):
+def flatten_sources(tmp_dir: Path, parallelism: int = 8, skip_deletion: bool = False, override: bool = False):
     partitions, merged = get_globs(settings.snapshot, settings.last_update, 'source')
     logging.info(f'Looks like there are {len(partitions):,} source partitions '
                  f'and {len(merged):,} merged_ids partitions since last update.')
@@ -165,7 +176,7 @@ def flatten_sources(tmp_dir: Path, parallelism: int = 8, skip_deletion: bool = F
                 'out_sources': tmp_dir / f'pg-source-{name_part(partition)}_sources.csv.gz',
             }
             for partition in partitions
-        ], parallelism=parallelism)
+        ], parallelism=parallelism, override=override)
 
     if not skip_deletion:
         generate_deletions_from_merge_file(merge_files=merged,
@@ -174,7 +185,7 @@ def flatten_sources(tmp_dir: Path, parallelism: int = 8, skip_deletion: bool = F
                                            batch_size=1000)
 
 
-def flatten_works(tmp_dir: Path, parallelism: int = 8, skip_deletion: bool = False):
+def flatten_works(tmp_dir: Path, parallelism: int = 8, skip_deletion: bool = False, override: bool = False):
     partitions, merged = get_globs(settings.snapshot, settings.last_update, 'work')
     logging.info(f'Looks like there are {len(partitions):,} works partitions '
                  f'and {len(merged):,} merged_ids partitions since last update.')
@@ -192,7 +203,7 @@ def flatten_works(tmp_dir: Path, parallelism: int = 8, skip_deletion: bool = Fal
                 'out_m2m_related': tmp_dir / f'pg-work-{name_part(partition)}_works_related.csv.gz',
             }
             for partition in partitions
-        ], parallelism=parallelism)
+        ], parallelism=parallelism, override=override)
 
     if not skip_deletion:
         generate_deletions_from_merge_file(merge_files=merged,

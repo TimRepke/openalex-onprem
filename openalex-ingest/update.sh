@@ -9,6 +9,7 @@ compile=true
 update_solr=true
 update_pg=true
 cleanup=true
+override=""
 jobs=1
 del_prior=""
 
@@ -23,6 +24,7 @@ usage() {
  echo " --skip-pg       Skip update of postgres"
  echo " --skip-del      Skip deletion of existing data in db/solr"
  echo " --skip-clean    Skip deleting all temporary files"
+ echo " --override      Ignore existing flattened files and override them"
  echo " --jobs N        Number of processes for parallel processing"
  echo ""
  echo " -h, --help      Display this help message"
@@ -70,6 +72,9 @@ while [ $# -gt 0 ]; do
     --jobs)
       shift
       jobs=$1
+      ;;
+    --override)
+      override="--override"
       ;;
     *)
       echo "Invalid option: $1" >&2
@@ -128,7 +133,7 @@ fi
 
 if [ "$update_pg" = true ]; then
   echo "Updating PostgreSQL..."
-  python update_postgres.py "$del_prior" --loglevel INFO "$tmp_dir/postgres" --parallelism "$jobs"
+  python update_postgres.py "$del_prior" --loglevel INFO "$tmp_dir/postgres" --parallelism "$jobs" "$override"
 
   cd "$tmp_dir"
   if [ "$del_prior" = "--skip-deletion" ]; then

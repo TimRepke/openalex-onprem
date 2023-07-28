@@ -11,6 +11,7 @@ from shared.config import settings
 def update_postgres(tmp_dir: Path,  # Directory where we can write temporary parsed partition files
                     skip_deletion: bool = False,
                     parallelism: int = 8,
+                    override: bool = False,
                     loglevel: str = 'INFO'):
     logging.basicConfig(format='%(asctime)s [%(levelname)s] %(name)s (%(process)d): %(message)s', level=loglevel)
 
@@ -22,19 +23,26 @@ def update_postgres(tmp_dir: Path,  # Directory where we can write temporary par
     (tmp_dir / 'postgres').mkdir(parents=True, exist_ok=True)
 
     logging.info('Flattening works')
-    flatten_works(tmp_dir=tmp_dir, parallelism=parallelism, skip_deletion=skip_deletion)
+    flatten_works(tmp_dir=tmp_dir, parallelism=parallelism, skip_deletion=skip_deletion,
+                  override=override)
     logging.info('Flattening authors')
-    flatten_authors(tmp_dir=tmp_dir, parallelism=parallelism, skip_deletion=skip_deletion)
+    flatten_authors(tmp_dir=tmp_dir, parallelism=parallelism, skip_deletion=skip_deletion,
+                    override=override)
     logging.info('Flattening publishers')
-    flatten_publishers(tmp_dir=tmp_dir, parallelism=parallelism, skip_deletion=skip_deletion)
+    flatten_publishers(tmp_dir=tmp_dir, parallelism=parallelism, skip_deletion=skip_deletion,
+                       override=override)
     logging.info('Flattening sources')
-    flatten_sources(tmp_dir=tmp_dir, parallelism=parallelism, skip_deletion=skip_deletion)
+    flatten_sources(tmp_dir=tmp_dir, parallelism=parallelism, skip_deletion=skip_deletion,
+                    override=override)
     logging.info('Flattening institutions')
-    flatten_institutions(tmp_dir=tmp_dir, parallelism=parallelism, skip_deletion=skip_deletion)
+    flatten_institutions(tmp_dir=tmp_dir, parallelism=parallelism, skip_deletion=skip_deletion,
+                         override=override)
     logging.info('Flattening concepts')
-    flatten_concepts(tmp_dir=tmp_dir, parallelism=parallelism, skip_deletion=skip_deletion)
+    flatten_concepts(tmp_dir=tmp_dir, parallelism=parallelism, skip_deletion=skip_deletion,
+                     override=override)
     logging.info('Flattening funders')
-    flatten_funders(tmp_dir=tmp_dir, parallelism=parallelism, skip_deletion=skip_deletion)
+    flatten_funders(tmp_dir=tmp_dir, parallelism=parallelism, skip_deletion=skip_deletion,
+                    override=override)
     logging.info('Postgres is up to date.')
     logging.warning(f'Remember to update the date in "{settings.last_update_file}"')
 
