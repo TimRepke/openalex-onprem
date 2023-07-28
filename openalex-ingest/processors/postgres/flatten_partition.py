@@ -583,7 +583,7 @@ def flatten_works_partition(partition: Path | str,
                     institutions = [strip_id(i.id) for i in author.institutions]
                 writer_authorships.writerow({
                     'work_id': wid,
-                    'author_id': strip_id(author.author.id),
+                    'author_id': strip_id(author.author.id) if author.author is not None else None,
                     'position': author.author_position,
                     'institutions': prepare_list(institutions),
                     'raw_affiliation': author.raw_affiliation_string,
@@ -593,7 +593,7 @@ def flatten_works_partition(partition: Path | str,
                 for location in work.locations:
                     writer_locations.writerow({
                         'work_id': wid,
-                        'source_id': strip_id(location.source.id),
+                        'source_id': strip_id(location.source.id) if author.source is not None else None,
                         'is_oa': location.is_oa,
                         'landing_page_url': location.landing_page_url,
                         'license': location.license,
