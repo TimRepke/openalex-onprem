@@ -10,7 +10,7 @@ def get_globs(snapshot: Path,  # /path/to/openalex-snapshot
               obj_type: ObjectType = 'work') -> tuple[list[Path], list[Path]]:
     return (sorted([p
                     for p in snapshot.glob(f'data/{obj_type}s/**/*.gz')
-                    if p.parent.name > f'updated_date={filter_since}']),
+                    if p.parent.name > f'updated_date={filter_since}'], reverse=True),
             sorted([m
                     for m in snapshot.glob(f'data/merged_ids/{obj_type}s/*.csv.gz')
                     if m.name > f'{filter_since}.csv.gz']))
