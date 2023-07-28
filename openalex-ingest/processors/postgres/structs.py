@@ -162,7 +162,7 @@ class InstitutionIds(Struct, kw_only=True, omit_defaults=True):
     mag: int | None = None
 
 
-InstitutionType = Literal['Education', 'Healthcare', 'Company', 'Archive',
+InstitutionType = Literal['Education', 'Healthcare', 'Company', 'company', 'Archive',
 'Nonprofit', 'Government', 'Facility', 'Other']
 
 
