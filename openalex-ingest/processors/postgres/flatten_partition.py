@@ -593,7 +593,7 @@ def flatten_works_partition(partition: Path | str,
                 for location in work.locations:
                     writer_locations.writerow({
                         'work_id': wid,
-                        'source_id': strip_id(location.source.id) if author.source is not None else None,
+                        'source_id': strip_id(location.source.id) if location.source is not None else None,
                         'is_oa': location.is_oa,
                         'landing_page_url': location.landing_page_url,
                         'license': location.license,
