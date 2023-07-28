@@ -26,6 +26,10 @@ usage() {
  echo " -h, --help      Display this help message"
 }
 
+if [ $# -lt 2 ]; then
+  usage
+fi
+
 # Fetch first parameter, as this is the working directory
 tmp_dir=$1
 shift
