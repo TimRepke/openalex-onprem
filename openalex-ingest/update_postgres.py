@@ -9,7 +9,7 @@ from shared.config import settings
 
 
 def update_postgres(tmp_dir: Path,  # Directory where we can write temporary parsed partition files
-                    skip_deletion: bool=False,
+                    skip_deletion: bool = False,
                     parallelism: int = 8,
                     loglevel: str = 'INFO'):
     logging.basicConfig(format='%(asctime)s [%(levelname)s] %(name)s (%(process)d): %(message)s', level=loglevel)
@@ -18,6 +18,8 @@ def update_postgres(tmp_dir: Path,  # Directory where we can write temporary par
                  '   $ python setup.py build_ext --inplace')
     logging.info('Please ensure you synced the snapshot via\n'
                  '   $ aws s3 sync "s3://openalex" "openalex-snapshot" --no-sign-request')
+
+    (tmp_dir / 'postgres').mkdir(parents=True, exist_ok=True)
 
     logging.info('Flattening publishers')
     flatten_publishers(tmp_dir=tmp_dir, parallelism=parallelism, skip_deletion=skip_deletion)
