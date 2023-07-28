@@ -9,6 +9,7 @@ compile=true
 update_solr=true
 update_pg=true
 cleanup=true
+jobs=1
 del_prior=""
 
 # Function to display script usage
@@ -22,6 +23,7 @@ usage() {
  echo " --skip-pg       Skip update of postgres"
  echo " --skip-del      Skip deletion of existing data in db/solr"
  echo " --skip-clean    Skip deleting all temporary files"
+ echo " --jobs N        Number of processes for parallel processing"
  echo ""
  echo " -h, --help      Display this help message"
 }
@@ -64,6 +66,10 @@ while [ $# -gt 0 ]; do
       ;;
     --skip-clean)
       cleanup=false
+      ;;
+    --jobs)
+      shift
+      jobs=$1
       ;;
     *)
       echo "Invalid option: $1" >&2
@@ -122,7 +128,7 @@ fi
 
 if [ "$update_pg" = true ]; then
   echo "Updating PostgreSQL..."
-  python update_postgres.py "$del_prior" --loglevel INFO "$tmp_dir/postgres" --parallelism 8
+  python update_postgres.py "$del_prior" --loglevel INFO "$tmp_dir/postgres" --parallelism "$jobs"
 
   cd "$tmp_dir"
   if [ "$del_prior" = "--skip-deletion" ]; then
