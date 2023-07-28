@@ -6,6 +6,7 @@ from typing import TextIO
 
 from msgspec.json import Decoder
 from msgspec.msgpack import Encoder
+from msgspec import DecodeError
 
 from processors.postgres import structs
 from processors.postgres.deletion import generate_deletions
@@ -511,7 +512,7 @@ def flatten_works_partition(partition: Path | str,
             'volume', 'issue', 'first_page', 'last_page', 'primary_location', 'type', 'type_crossref',
             'id_doi', 'id_mag', 'id_pmid', 'id_pmcid',
             'is_oa', 'oa_status', 'oa_url', 'oa_any_repository_has_fulltext',
-            'apc_paid','apc_list', 'license', 'cited_by_count',
+            'apc_paid', 'apc_list', 'license', 'cited_by_count',
             'is_paratext', 'is_retracted', 'mesh', 'grants',
             'created_date', 'updated_date'])
         writer_authorships = get_writer(f_authorships, ['work_id', 'author_id', 'position', 'institutions',
@@ -537,10 +538,17 @@ def flatten_works_partition(partition: Path | str,
 
             abstract = None
             if work.abstract_inverted_index is not None:
-                ia = decoder_ia.decode(work.abstract_inverted_index)
-                n_abstracts += 1
-                inverted_abstract = ia.InvertedIndex
-                abstract = invert(inverted_abstract, ia.IndexLength)
+                try:
+                    ia = decoder_ia.decode(work.abstract_inverted_index)
+                    inverted_abstract = ia.InvertedIndex
+                    abstract = invert(inverted_abstract, ia.IndexLength)
+                    if len(abstract.strip()) > 0:
+                        n_abstracts += 1
+                    else:
+                        abstract = None
+                except DecodeError:
+                    logging.warning(f'Failed to read abstract for {wid} in {partition}')
+                    abstract = None
 
             writer_works.writerow({
                 'id': wid,
