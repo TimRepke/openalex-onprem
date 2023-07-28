@@ -121,14 +121,16 @@ if [ "$update_pg" = true ]; then
   python update_postgres.py "$del_prior" --loglevel INFO "$tmp_dir/postgres" --parallelism 8
 
   cd "$tmp_dir"
-  echo "Deleting merged objects"
-  psql -f postgres/*merged_del.sql
-  echo "Deleting existing new objects"
-  psql -f postgres/*-del.sql
+  if [ "$del_prior" = "--skip-deletion" ]; then
+    echo "Deleting merged objects"
+    psql -f postgres/*merged_del.sql
+    echo "Deleting existing new objects"
+    psql -f postgres/*-del.sql
+  fi
   echo "Import new or updated objects"
   psql -f postgres/*-cpy.sql
 
-  if [ "$update_solr" = true ]; then
+  if [ "$cleanup" = true ]; then
     echo "Deleting all temporary flattened files and scripts"
     rm -r "$tmp_dir/postgres"
   fi
