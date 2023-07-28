@@ -11,21 +11,24 @@ from processors.postgres.flatten_partition import flatten_authors_partition, fla
     flatten_sources_partition
 
 
+def picklify(params):
+    return [
+        {
+            # Path cannot be pickled, so stringify them
+            k: (str(v) if isinstance(v, Path) else v)
+            for k, v in p.items()
+        }
+        for p in params
+    ]
+
+
 def run(func, params, parallelism: int):
     if parallelism == 1:
         for kwargs in params:
             func(**kwargs)
     else:
-        params = [
-            {
-                # Path cannot be pickled, so stringify them
-                k: (str(v) if isinstance(v, Path) else v)
-                for k, v in p.items()
-            }
-            for p in params
-        ]
         with multiprocessing.Pool(parallelism) as pool:
-            pool.apply(lambda kwargs: func(**kwargs), params)
+            pool.apply(lambda kwargs: func(**kwargs), picklify(params))
 
 
 def name_part(partition: Path):
@@ -86,16 +89,21 @@ def flatten_publishers(tmp_dir: Path, parallelism: int = 8, skip_deletion: bool 
     partitions, merged = get_globs(settings.snapshot, settings.last_update, 'publisher')
     logging.info(f'Looks like there are {len(partitions)} publisher partitions '
                  f'and {len(merged)} merged_ids partitions since last update.')
-    run(flatten_institutions_partition,
-        [
-            {
-                'partition': partition,
-                'out_sql_cpy': tmp_dir / f'pg-publisher-{name_part(partition)}-cpy.sql',
-                'out_sql_del': tmp_dir / f'pg-publisher-{name_part(partition)}-del.sql',
-                'out_publishers': tmp_dir / f'pg-publisher-{name_part(partition)}_publishers.csv.gz',
-            }
-            for partition in partitions
-        ], parallelism=parallelism)
+    params = picklify([
+        {
+            'partition': partition,
+            'out_sql_cpy': tmp_dir / f'pg-publisher-{name_part(partition)}-cpy.sql',
+            'out_sql_del': tmp_dir / f'pg-publisher-{name_part(partition)}-del.sql',
+            'out_publishers': tmp_dir / f'pg-publisher-{name_part(partition)}_publishers.csv.gz',
+        }
+        for partition in partitions
+    ])
+    if parallelism == 1:
+        for kwargs in params:
+            flatten_institutions_partition(**kwargs)
+    else:
+        with multiprocessing.Pool(parallelism) as pool:
+            pool.apply(lambda kwargs: flatten_institutions_partition(**kwargs), picklify(params))
 
     if not skip_deletion:
         generate_deletions_from_merge_file(merge_files=merged,
