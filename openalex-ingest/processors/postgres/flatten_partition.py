@@ -189,7 +189,7 @@ def flatten_institutions_partition(partition: Path | str,
         f_sql_cpy.write(f"COPY {settings.pg_schema}.institutions_concepts "
                         f"FROM PROGRAM 'gunzip -c {out_m2m_concepts.absolute()}' csv header;\n\n")
 
-        logging.info(f'Flattened {n_institutions:,} institutions in {partition:,}')
+        logging.info(f'Flattened {n_institutions:,} institutions in {partition}')
 
 
 def flatten_publisher_partition(partition: Path | str,
@@ -250,7 +250,7 @@ def flatten_publisher_partition(partition: Path | str,
         f_sql_cpy.write(f"COPY {settings.pg_schema}.publishers "
                         f"FROM PROGRAM 'gunzip -c {out_publishers.absolute()}' csv header;\n\n")
 
-        logging.info(f'Flattened {n_pubs:,} publishers in {partition:,}')
+        logging.info(f'Flattened {n_pubs:,} publishers in {partition}')
 
 
 def flatten_funder_partition(partition: Path | str,
@@ -394,7 +394,7 @@ def flatten_concept_partition(partition: Path | str,
         f_sql_cpy.write(f"COPY {settings.pg_schema}.concepts_related "
                         f"FROM PROGRAM 'gunzip -c {out_m2m_related.absolute()}' csv header;\n\n")
 
-        logging.info(f'Flattened {n_concepts:,} concepts in {partition:,}')
+        logging.info(f'Flattened {n_concepts:,} concepts in {partition}')
 
 
 def flatten_sources_partition(partition: Path | str,
@@ -473,7 +473,7 @@ def flatten_sources_partition(partition: Path | str,
         f_sql_cpy.write(f"COPY {settings.pg_schema}.sources "
                         f"FROM PROGRAM 'gunzip -c {out_sources.absolute()}' csv header;\n\n")
 
-        logging.info(f'Flattened {n_sources:,} sources in {partition:,}')
+        logging.info(f'Flattened {n_sources:,} sources in {partition}')
 
 
 def flatten_works_partition(partition: Path | str,
@@ -631,7 +631,7 @@ def flatten_works_partition(partition: Path | str,
         f_sql_cpy.write(f"COPY {settings.pg_schema}.works_related "
                         f"FROM PROGRAM 'gunzip -c {out_m2m_related.absolute()}' csv header;\n\n")
 
-    logging.info(f'Flattened {n_works:,} works with {n_abstracts:,} abstracts in {partition:,}')
+    logging.info(f'Flattened {n_works:,} works with {n_abstracts:,} abstracts in {partition}')
 
 
 def flatten_authors_partition_kw(kwargs):
