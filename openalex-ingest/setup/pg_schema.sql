@@ -218,6 +218,7 @@ CREATE TABLE openalex.works
     oa_url                         text,
     oa_any_repository_has_fulltext boolean,
     apc_paid                       integer,
+    apc_list                       integer,
     license                        text,
     cited_by_count                 integer,
     is_paratext                    boolean,

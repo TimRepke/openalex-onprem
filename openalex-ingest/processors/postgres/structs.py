@@ -365,7 +365,7 @@ class OpenAccess(Struct, kw_only=True, omit_defaults=True):
 class Work(Struct, kw_only=True, omit_defaults=True):
     abstract_inverted_index: str | None = None
     authorships: list[Authorship] | None = None
-    apc_list: list[APC] | None = None
+    apc_list: APC | None = None
     apc_paid: APC | None = None
     best_oa_location: Location | None = None
     biblio: Biblio | None = None
