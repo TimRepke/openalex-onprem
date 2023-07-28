@@ -35,13 +35,13 @@ def all_exist(kwargs: dict):
 def run(func, params: list[dict], parallelism: int, override: bool):
     if not override:
         params = [kwargs for kwargs in params if not all_exist(kwargs)]
-
-    if parallelism == 1:
-        for kwargs in params:
-            func(kwargs)
-    else:
-        with multiprocessing.Pool(parallelism) as pool:
-            pool.map(func, picklify(params))
+    if len(params) > 0:
+        if parallelism == 1:
+            for kwargs in params:
+                func(kwargs)
+        else:
+            with multiprocessing.Pool(parallelism) as pool:
+                pool.map(func, picklify(params))
 
 
 def name_part(partition: Path):
