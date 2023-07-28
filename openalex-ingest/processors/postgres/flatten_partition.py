@@ -103,10 +103,11 @@ def flatten_authors_partition(partition: Path | str,
         f_sql_cpy.write(f"COPY {settings.pg_schema}.authors "
                         f"FROM PROGRAM 'gunzip -c {out_authors.absolute()}' csv header;\n\n")
 
-        executionTime = (time.time() - startTime)
-
-        logging.info(f'Flattened {n_authors:,} authors in '
-                     f'{int(executionTime / 60)}:{executionTime:.0f}mm:ss from {partition}')
+    executionTime = (time.time() - startTime)
+    mins = int(executionTime / 60)
+    secs = executionTime - (mins * 60)
+    logging.info(f'Flattened {n_authors:,} authors in '
+                 f'{mins}:{secs:.2f} from {partition}')
 
 
 def flatten_institutions_partition(partition: Path | str,
@@ -208,9 +209,11 @@ def flatten_institutions_partition(partition: Path | str,
         f_sql_cpy.write(f"COPY {settings.pg_schema}.institutions_concepts "
                         f"FROM PROGRAM 'gunzip -c {out_m2m_concepts.absolute()}' csv header;\n\n")
 
-        executionTime = (time.time() - startTime)
-        logging.info(f'Flattened {n_institutions:,} institutions in '
-                     f'{int(executionTime / 60)}:{executionTime:.0f}mm:ss from {partition}')
+    executionTime = (time.time() - startTime)
+    mins = int(executionTime / 60)
+    secs = executionTime - (mins * 60)
+    logging.info(f'Flattened {n_institutions:,} institutions in '
+                 f'{mins}:{secs:.2f} from {partition}')
 
 
 def flatten_publisher_partition(partition: Path | str,
@@ -278,9 +281,11 @@ def flatten_publisher_partition(partition: Path | str,
         f_sql_cpy.write(f"COPY {settings.pg_schema}.publishers "
                         f"FROM PROGRAM 'gunzip -c {out_publishers.absolute()}' csv header;\n\n")
 
-        executionTime = (time.time() - startTime)
-        logging.info(f'Flattened {n_pubs:,} publishers in '
-                     f'{int(executionTime / 60)}:{executionTime:.0f}mm:ss from {partition}')
+    executionTime = (time.time() - startTime)
+    mins = int(executionTime / 60)
+    secs = executionTime - (mins * 60)
+    logging.info(f'Flattened {n_pubs:,} publishers in '
+                 f'{mins}:{secs:.2f} from {partition}')
 
 
 def flatten_funder_partition(partition: Path | str,
@@ -348,9 +353,11 @@ def flatten_funder_partition(partition: Path | str,
         f_sql_cpy.write(f"COPY {settings.pg_schema}.funders "
                         f"FROM PROGRAM 'gunzip -c {out_funders.absolute()}' csv header;\n\n")
 
-        executionTime = (time.time() - startTime)
-        logging.info(f'Flattened {n_funders:,} funders in '
-                     f'{int(executionTime / 60)}:{executionTime:.0f}mm:ss from {partition}')
+    executionTime = (time.time() - startTime)
+    mins = int(executionTime / 60)
+    secs = executionTime - (mins * 60)
+    logging.info(f'Flattened {n_funders:,} funders in '
+                 f'{mins}:{secs:.2f} from {partition}')
 
 
 def flatten_concept_partition(partition: Path | str,
@@ -440,9 +447,11 @@ def flatten_concept_partition(partition: Path | str,
         f_sql_cpy.write(f"COPY {settings.pg_schema}.concepts_related "
                         f"FROM PROGRAM 'gunzip -c {out_m2m_related.absolute()}' csv header;\n\n")
 
-        executionTime = (time.time() - startTime)
-        logging.info(f'Flattened {n_concepts:,} concepts in '
-                     f'{int(executionTime / 60)}:{executionTime:.0f}mm:ss from {partition}')
+    executionTime = (time.time() - startTime)
+    mins = int(executionTime / 60)
+    secs = executionTime - (mins * 60)
+    logging.info(f'Flattened {n_concepts:,} concepts in '
+                 f'{mins}:{secs:.2f} from {partition}')
 
 
 def flatten_sources_partition(partition: Path | str,
@@ -528,9 +537,11 @@ def flatten_sources_partition(partition: Path | str,
         f_sql_cpy.write(f"COPY {settings.pg_schema}.sources "
                         f"FROM PROGRAM 'gunzip -c {out_sources.absolute()}' csv header;\n\n")
 
-        executionTime = (time.time() - startTime)
-        logging.info(f'Flattened {n_sources:,} sources in'
-                     f' {int(executionTime / 60)}:{executionTime:.0f}mm:ss from {partition}')
+    executionTime = (time.time() - startTime)
+    mins = int(executionTime / 60)
+    secs = executionTime - (mins * 60)
+    logging.info(f'Flattened {n_sources:,} sources in'
+                 f' {mins}:{secs:.2f} from {partition}')
 
 
 def flatten_works_partition(partition: Path | str,
@@ -709,8 +720,10 @@ def flatten_works_partition(partition: Path | str,
                         f"FROM PROGRAM 'gunzip -c {out_m2m_related.absolute()}' csv header;\n\n")
 
     executionTime = (time.time() - startTime)
+    mins = int(executionTime / 60)
+    secs = executionTime - (mins * 60)
     logging.info(f'Flattened {n_works:,} works with {n_abstracts:,} abstracts in'
-                 f' {int(executionTime / 60)}:{executionTime:.0f}mm:ss from {partition}')
+                 f' {mins}:{secs:.2f} from {partition}')
 
 
 def flatten_authors_partition_kw(kwargs):
