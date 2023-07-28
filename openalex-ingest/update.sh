@@ -133,7 +133,7 @@ fi
 
 if [ "$update_pg" = true ]; then
   echo "Updating PostgreSQL..."
-  python update_postgres.py "$del_prior" --loglevel INFO "$tmp_dir/postgres" --parallelism "$jobs" "$override"
+  python update_postgres.py "$del_prior" --loglevel INFO --parallelism "$jobs" "$override" "$tmp_dir/postgres"
 
   cd "$tmp_dir"
   if [ "$del_prior" = "--skip-deletion" ]; then
