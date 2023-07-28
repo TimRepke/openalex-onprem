@@ -19,6 +19,12 @@ table_map: dict[ObjectType, list[str]] = {
     'source': [
         # TODO
     ],
+    'concept': [
+        # TODO
+    ],
+    'funder': [
+        # TODO
+    ],
     'work': [
         # TODO
     ]
