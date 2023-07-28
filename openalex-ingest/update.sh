@@ -97,7 +97,7 @@ fi
 cd "$SCRIPT_DIR" || exit
 
 # Load our python environment
-source venv/bin/activate
+source ../venv/bin/activate
 
 if [ "$compile" = true ]; then
   echo "Ensuring cython sources are compiled..."
