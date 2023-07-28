@@ -9,9 +9,9 @@ compile=true
 update_solr=true
 update_pg=true
 cleanup=true
-override=""
+override="--no-override"
 jobs=1
-del_prior=""
+del_prior="--no-skip-deletion"
 
 # Function to display script usage
 usage() {
@@ -133,7 +133,7 @@ fi
 
 if [ "$update_pg" = true ]; then
   echo "Updating PostgreSQL..."
-  python update_postgres.py "$del_prior" --loglevel INFO --parallelism "$jobs" "$override" "$tmp_dir/postgres"
+  python update_postgres.py --loglevel INFO --parallelism "$jobs" "$del_prior" "$override" "$tmp_dir/postgres"
 
   cd "$tmp_dir"
   if [ "$del_prior" = "--skip-deletion" ]; then
