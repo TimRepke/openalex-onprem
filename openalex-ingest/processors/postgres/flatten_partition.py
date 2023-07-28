@@ -555,7 +555,7 @@ def flatten_works_partition(partition: Path | str,
                 'first_page': work.biblio.first_page,
                 'last_page': work.biblio.last_page,
                 'primary_location': strip_id(work.primary_location.source.id) \
-                    if work.primary_location is not None else None,
+                    if work.primary_location is not None and work.primary_location.source is not None else None,
                 'type': work.type,
                 'type_crossref': work.type_crossref,
                 'cited_by_count': work.cited_by_count,
