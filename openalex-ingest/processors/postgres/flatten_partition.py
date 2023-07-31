@@ -583,9 +583,9 @@ def flatten_works_partition(partition: Path | str,
             'apc_paid', 'apc_list', 'license', 'cited_by_count',
             'is_paratext', 'is_retracted', 'mesh', 'grants',
             'created_date', 'updated_date'])
-        writer_authorships = get_writer(f_authorships, ['row_id', 'work_id', 'author_id', 'position', 'institutions',
+        writer_authorships = get_writer(f_authorships, ['work_id', 'author_id', 'position', 'institutions',
                                                         'raw_affiliation', 'is_corresponding'])
-        writer_locations = get_writer(f_locations, ['row_id', 'work_id', 'source_id', 'is_oa', 'landing_page_url',
+        writer_locations = get_writer(f_locations, ['work_id', 'source_id', 'is_oa', 'landing_page_url',
                                                     'license', 'pdf_url', 'version'])
         writer_concepts = get_writer(f_concepts, ['work_id', 'concept_id', 'score'])
         writer_references = get_writer(f_references, ['work_a_id', 'work_b_id'])
@@ -676,7 +676,6 @@ def flatten_works_partition(partition: Path | str,
                 if author.institutions is not None and len(author.institutions) > 0:
                     institutions = [strip_id(i.id) for i in author.institutions]
                 writer_authorships.writerow({
-                    'row_id': None,
                     'work_id': wid,
                     'author_id': strip_id(author.author.id) if author.author is not None else None,
                     'position': author.author_position,
@@ -687,7 +686,6 @@ def flatten_works_partition(partition: Path | str,
             if work.locations is not None:
                 for location in work.locations:
                     writer_locations.writerow({
-                        'row_id': None,
                         'work_id': wid,
                         'source_id': strip_id(location.source.id) if location.source is not None else None,
                         'is_oa': location.is_oa,
@@ -718,11 +716,11 @@ def flatten_works_partition(partition: Path | str,
 
         f_sql_cpy.write(f"COPY {settings.pg_schema}.works "
                         f"FROM PROGRAM 'gunzip -c {out_works.absolute()}' csv header;\n\n")
-        f_sql_cpy.write(f"COPY {settings.pg_schema}.works_locations "
+        f_sql_cpy.write(f"COPY {settings.pg_schema}.works_locations ({', '.join(writer_locations.fieldnames)}) "
                         f"FROM PROGRAM 'gunzip -c {out_m2m_locations.absolute()}' csv header;\n\n")
         f_sql_cpy.write(f"COPY {settings.pg_schema}.works_concepts "
                         f"FROM PROGRAM 'gunzip -c {out_m2m_concepts.absolute()}' csv header;\n\n")
-        f_sql_cpy.write(f"COPY {settings.pg_schema}.works_authorships "
+        f_sql_cpy.write(f"COPY {settings.pg_schema}.works_authorships ({', '.join(writer_authorships.fieldnames)}) "
                         f"FROM PROGRAM 'gunzip -c {out_m2m_authorships.absolute()}' csv header;\n\n")
         f_sql_cpy.write(f"COPY {settings.pg_schema}.works_references "
                         f"FROM PROGRAM 'gunzip -c {out_m2m_references.absolute()}' csv header;\n\n")
