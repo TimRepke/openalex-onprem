@@ -141,14 +141,16 @@ if [ "$update_pg" = true ]; then
   python update_postgres.py --loglevel INFO --parallelism "$jobs" "$preserve_ram" "$del_prior" "$override" "$tmp_dir/postgres"
 
   cd "$tmp_dir"
+  # shellcheck disable=SC2034
+  PGPASSWORD="$OA_PG_PW"  # set for passwordless postgres
   if [ "$del_prior" = "--skip-deletion" ]; then
     echo "Deleting merged objects"
-    psql -f postgres/*merged_del.sql
+    find ./postgres -name "*-merged_del.sql" -exec psql -f {} -p "$OA_PG_PORT" -h "$OA_PG_HOST" -U "$OA_PG_USER" --echo-all -d "$OA_PG_DB" \;
     echo "Deleting existing new objects"
-    psql -f postgres/*-del.sql
+    find ./postgres -name "*-del.sql" -exec psql -f {} -p "$OA_PG_PORT" -h "$OA_PG_HOST" -U "$OA_PG_USER" --echo-all -d "$OA_PG_DB" \;
   fi
   echo "Import new or updated objects"
-  psql -f postgres/*-cpy.sql
+  find ./postgres -name "*-cpy.sql" -exec psql -f {} -p "$OA_PG_PORT" -h "$OA_PG_HOST" -U "$OA_PG_USER" --echo-all -d "$OA_PG_DB" \;
 
   if [ "$cleanup" = true ]; then
     echo "Deleting all temporary flattened files and scripts"

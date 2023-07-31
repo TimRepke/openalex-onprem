@@ -5,8 +5,7 @@ import logging
 from pathlib import Path
 from typing import TextIO
 
-from msgspec.json import Decoder
-from msgspec.msgpack import Encoder
+from msgspec.json import Decoder, Encoder
 from msgspec import DecodeError
 
 from processors.postgres import structs
@@ -624,6 +623,14 @@ def flatten_works_partition(partition: Path | str,
                     logging.warning(f'Failed to read abstract for {wid} in {partition}')
                     abstract = None
 
+            grants = None
+            if work.grant is not None and len(work.grant) > 0:
+                grants = encoder.encode([{
+                    'funder': strip_id(g.funder),
+                    'funder_display_name': g.funder_display_name,
+                    'award_id': g.award_id
+                } for g in work.grants]).decode()
+
             writer_works.writerow({
                 'id': wid,
                 'title': work.title,
@@ -657,8 +664,9 @@ def flatten_works_partition(partition: Path | str,
                 'license': work.license,
                 'is_paratext': work.is_paratext,
                 'is_retracted': work.is_retracted,
-                'mesh': encoder.encode(work.mesh),
-                'grants': encoder.encode(work.grants),
+                'mesh': (encoder.encode(work.mesh).decode()
+                         if work.mesh is not None and len(work.mesh) > 0 else None),
+                'grants': grants,
                 'created_date': work.created_date,
                 'updated_date': work.updated_date
             })
@@ -752,3 +760,16 @@ def flatten_sources_partition_kw(kwargs):
 
 def flatten_works_partition_kw(kwargs):
     return flatten_works_partition(**kwargs)
+
+
+if __name__ == '__main__':
+    flatten_works_partition(partition='../data/work/part_001.gz',
+                            out_works='../data/work/out/wrks.csv.gz',
+                            out_sql_cpy='../data/work/out/wrks-cpy.sql',
+                            out_sql_del='../data/work/out/wrks-del.sql',
+                            out_m2m_concepts='../data/work/out/con.csv.gz',
+                            out_m2m_related='../data/work/out/rel.csv.gz',
+                            out_m2m_authorships='../data/work/out/aut.csv.gz',
+                            out_m2m_locations='../data/work/out/loc.csv.gz',
+                            out_m2m_references='../data/work/out/ref.csv.gz',
+                            preserve_ram=True)
