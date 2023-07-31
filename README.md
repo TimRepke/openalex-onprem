@@ -32,6 +32,13 @@ bin/solr start -c  -Denable.packages=true -Dsolr.modules=sql,clustering
 
 Postgres is properly set up and database/relations exist.
 
+```bash
+# Create all relations in the "openalex" schema via:
+psql setup/pg_schema.sql
+# (optional) create users by editing the following file and then running
+psql setup/pg_users.sql
+```
+
 In case you want to run the python script directly, make sure the Cython bit is compiled: 
 
 ```bash
@@ -40,3 +47,10 @@ python setup.py build_ext --inplace
 ```
 
 
+## Examples
+
+Assuming you already synced to the latest OpenAlex snapshot and you only want to flatten files for the initial 
+postgres import (not deleting flattened files after done and not generating deletion files);
+```bash
+./update.sh /home/rept/openalex/tmp_dir --skip-sync --skip-solr --skip-del --skip-clean --jobs 20
+```

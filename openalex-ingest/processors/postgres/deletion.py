@@ -3,30 +3,39 @@ from pathlib import Path
 from shared.util import get_ids_to_delete, batched, ObjectType
 from shared.config import settings
 
-table_map: dict[ObjectType, list[str]] = {
+table_map: dict[ObjectType, list[tuple[str, str]]] = {
+    # NOTE: We are only deleting based on the "primary" table.
+    #       We assume, that any other references (e.g. authorships) are updated on
+    #       the other end (e.g. via works) if an author is removed.
     'author': [
-        # ('authors', 'id'),
-        # ('authors_counts_by_year', 'author_id'),
-        # ('authors_ids', 'author_id'),
-        # TODO
+        ('authors', 'id')
     ],
     'institution': [
-        # TODO
+        ('institutions', 'id'),
+        ('institutions_association', 'institution_a_id'),
+        ('institutions_concept', 'institution_id')
     ],
     'publisher': [
-        # TODO
+        ('publishers', 'id')
     ],
     'source': [
-        # TODO
+        ('sources', 'id')
     ],
     'concept': [
-        # TODO
+        ('concepts', 'id'),
+        ('concepts_ancestor', 'concept_a_id'),
+        ('concepts_related', 'concept_a_id')
     ],
     'funder': [
-        # TODO
+        ('funders', 'id')
     ],
     'work': [
-        # TODO
+        ('works', 'id'),
+        ('works_authorships', 'work_id'),
+        ('works_concepts', 'work_id'),
+        ('works_locations', 'work_id'),
+        ('works_references', 'work_a_id'),  # we are not explicitly deleting the other direction (`work_b_id`)
+        ('works_related', 'work_a_id')
     ]
 }
 
