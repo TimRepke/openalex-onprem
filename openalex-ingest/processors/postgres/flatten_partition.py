@@ -624,7 +624,7 @@ def flatten_works_partition(partition: Path | str,
                     abstract = None
 
             grants = None
-            if work.grant is not None and len(work.grant) > 0:
+            if work.grants is not None and len(work.grants) > 0:
                 grants = encoder.encode([{
                     'funder': strip_id(g.funder),
                     'funder_display_name': g.funder_display_name,
