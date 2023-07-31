@@ -36,7 +36,7 @@ CREATE TABLE openalex.authors
     i10_index                 integer,
     display_name              text,
     display_name_alternatives text,
-    id_mag                    integer,
+    id_mag                    bigint,
     id_orcid                  text,
     id_scopus                 text,
     id_twitter                text,
@@ -58,7 +58,7 @@ CREATE TABLE openalex.institutions
     display_name_alternatives text[],
     display_name_acronyms     text[],
     id_ror                    text,
-    id_mag                    integer,
+    id_mag                    bigint,
     id_wikipedia              text,
     id_wikidata               text,
     id_grid                   text,
@@ -139,7 +139,7 @@ CREATE TABLE openalex.concepts
     display_name   text,
     description    text,
     level          integer,
-    id_mag         integer,
+    id_mag         bigint,
     id_umls_cui    text,
     id_umls_aui    text,
     id_wikidata    text,
@@ -183,7 +183,7 @@ CREATE TABLE openalex.sources
     societies                 text[],
     is_in_doaj                boolean,
     is_oa                     boolean,
-    id_mag                    integer,
+    id_mag                    bigint,
     id_fatcat                 text,
     id_issn_l                 text,
     id_issn                   text[],
@@ -210,7 +210,7 @@ CREATE TABLE openalex.works
     type                           text,
     type_crossref                  text,
     id_doi                         text,
-    id_mag                         integer,
+    id_mag                         bigint,
     id_pmid                        text,
     id_pmcid                       text,
     is_oa                          boolean,
@@ -230,26 +230,25 @@ CREATE TABLE openalex.works
 );
 CREATE TABLE openalex.works_authorships
 (
+    row_id           BIGSERIAL PRIMARY KEY,
     work_id          text NOT NULL,
-    author_id        text NOT NULL,
+    author_id        text, -- this should never be null, but some are
     position         text,
     institutions     text[],
     raw_affiliation  text,
-    is_corresponding boolean,
+    is_corresponding boolean
 
-    PRIMARY KEY (work_id, author_id)
 );
 CREATE TABLE openalex.works_locations
 (
+    row_id           BIGSERIAL PRIMARY KEY,
     work_id          text NOT NULL,
-    source_id        text NOT NULL,
+    source_id        text, -- this should never be null, but some are
     is_oa            boolean,
     landing_page_url text,
     license          text,
     pdf_url          text,
-    version          text,
-
-    PRIMARY KEY (work_id, source_id)
+    version          text
 );
 CREATE TABLE openalex.works_concepts
 (
@@ -275,7 +274,7 @@ CREATE TABLE openalex.works_related
 );
 
 
-
+-- old stuff for reference:
 -- CREATE INDEX concepts_ancestors_concept_id_idx ON openalex.concepts_ancestors USING btree (concept_id);
 --
 -- CREATE INDEX concepts_related_concepts_concept_id_idx ON openalex.concepts_related_concepts USING btree (concept_id);
