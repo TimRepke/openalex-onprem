@@ -11,6 +11,7 @@ from msgspec import DecodeError
 from processors.postgres import structs
 from processors.postgres.deletion import generate_deletions
 from shared.config import settings
+from shared.util import strip_id
 from shared.cyth.invert_index import invert
 
 
@@ -32,15 +33,6 @@ def prepare_list(lst: list[str] | None, strip: bool = False) -> str | None:
         if len(prepped) > 0:
             return '{' + ','.join(prepped) + '}'
 
-    return None
-
-
-def strip_id(s: str | None) -> str | None:
-    if s is not None and len(s) > 20:
-        if len(s) > 20:
-            return s[21:]
-        if len(s) > 0:
-            return s
     return None
 
 

@@ -35,7 +35,7 @@ def update_solr(tmp_dir: Path,  # Directory where we can write temporary parsed 
 
         logging.debug(f'Reading partition from "{partition}" and writing to "{out_file}"')
         n_works, n_abstracts = transform_partition(partition, out_file)
-        logging.info(f'Partition contained {n_works} works with {n_abstracts} abstracts (referring to {partition})')
+        logging.info(f'Partition contained {n_works:,} works with {n_abstracts:,} abstracts (referring to {partition})')
 
         subprocess.run([settings.solr_bin / 'post',
                         '-c', settings.collection,

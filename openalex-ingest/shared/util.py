@@ -28,6 +28,15 @@ def get_ids_to_delete(merge_files: list[Path]) -> Generator[str, None, None]:
             ]
 
 
+def strip_id(s: str | None) -> str | None:
+    if s is not None and len(s) > 20:
+        if len(s) > 20:
+            return s[21:]
+        if len(s) > 0:
+            return s
+    return None
+
+
 def batched(it: Iterable[str], bs: int) -> Generator[list[str], None, None]:
     batch = []
     cnt = 0

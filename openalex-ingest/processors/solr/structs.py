@@ -1,5 +1,6 @@
 from msgspec import Struct
 
+
 class InvertedAbstract(Struct):
     IndexLength: int
     InvertedIndex: dict[str, list[int]]
@@ -35,28 +36,28 @@ class DehydratedAuthor(Struct, omit_defaults=True):
 
 
 class Authorship(Struct):
-    author: DehydratedAuthor
-    author_position: str
-    institutions: list[DehydratedInstitution]
-    is_corresponding: bool
-    raw_affiliation_string: str
+    author: DehydratedAuthor | None = None
+    author_position: str | None = None
+    institutions: list[DehydratedInstitution] | None = None
+    is_corresponding: bool | None = None
+    raw_affiliation_string: str | None = None
 
 
 class DehydratedSource(Struct, omit_defaults=True, kw_only=True):
-    display_name: str
+    display_name: str | None = None
     host_organization: str | None = None
     # host_organization_lineage
     host_organization_name: str | None = None
-    id: str
+    id: str | None = None
     # is_in_doaj
     # is_oa
     issn: list[str] | None = None
     issn_l: str | None = None
-    type: str
+    type: str | None = None
 
 
 class Location(Struct, omit_defaults=True, kw_only=True):
-    is_oa: bool
+    is_oa: bool | None = None
     landing_page_url: str | None = None
     license: str | None = None
     source: DehydratedSource | None = None
@@ -66,30 +67,30 @@ class Location(Struct, omit_defaults=True, kw_only=True):
 
 class Work(Struct, kw_only=True, omit_defaults=True):
     abstract_inverted_index: str | None = None
-    authorships: list[Authorship]
+    authorships: list[Authorship] | None = None
     # apc_list
     # apc_paid
     # best_oa_location
-    biblio: Biblio
+    biblio: Biblio | None = None
     # cited_by_api_url
-    cited_by_count: int
+    cited_by_count: int | None = None
     # concepts
     # corresponding_author_ids
     # corresponding_institution_ids
     # counts_by_year
-    created_date: str
+    created_date: str | None = None
     display_name: str | None = None
     doi: str | None = None
 
     # grants
-    id: str
-    ids: WorkIds
+    id: str | None = None
+    ids: WorkIds | None = None
     is_oa: bool | None = None
-    is_paratext: bool
-    is_retracted: bool
+    is_paratext: bool | None = None
+    is_retracted: bool | None = None
     language: str | None = None
     # license:str
-    locations: list[Location]
+    locations: list[Location] | None = None
     # locations_count
     # mesh
     # ngrams_url
@@ -100,7 +101,7 @@ class Work(Struct, kw_only=True, omit_defaults=True):
     # referenced_works
     # related_works
     title: str | None = None
-    type: str
+    type: str | None = None
     # type_crossref
     updated_date: str | None = None
     # ngram
@@ -118,21 +119,21 @@ class WorkOut(Struct, kw_only=True, omit_defaults=True):
 
     authorships: str | None = None  # list[Authorship]
     biblio: str | None = None  # Biblio
-    cited_by_count: int
-    created_date: str
+    cited_by_count: int | None = None
+    created_date: str | None = None
     doi: str | None = None
     mag: int | None = None
     pmid: str | None = None
     pmcid: str | None = None
 
-    is_oa: bool
-    is_paratext: bool
-    is_retracted: bool
+    is_oa: bool | None = None
+    is_paratext: bool | None = None
+    is_retracted: bool | None = None
     language: str | None = None
 
     locations: str | None = None  # list[Location]
 
     publication_date: str | None = None
     publication_year: int | None = None
-    type: str
+    type: str | None = None
     updated_date: str | None = None
