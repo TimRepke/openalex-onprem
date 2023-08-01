@@ -14,6 +14,10 @@ from shared.config import settings
 from shared.cyth.invert_index import invert
 
 
+def fieldnames(writer: csv.DictWriter):
+    return ','.join(writer.fieldnames)
+
+
 def prepare_list(lst: list[str] | None, strip: bool = False) -> str | None:
     def clean(string):
         return string.replace(',', '').replace('"', '').replace("'", '')
@@ -106,7 +110,7 @@ def flatten_authors_partition(partition: Path | str,
         for del_row in generate_deletions(ids=author_ids, object_type='author', batch_size=1000):
             f_sql_del.write(del_row + '\n')
 
-        f_sql_cpy.write(f"COPY {settings.pg_schema}.authors "
+        f_sql_cpy.write(f"COPY {settings.pg_schema}.authors ({fieldnames(writer_authors)}) "
                         f"FROM PROGRAM 'gunzip -c {out_authors.absolute()}' csv header;\n\n")
 
     executionTime = (time.time() - startTime)
@@ -208,11 +212,11 @@ def flatten_institutions_partition(partition: Path | str,
         for del_row in generate_deletions(ids=institution_ids, object_type='institution', batch_size=1000):
             f_sql_del.write(del_row + '\n')
 
-        f_sql_cpy.write(f"COPY {settings.pg_schema}.institutions "
+        f_sql_cpy.write(f"COPY {settings.pg_schema}.institutions ({fieldnames(writer_inst)}) "
                         f"FROM PROGRAM 'gunzip -c {out_institutions.absolute()}' csv header;\n\n")
-        f_sql_cpy.write(f"COPY {settings.pg_schema}.institutions_associations "
+        f_sql_cpy.write(f"COPY {settings.pg_schema}.institutions_associations ({fieldnames(writer_m2m_ass)}) "
                         f"FROM PROGRAM 'gunzip -c {out_m2m_association.absolute()}' csv header;\n\n")
-        f_sql_cpy.write(f"COPY {settings.pg_schema}.institutions_concepts "
+        f_sql_cpy.write(f"COPY {settings.pg_schema}.institutions_concepts ({fieldnames(writer_m2m_con)}) "
                         f"FROM PROGRAM 'gunzip -c {out_m2m_concepts.absolute()}' csv header;\n\n")
 
     executionTime = (time.time() - startTime)
@@ -289,7 +293,7 @@ def flatten_publisher_partition(partition: Path | str,
         for del_row in generate_deletions(ids=publisher_ids, object_type='publisher', batch_size=1000):
             f_sql_del.write(del_row + '\n')
 
-        f_sql_cpy.write(f"COPY {settings.pg_schema}.publishers "
+        f_sql_cpy.write(f"COPY {settings.pg_schema}.publishers ({fieldnames(writer_pub)}) "
                         f"FROM PROGRAM 'gunzip -c {out_publishers.absolute()}' csv header;\n\n")
 
     executionTime = (time.time() - startTime)
@@ -361,7 +365,7 @@ def flatten_funder_partition(partition: Path | str,
         for del_row in generate_deletions(ids=funder_ids, object_type='funder', batch_size=1000):
             f_sql_del.write(del_row + '\n')
 
-        f_sql_cpy.write(f"COPY {settings.pg_schema}.funders "
+        f_sql_cpy.write(f"COPY {settings.pg_schema}.funders ({fieldnames(writer_funders)}) "
                         f"FROM PROGRAM 'gunzip -c {out_funders.absolute()}' csv header;\n\n")
 
     executionTime = (time.time() - startTime)
@@ -451,11 +455,11 @@ def flatten_concept_partition(partition: Path | str,
         for del_row in generate_deletions(ids=concept_ids, object_type='concept', batch_size=1000):
             f_sql_del.write(del_row + '\n')
 
-        f_sql_cpy.write(f"COPY {settings.pg_schema}.concepts "
+        f_sql_cpy.write(f"COPY {settings.pg_schema}.concepts ({fieldnames(writer_concepts)}) "
                         f"FROM PROGRAM 'gunzip -c {out_concepts.absolute()}' csv header;\n\n")
-        f_sql_cpy.write(f"COPY {settings.pg_schema}.concepts_ancestors "
+        f_sql_cpy.write(f"COPY {settings.pg_schema}.concepts_ancestors ({fieldnames(writer_m2m_ancestor)}) "
                         f"FROM PROGRAM 'gunzip -c {out_m2m_ancestor.absolute()}' csv header;\n\n")
-        f_sql_cpy.write(f"COPY {settings.pg_schema}.concepts_related "
+        f_sql_cpy.write(f"COPY {settings.pg_schema}.concepts_related ({fieldnames(writer_m2m_related)}) "
                         f"FROM PROGRAM 'gunzip -c {out_m2m_related.absolute()}' csv header;\n\n")
 
     executionTime = (time.time() - startTime)
@@ -545,7 +549,7 @@ def flatten_sources_partition(partition: Path | str,
         for del_row in generate_deletions(ids=source_ids, object_type='source', batch_size=1000):
             f_sql_del.write(del_row + '\n')
 
-        f_sql_cpy.write(f"COPY {settings.pg_schema}.sources "
+        f_sql_cpy.write(f"COPY {settings.pg_schema}.sources ({fieldnames(writer_sources)}) "
                         f"FROM PROGRAM 'gunzip -c {out_sources.absolute()}' csv header;\n\n")
 
     executionTime = (time.time() - startTime)
@@ -726,17 +730,17 @@ def flatten_works_partition(partition: Path | str,
         for del_row in generate_deletions(ids=work_ids, object_type='work', batch_size=1000):
             f_sql_del.write(del_row + '\n')
 
-        f_sql_cpy.write(f"COPY {settings.pg_schema}.works "
+        f_sql_cpy.write(f"COPY {settings.pg_schema}.works ({fieldnames(writer_works)}) "
                         f"FROM PROGRAM 'gunzip -c {out_works.absolute()}' csv header;\n\n")
-        f_sql_cpy.write(f"COPY {settings.pg_schema}.works_locations ({', '.join(writer_locations.fieldnames)}) "
+        f_sql_cpy.write(f"COPY {settings.pg_schema}.works_locations ({fieldnames(writer_locations)}) "
                         f"FROM PROGRAM 'gunzip -c {out_m2m_locations.absolute()}' csv header;\n\n")
         f_sql_cpy.write(f"COPY {settings.pg_schema}.works_concepts "
                         f"FROM PROGRAM 'gunzip -c {out_m2m_concepts.absolute()}' csv header;\n\n")
-        f_sql_cpy.write(f"COPY {settings.pg_schema}.works_authorships ({', '.join(writer_authorships.fieldnames)}) "
+        f_sql_cpy.write(f"COPY {settings.pg_schema}.works_authorships ({fieldnames(writer_authorships)}) "
                         f"FROM PROGRAM 'gunzip -c {out_m2m_authorships.absolute()}' csv header;\n\n")
-        f_sql_cpy.write(f"COPY {settings.pg_schema}.works_references "
+        f_sql_cpy.write(f"COPY {settings.pg_schema}.works_references ({fieldnames(writer_references)}) "
                         f"FROM PROGRAM 'gunzip -c {out_m2m_references.absolute()}' csv header;\n\n")
-        f_sql_cpy.write(f"COPY {settings.pg_schema}.works_related "
+        f_sql_cpy.write(f"COPY {settings.pg_schema}.works_related ({fieldnames(writer_related)}) "
                         f"FROM PROGRAM 'gunzip -c {out_m2m_related.absolute()}' csv header;\n\n")
 
     executionTime = (time.time() - startTime)
