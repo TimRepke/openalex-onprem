@@ -41,7 +41,7 @@ def update_solr(tmp_dir: Path,  # Directory where we can write temporary parsed 
                         '-c', settings.solr_collection,
                         '-commit', 'yes',
                         '-host', settings.solr_host,
-                        '-port', settings.solr_port,
+                        '-port', str(settings.solr_port),
                         out_file])
 
         logging.info('Partition posted to solr!')
@@ -59,7 +59,7 @@ def update_solr(tmp_dir: Path,  # Directory where we can write temporary parsed 
                             '-c', settings.solr_collection,
                             '-commit', 'yes',
                             '-host', settings.solr_host,
-                            '-port', settings.solr_port,
+                            '-port', str(settings.solr_port),
                             '-d', payload])
     else:
         logging.info('Found no merged work objects since last update and/or was asked to skip deletions!')
