@@ -122,7 +122,7 @@ class WorkOut(Struct, kw_only=True, omit_defaults=True):
     cited_by_count: int | None = None
     created_date: str | None = None
     doi: str | None = None
-    mag: int | None = None
+    mag: str | None = None
     pmid: str | None = None
     pmcid: str | None = None
 

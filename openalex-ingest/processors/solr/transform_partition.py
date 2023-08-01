@@ -1,4 +1,3 @@
-import csv
 import time
 import gzip
 import logging
@@ -21,15 +20,9 @@ def transform_partition(in_file: str | Path, out_file: str | Path) -> tuple[int,
 
     n_abstracts: int = 0
     n_works: int = 0
+    buffer = bytearray(256)
 
-    with gzip.open(in_file, 'rb') as f_in, open(out_file, 'wt') as f_out:
-        writer = csv.DictWriter(f_out,
-                                fieldnames=['id', 'display_name', 'title', 'abstract', 'title_abstract', 'authorships',
-                                            'biblio', 'cited_by_count', 'created_date', 'doi', 'mag', 'pmid', 'pmcid',
-                                            'is_oa', 'is_paratext', 'is_retracted', 'language', 'locations',
-                                            'publication_date', 'publication_year', 'type', 'updated_date'])
-        writer.writeheader()
-
+    with gzip.open(in_file, 'rb') as f_in, open(out_file, 'wb') as f_out:
         for line in f_in:
             n_works += 1
             work = decoder_work.decode(line)
@@ -62,41 +55,44 @@ def transform_partition(in_file: str | Path, out_file: str | Path) -> tuple[int,
                 locations = encoder.encode(work.locations).decode()
 
             biblio = None
-            if work.biblio is not None:
+            if work.biblio is not None and work.biblio.volume is not None:
                 biblio = encoder.encode(work.biblio).decode()
 
             mag = None
             pmid = None
             pmcid = None
             if work.ids is not None:
-                mag = work.ids.mag
+                mag = str(work.ids.mag)
                 pmid = work.ids.pmid
                 pmcid = work.ids.pmcid
 
-            writer.writerow({
-                'id': wid,
-                'display_name': work.display_name,
-                'title': work.title,
-                'abstract': abstract,
-                'title_abstract': ta,
-                'authorships': authorships,
-                'biblio': biblio,
-                'cited_by_count': work.cited_by_count,
-                'created_date': work.created_date,
-                'doi': work.doi,
-                'mag': mag,
-                'pmid': pmid,
-                'pmcid': pmcid,
-                'is_oa': work.is_oa,
-                'is_paratext': work.is_paratext,
-                'is_retracted': work.is_retracted,
-                'language': work.language,
-                'locations': locations,
-                'publication_date': work.publication_date,
-                'publication_year': work.publication_year,
-                'type': work.type,
-                'updated_date': work.updated_date
-            })
+            wo = structs.WorkOut(id=wid,
+                                 display_name=work.display_name,
+                                 title=work.title,
+                                 abstract=abstract,
+                                 title_abstract=ta,
+                                 authorships=authorships,
+                                 biblio=biblio,
+                                 cited_by_count=work.cited_by_count,
+                                 created_date=work.created_date,
+                                 doi=work.doi,
+                                 mag=mag,
+                                 pmid=pmid,
+                                 pmcid=pmcid,
+                                 is_oa=work.is_oa,
+                                 is_paratext=work.is_paratext,
+                                 is_retracted=work.is_retracted,
+                                 language=work.language,
+                                 locations=locations,
+                                 publication_date=work.publication_date,
+                                 publication_year=work.publication_year,
+                                 type=work.type,
+                                 # created_date=work.created_date,
+                                 updated_date=work.updated_date)
+
+            encoder.encode_into(wo, buffer)
+            buffer.extend(b'\n')
+            f_out.write(buffer)
 
     return n_works, n_abstracts
 
