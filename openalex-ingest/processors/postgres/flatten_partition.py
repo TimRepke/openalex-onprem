@@ -15,12 +15,19 @@ from shared.cyth.invert_index import invert
 
 
 def prepare_list(lst: list[str] | None, strip: bool = False) -> str | None:
+    def clean(string):
+        return string.replace(',', '').replace('"', '').replace("'", '')
+
     if lst is not None and len(lst) > 0:
-        if strip:
-            s = ','.join([strip_id(li.replace(',', '')) for li in lst if li is not None])
-        else:
-            s = ','.join([li.replace(',', '') for li in lst if li is not None])
-        return '{' + s + '}'
+        prepped = ([strip_id(clean(li))
+                    for li in lst
+                    if li is not None and len(li) > 0] if strip else
+                   [clean(li)
+                    for li in lst
+                    if li is not None and len(li) > 0])
+        if len(prepped) > 0:
+            return '{' + ','.join(prepped) + '}'
+
     return None
 
 
@@ -251,9 +258,14 @@ def flatten_publisher_partition(partition: Path | str,
             lines = f_in.readlines()
 
         for line in lines:
-            n_pubs += 1
             publisher = decoder.decode(line)
-            pid = strip_id(publisher.id[21:])
+            pid = strip_id(publisher.id)
+
+            # There are very few publishers with no title, drop them!
+            if pid is None:
+                continue
+
+            n_pubs += 1
             publisher_ids.append(pid)
 
             writer_pub.writerow({
@@ -416,8 +428,8 @@ def flatten_concept_partition(partition: Path | str,
                 'description': concept.description,
                 'level': concept.level,
                 'id_mag': concept.ids.mag,
-                'id_umls_cui': concept.ids.umls_cui,
-                'id_umls_aui': concept.ids.umls_aui,
+                'id_umls_cui': prepare_list(concept.ids.umls_cui),
+                'id_umls_aui': prepare_list(concept.ids.umls_aui),
                 'id_wikidata': concept.ids.wikidata,
                 'id_wikipedia': concept.ids.wikipedia,
                 'created_date': concept.created_date,
@@ -763,13 +775,18 @@ def flatten_works_partition_kw(kwargs):
 
 
 if __name__ == '__main__':
-    flatten_works_partition(partition='../data/work/part_001.gz',
-                            out_works='../data/work/out/wrks.csv.gz',
-                            out_sql_cpy='../data/work/out/wrks-cpy.sql',
-                            out_sql_del='../data/work/out/wrks-del.sql',
-                            out_m2m_concepts='../data/work/out/con.csv.gz',
-                            out_m2m_related='../data/work/out/rel.csv.gz',
-                            out_m2m_authorships='../data/work/out/aut.csv.gz',
-                            out_m2m_locations='../data/work/out/loc.csv.gz',
-                            out_m2m_references='../data/work/out/ref.csv.gz',
-                            preserve_ram=True)
+    # flatten_works_partition(partition='../data/work/part_001.gz',
+    #                         out_works='../data/work/out/wrks.csv.gz',
+    #                         out_sql_cpy='../data/work/out/wrks-cpy.sql',
+    #                         out_sql_del='../data/work/out/wrks-del.sql',
+    #                         out_m2m_concepts='../data/work/out/con.csv.gz',
+    #                         out_m2m_related='../data/work/out/rel.csv.gz',
+    #                         out_m2m_authorships='../data/work/out/aut.csv.gz',
+    #                         out_m2m_locations='../data/work/out/loc.csv.gz',
+    #                         out_m2m_references='../data/work/out/ref.csv.gz',
+    #                         preserve_ram=True)
+    flatten_sources_partition(partition='../data/source/part_000.gz',
+                              out_sources='../data/source/out/src.csv.gz',
+                              out_sql_cpy='../data/source/out/src-cpy.sql',
+                              out_sql_del='../data/source/out/src-del.sql',
+                              preserve_ram=True)

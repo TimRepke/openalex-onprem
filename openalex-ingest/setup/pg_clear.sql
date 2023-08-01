@@ -1,12 +1,12 @@
 -- This will empty all openalex tables in a matter of seconds. So be careful!
 DELETE FROM oa.openalex.authors;
 DELETE FROM oa.openalex.concepts;
-DELETE FROM oa.openalex.concepts_ancestor;
+DELETE FROM oa.openalex.concepts_ancestors;
 DELETE FROM oa.openalex.concepts_related;
 DELETE FROM oa.openalex.funders;
 DELETE FROM oa.openalex.institutions;
-DELETE FROM oa.openalex.institutions_association;
-DELETE FROM oa.openalex.institutions_concept;
+DELETE FROM oa.openalex.institutions_associations;
+DELETE FROM oa.openalex.institutions_concepts;
 DELETE FROM oa.openalex.publishers;
 DELETE FROM oa.openalex.sources;
 DELETE FROM oa.openalex.works;

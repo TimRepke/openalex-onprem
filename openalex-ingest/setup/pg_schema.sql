@@ -74,7 +74,7 @@ CREATE TABLE openalex.institutions
 
 
 );
-CREATE TABLE openalex.institutions_association
+CREATE TABLE openalex.institutions_associations
 (
     institution_a_id text NOT NULL,
     institution_b_id text NOT NULL,
@@ -82,7 +82,7 @@ CREATE TABLE openalex.institutions_association
 
     PRIMARY KEY (institution_a_id, institution_b_id)
 );
-CREATE TABLE openalex.institutions_concept
+CREATE TABLE openalex.institutions_concepts
 (
     institution_id text NOT NULL,
     concept_id     text NOT NULL,
@@ -140,14 +140,14 @@ CREATE TABLE openalex.concepts
     description    text,
     level          integer,
     id_mag         bigint,
-    id_umls_cui    text,
-    id_umls_aui    text,
+    id_umls_cui    text[],
+    id_umls_aui    text[],
     id_wikidata    text,
     id_wikipedia   text,
     created_date   timestamp without time zone,
     updated_date   timestamp without time zone
 );
-CREATE TABLE openalex.concepts_ancestor
+CREATE TABLE openalex.concepts_ancestors
 (
     concept_a_id text NOT NULL,
     concept_b_id text NOT NULL,
