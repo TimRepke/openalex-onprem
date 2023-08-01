@@ -42,8 +42,8 @@ def update_solr(tmp_dir: Path,  # Directory where we can write temporary parsed 
                         '-commit', 'yes',
                         '-host', settings.solr_host,
                         '-port', str(settings.solr_port),
-                        '-type', 'text/csv',
-                        '-filetype', 'csv',
+                        # '-type', 'text/csv',
+                        # '-filetype', 'csv',
                         out_file])
 
         logging.info('Partition posted to solr!')
