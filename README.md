@@ -27,7 +27,17 @@ Copy the `default.env` file to `secrets.env` and adjust the values accordingly.
 Solr is up and running, schema and collection exist:
 
 ```bash
-bin/solr start -c  -Denable.packages=true -Dsolr.modules=sql,clustering
+cd /srv/solr
+
+# starting solr
+sudo -u solr solr/bin/solr start -c -h 0.0.0.0 -m 6g -s /srv/solr/solr-home -Denable.packages=true -Dsolr.modules=sql,clustering -Dsolr.max.booleanClauses=4096
+
+# stop and monitor solr
+sudo -u solr solr/bin/solr stop
+sudo -u solr solr/bin/solr status
+
+# copying config files via zookeeper
+sudo -u solr solr/bin/solr zk cp file:managed-schema.xml zk:/configs/._designer_openalex/managed-schema.xml -z 127.0.0.1:9983
 ```
 
 Postgres is properly set up and database/relations exist.
@@ -53,4 +63,10 @@ Assuming you already synced to the latest OpenAlex snapshot and you only want to
 postgres import (not deleting flattened files after done and not generating deletion files);
 ```bash
 ./update.sh /home/rept/openalex/tmp_dir --skip-sync --skip-solr --skip-del --skip-clean --jobs 20
+```
+
+Only running initial solr import 
+
+```bash
+./update.sh /mnt/bulk/openalex/tmp_dir/ --skip-sync --skip-pg --skip-clean --skip-del
 ```

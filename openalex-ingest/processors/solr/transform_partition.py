@@ -87,7 +87,6 @@ def transform_partition(in_file: str | Path, out_file: str | Path) -> tuple[int,
                                  publication_date=work.publication_date,
                                  publication_year=work.publication_year,
                                  type=work.type,
-                                 # created_date=work.created_date,
                                  updated_date=work.updated_date)
 
             encoder.encode_into(wo, buffer)
