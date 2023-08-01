@@ -43,8 +43,8 @@ def transform_partition(in_file: str | Path, out_file: str | Path) -> tuple[int,
                     abstract = None
 
             ta = None
-            if abstract is not None and work.title is not None:
-                ta = work.title + ' ' + abstract
+            if abstract is not None or work.title is not None:
+                ta = (work.title if work.title is not None else '') + ' ' + (abstract if abstract is not None else '')
 
             authorships = None
             if work.authorships is not None and len(work.authorships) > 0:
