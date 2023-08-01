@@ -38,7 +38,7 @@ def update_solr(tmp_dir: Path,  # Directory where we can write temporary parsed 
         logging.info(f'Partition contained {n_works:,} works with {n_abstracts:,} abstracts (referring to {partition})')
 
         subprocess.run([settings.solr_bin / 'post',
-                        '-c', settings.collection,
+                        '-c', settings.solr_collection,
                         '-commit', 'yes',
                         '-host', settings.solr_host,
                         '-port', settings.solr_port,
@@ -56,7 +56,7 @@ def update_solr(tmp_dir: Path,  # Directory where we can write temporary parsed 
             payload = f'<delete><id>{ids}</id></delete>'
 
             subprocess.run([settings.solr_bin / 'post',
-                            '-c', settings.collection,
+                            '-c', settings.solr_collection,
                             '-commit', 'yes',
                             '-host', settings.solr_host,
                             '-port', settings.solr_port,
