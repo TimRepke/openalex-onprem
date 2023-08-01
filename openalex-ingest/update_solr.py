@@ -30,7 +30,7 @@ def update_solr(tmp_dir: Path,  # Directory where we can write temporary parsed 
                  f'and {len(merged)} merged_ids partitions since last update.')
 
     for partition in works:
-        out_file = tmp_dir / f'solr-{name_part(partition)}.csv'
+        out_file = tmp_dir / f'solr-{name_part(partition)}.jsonl'
         out_file.parent.mkdir(exist_ok=True, parents=True)
 
         logging.debug(f'Reading partition from "{partition}" and writing to "{out_file}"')
