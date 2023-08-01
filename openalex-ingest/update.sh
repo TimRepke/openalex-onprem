@@ -143,7 +143,7 @@ if [ "$update_pg" = true ]; then
   cd "$tmp_dir"
   # shellcheck disable=SC2034
   export PGPASSWORD="$OA_PG_PW"  # set for passwordless postgres
-  if [ "$del_prior" = "--skip-deletion" ]; then
+  if [ "$del_prior" = "--no-skip-deletion" ]; then
     echo "Deleting merged objects"
     find ./postgres -name "*-merged_del.sql" -exec psql -f {} -p "$OA_PG_PORT" -h "$OA_PG_HOST" -U "$OA_PG_USER" --echo-all -d "$OA_PG_DB" \;
     echo "Deleting existing new objects"
