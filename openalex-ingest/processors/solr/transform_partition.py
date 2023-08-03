@@ -8,6 +8,8 @@ from msgspec import DecodeError
 from msgspec.json import Decoder, Encoder
 
 from shared.cyth.invert_index import invert
+
+from processors.solr.structs import LocationOut
 from shared.util import strip_id
 
 from processors.solr import structs
@@ -52,7 +54,23 @@ def transform_partition(in_file: str | Path, out_file: str | Path) -> tuple[int,
 
             locations = None
             if work.locations is not None and len(work.locations) > 0:
-                locations = encoder.encode(work.locations).decode()
+                locations = encoder.encode([
+                    LocationOut(
+                        is_oa=loc.is_oa,
+                        is_primary=(work.primary_location is not None
+                                    and work.primary_location.source is not None
+                                    and loc.source is not None
+                                    and work.primary_location.source.id == loc.source.id
+                                    and work.primary_location.source.display_name == loc.source.display_name
+                                    and work.primary_location.pdf_url == loc.pdf_url
+                                    and work.primary_location.version == loc.version),
+                        landing_page_url=loc.landing_page_url,
+                        license=loc.license,
+                        source=loc.source,
+                        pdf_url=loc.pdf_url,
+                        version=loc.version
+                    )
+                    for loc in work.locations]).decode()
 
             biblio = None
             if work.biblio is not None and work.biblio.volume is not None:

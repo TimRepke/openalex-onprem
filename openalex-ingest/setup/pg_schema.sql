@@ -234,10 +234,10 @@ CREATE TABLE openalex.works_authorships
     work_id          text NOT NULL,
     author_id        text, -- this should never be null, but some are
     position         text,
+    exact_position   int,
     institutions     text[],
     raw_affiliation  text,
     is_corresponding boolean
-
 );
 CREATE TABLE openalex.works_locations
 (
@@ -245,6 +245,7 @@ CREATE TABLE openalex.works_locations
     work_id          text NOT NULL,
     source_id        text, -- this should never be null, but some are
     is_oa            boolean,
+    is_primary       boolean,
     landing_page_url text,
     license          text,
     pdf_url          text,

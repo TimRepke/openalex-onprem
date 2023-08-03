@@ -679,7 +679,7 @@ def flatten_works_partition(partition: Path | str,
                 'updated_date': work.updated_date
             })
 
-            for author in work.authorships:
+            for ai, author in enumerate(work.authorships):
                 institutions = None
                 if author.institutions is not None and len(author.institutions) > 0:
                     institutions = [strip_id(i.id) for i in author.institutions]
@@ -687,10 +687,12 @@ def flatten_works_partition(partition: Path | str,
                     'work_id': wid,
                     'author_id': strip_id(author.author.id) if author.author is not None else None,
                     'position': author.author_position,
+                    'exact_position': ai,
                     'institutions': prepare_list(institutions),
                     'raw_affiliation': author.raw_affiliation_string,
                     'is_corresponding': author.is_corresponding
                 })
+
             if work.locations is not None:
                 for location in work.locations:
                     writer_locations.writerow({
@@ -698,91 +700,91 @@ def flatten_works_partition(partition: Path | str,
                         'source_id': strip_id(location.source.id) if location.source is not None else None,
                         'is_oa': location.is_oa,
                         'landing_page_url': location.landing_page_url,
+                        'is_primary': (work.primary_location is not None
+                                       and work.primary_location.source is not None
+                                       and location.source is not None
+                                       and work.primary_location.source.id == location.source.id
+                                       and work.primary_location.source.display_name == location.source.display_name
+                                       and work.primary_location.pdf_url == location.pdf_url
+                                       and work.primary_location.version == location.version),
                         'license': location.license,
                         'pdf_url': location.pdf_url,
                         'version': location.version
                     })
-            for concept in work.concepts:
-                writer_concepts.writerow({
-                    'work_id': wid,
-                    'concept_id': strip_id(concept.id),
-                    'score': concept.score
-                })
-            for ref in work.referenced_works:
-                writer_references.writerow({
-                    'work_a_id': wid,
-                    'work_b_id': strip_id(ref)
-                })
-            for rel in work.related_works:
-                writer_related.writerow({
-                    'work_a_id': wid,
-                    'work_b_id': strip_id(rel)
-                })
 
-        for del_row in generate_deletions(ids=work_ids, object_type='work', batch_size=1000):
-            f_sql_del.write(del_row + '\n')
+                for concept in work.concepts:
+                    writer_concepts.writerow({
+                        'work_id': wid,
+                        'concept_id': strip_id(concept.id),
+                        'score': concept.score
+                    })
+                for ref in work.referenced_works:
+                    writer_references.writerow({
+                        'work_a_id': wid,
+                        'work_b_id': strip_id(ref)
+                    })
+                for rel in work.related_works:
+                    writer_related.writerow({
+                        'work_a_id': wid,
+                        'work_b_id': strip_id(rel)
+                    })
 
-        f_sql_cpy.write(f"COPY {settings.pg_schema}.works ({fieldnames(writer_works)}) "
-                        f"FROM PROGRAM 'gunzip -c {out_works.absolute()}' csv header;\n\n")
-        f_sql_cpy.write(f"COPY {settings.pg_schema}.works_locations ({fieldnames(writer_locations)}) "
-                        f"FROM PROGRAM 'gunzip -c {out_m2m_locations.absolute()}' csv header;\n\n")
-        f_sql_cpy.write(f"COPY {settings.pg_schema}.works_concepts "
-                        f"FROM PROGRAM 'gunzip -c {out_m2m_concepts.absolute()}' csv header;\n\n")
-        f_sql_cpy.write(f"COPY {settings.pg_schema}.works_authorships ({fieldnames(writer_authorships)}) "
-                        f"FROM PROGRAM 'gunzip -c {out_m2m_authorships.absolute()}' csv header;\n\n")
-        f_sql_cpy.write(f"COPY {settings.pg_schema}.works_references ({fieldnames(writer_references)}) "
-                        f"FROM PROGRAM 'gunzip -c {out_m2m_references.absolute()}' csv header;\n\n")
-        f_sql_cpy.write(f"COPY {settings.pg_schema}.works_related ({fieldnames(writer_related)}) "
-                        f"FROM PROGRAM 'gunzip -c {out_m2m_related.absolute()}' csv header;\n\n")
+            for del_row in generate_deletions(ids=work_ids, object_type='work', batch_size=1000):
+                f_sql_del.write(del_row + '\n')
 
-    executionTime = (time.time() - startTime)
-    mins = int(executionTime / 60)
-    secs = executionTime - (mins * 60)
-    logging.info(f'Flattened {n_works:,} works with {n_abstracts:,} abstracts in'
-                 f' {mins}:{secs:.2f} from {partition}')
+            f_sql_cpy.write(f"COPY {settings.pg_schema}.works ({fieldnames(writer_works)}) "
+                            f"FROM PROGRAM 'gunzip -c {out_works.absolute()}' csv header;\n\n")
+            f_sql_cpy.write(f"COPY {settings.pg_schema}.works_locations ({fieldnames(writer_locations)}) "
+                            f"FROM PROGRAM 'gunzip -c {out_m2m_locations.absolute()}' csv header;\n\n")
+            f_sql_cpy.write(f"COPY {settings.pg_schema}.works_concepts "
+                            f"FROM PROGRAM 'gunzip -c {out_m2m_concepts.absolute()}' csv header;\n\n")
+            f_sql_cpy.write(f"COPY {settings.pg_schema}.works_authorships ({fieldnames(writer_authorships)}) "
+                            f"FROM PROGRAM 'gunzip -c {out_m2m_authorships.absolute()}' csv header;\n\n")
+            f_sql_cpy.write(f"COPY {settings.pg_schema}.works_references ({fieldnames(writer_references)}) "
+                            f"FROM PROGRAM 'gunzip -c {out_m2m_references.absolute()}' csv header;\n\n")
+            f_sql_cpy.write(f"COPY {settings.pg_schema}.works_related ({fieldnames(writer_related)}) "
+                            f"FROM PROGRAM 'gunzip -c {out_m2m_related.absolute()}' csv header;\n\n")
 
+        executionTime = (time.time() - startTime)
+        mins = int(executionTime / 60)
+        secs = executionTime - (mins * 60)
+        logging.info(f'Flattened {n_works:,} works with {n_abstracts:,} abstracts in'
+                     f' {mins}:{secs:.2f} from {partition}')
 
-def flatten_authors_partition_kw(kwargs):
-    return flatten_authors_partition(**kwargs)
+    def flatten_authors_partition_kw(kwargs):
+        return flatten_authors_partition(**kwargs)
 
+    def flatten_institutions_partition_kw(kwargs):
+        return flatten_institutions_partition(**kwargs)
 
-def flatten_institutions_partition_kw(kwargs):
-    return flatten_institutions_partition(**kwargs)
+    def flatten_publisher_partition_kw(kwargs):
+        return flatten_publisher_partition(**kwargs)
 
+    def flatten_funder_partition_kw(kwargs):
+        return flatten_funder_partition(**kwargs)
 
-def flatten_publisher_partition_kw(kwargs):
-    return flatten_publisher_partition(**kwargs)
+    def flatten_concept_partition_kw(kwargs):
+        return flatten_concept_partition(**kwargs)
 
+    def flatten_sources_partition_kw(kwargs):
+        return flatten_sources_partition(**kwargs)
 
-def flatten_funder_partition_kw(kwargs):
-    return flatten_funder_partition(**kwargs)
+    def flatten_works_partition_kw(kwargs):
+        return flatten_works_partition(**kwargs)
 
-
-def flatten_concept_partition_kw(kwargs):
-    return flatten_concept_partition(**kwargs)
-
-
-def flatten_sources_partition_kw(kwargs):
-    return flatten_sources_partition(**kwargs)
-
-
-def flatten_works_partition_kw(kwargs):
-    return flatten_works_partition(**kwargs)
-
-
-if __name__ == '__main__':
-    # flatten_works_partition(partition='../data/work/part_001.gz',
-    #                         out_works='../data/work/out/wrks.csv.gz',
-    #                         out_sql_cpy='../data/work/out/wrks-cpy.sql',
-    #                         out_sql_del='../data/work/out/wrks-del.sql',
-    #                         out_m2m_concepts='../data/work/out/con.csv.gz',
-    #                         out_m2m_related='../data/work/out/rel.csv.gz',
-    #                         out_m2m_authorships='../data/work/out/aut.csv.gz',
-    #                         out_m2m_locations='../data/work/out/loc.csv.gz',
-    #                         out_m2m_references='../data/work/out/ref.csv.gz',
-    #                         preserve_ram=True)
-    flatten_sources_partition(partition='../data/source/part_000.gz',
-                              out_sources='../data/source/out/src.csv.gz',
-                              out_sql_cpy='../data/source/out/src-cpy.sql',
-                              out_sql_del='../data/source/out/src-del.sql',
-                              preserve_ram=True)
+    if __name__ == '__main__':
+        # flatten_works_partition(partition='../data/work/part_001.gz',
+        #                         out_works='../data/work/out/wrks.csv.gz',
+        #                         out_sql_cpy='../data/work/out/wrks-cpy.sql',
+        #                         out_sql_del='../data/work/out/wrks-del.sql',
+        #                         out_m2m_concepts='../data/work/out/con.csv.gz',
+        #                         out_m2m_related='../data/work/out/rel.csv.gz',
+        #                         out_m2m_authorships='../data/work/out/aut.csv.gz',
+        #                         out_m2m_locations='../data/work/out/loc.csv.gz',
+        #                         out_m2m_references='../data/work/out/ref.csv.gz',
+        #                         preserve_ram=True)
+        flatten_sources_partition(partition='../data/source/part_000.gz',
+                                  out_sources='../data/source/out/src.csv.gz',
+                                  out_sql_cpy='../data/source/out/src-cpy.sql',
+                                  out_sql_del='../data/source/out/src-del.sql',
+                                  preserve_ram=True)

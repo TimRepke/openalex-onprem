@@ -65,6 +65,16 @@ class Location(Struct, omit_defaults=True, kw_only=True):
     version: str | None = None
 
 
+class LocationOut(Struct, omit_defaults=True, kw_only=True):
+    is_oa: bool | None = None
+    is_primary: bool | None = None
+    landing_page_url: str | None = None
+    license: str | None = None
+    source: DehydratedSource | None = None
+    pdf_url: str | None = None
+    version: str | None = None
+
+
 class Work(Struct, kw_only=True, omit_defaults=True):
     abstract_inverted_index: str | None = None
     authorships: list[Authorship] | None = None
@@ -95,7 +105,7 @@ class Work(Struct, kw_only=True, omit_defaults=True):
     # mesh
     # ngrams_url
     # open_access
-    # primary_location
+    primary_location: Location | None = None
     publication_date: str | None = None
     publication_year: int | None = None
     # referenced_works
