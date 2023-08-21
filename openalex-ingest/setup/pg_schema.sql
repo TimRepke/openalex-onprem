@@ -274,6 +274,8 @@ CREATE TABLE openalex.works_related
     PRIMARY KEY (work_a_id, work_b_id)
 );
 
+CREATE INDEX works_id_doi_idx ON openalex.works USING hash (id_doi);
+
 
 -- old stuff for reference:
 -- CREATE INDEX concepts_ancestors_concept_id_idx ON openalex.concepts_ancestors USING btree (concept_id);
