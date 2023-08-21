@@ -275,6 +275,7 @@ CREATE TABLE openalex.works_related
 );
 
 CREATE INDEX works_id_doi_idx ON openalex.works USING hash (id_doi);
+CREATE INDEX works_publication_year_idx ON openalex.works USING btree (id_doi);
 
 
 -- old stuff for reference:
