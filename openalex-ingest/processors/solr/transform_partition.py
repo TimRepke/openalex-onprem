@@ -27,15 +27,18 @@ def transform_partition(in_file: str | Path, out_file: str | Path) -> tuple[int,
     with gzip.open(in_file, 'rb') as f_in, open(out_file, 'wb') as f_out:
         for line in f_in:
             n_works += 1
-            work = decoder_work.decode(line)
+            try:
+                work = decoder_work.decode(line)
+            except Exception as e:
+                print(line)
+                raise e
             wid = strip_id(work.id)
 
             abstract = None
             if work.abstract_inverted_index is not None:
                 try:
-                    ia = decoder_ia.decode(work.abstract_inverted_index)
-                    inverted_abstract = ia.InvertedIndex
-                    abstract = invert(inverted_abstract, ia.IndexLength)
+                    inverted_abstract = work.abstract_inverted_index
+                    abstract = invert(inverted_abstract, work.abstract_inverted_index)
                     if len(abstract.strip()) > 0:
                         n_abstracts += 1
                     else:

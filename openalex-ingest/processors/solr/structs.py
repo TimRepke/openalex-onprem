@@ -76,7 +76,7 @@ class LocationOut(Struct, omit_defaults=True, kw_only=True):
 
 
 class Work(Struct, kw_only=True, omit_defaults=True):
-    abstract_inverted_index: str | None = None
+    abstract_inverted_index: InvertedAbstract | None = None
     authorships: list[Authorship] | None = None
     # apc_list
     # apc_paid
