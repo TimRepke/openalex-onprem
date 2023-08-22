@@ -274,8 +274,11 @@ CREATE TABLE openalex.works_related
     PRIMARY KEY (work_a_id, work_b_id)
 );
 
-CREATE INDEX works_id_doi_idx ON openalex.works USING hash (id_doi);
-CREATE INDEX works_publication_year_idx ON openalex.works USING btree (id_doi);
+-- CREATE INDEX works_id_doi_idx ON openalex.works USING hash (id_doi);
+-- CREATE INDEX IF NOT EXISTS works_publication_year_idx ON openalex.works USING btree (id_doi);
+
+-- DROP INDEX IF EXISTS works_id_doi_idx;
+-- DROP INDEX IF EXISTS works_publication_year_idx;
 
 
 -- old stuff for reference:

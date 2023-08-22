@@ -143,6 +143,11 @@ if [ "$update_pg" = true ]; then
   cd "$tmp_dir"
   # shellcheck disable=SC2034
   export PGPASSWORD="$OA_PG_PW"  # set for passwordless postgres
+
+  echo "Dropping indexes to speed up imports..."
+  psql -c 'DROP INDEX IF EXISTS works_id_doi_idx;' -p "$OA_PG_PORT" -h "$OA_PG_HOST" -U "$OA_PG_USER" --echo-all -d "$OA_PG_DB"
+  psql -c 'DROP INDEX IF EXISTS works_publication_year_idx;' -p "$OA_PG_PORT" -h "$OA_PG_HOST" -U "$OA_PG_USER" --echo-all -d "$OA_PG_DB"
+
   if [ "$del_prior" = "--no-skip-deletion" ]; then
     echo "Deleting merged objects"
     find ./postgres -name "*-merged_del.sql" -exec psql -f {} -p "$OA_PG_PORT" -h "$OA_PG_HOST" -U "$OA_PG_USER" --echo-all -d "$OA_PG_DB" \;
@@ -151,6 +156,10 @@ if [ "$update_pg" = true ]; then
   fi
   echo "Import new or updated objects"
   find ./postgres -name "*-cpy.sql" -exec psql -f {} -p "$OA_PG_PORT" -h "$OA_PG_HOST" -U "$OA_PG_USER" --echo-all -d "$OA_PG_DB" \;
+
+  echo "Creating indexes again..."
+  psql -c 'CREATE INDEX IF NOT EXISTS works_id_doi_idx ON openalex.works USING hash (id_doi);' -p "$OA_PG_PORT" -h "$OA_PG_HOST" -U "$OA_PG_USER" --echo-all -d "$OA_PG_DB"
+  psql -c 'CREATE INDEX IF NOT EXISTS works_publication_year_idx ON openalex.works USING btree (id_doi);' -p "$OA_PG_PORT" -h "$OA_PG_HOST" -U "$OA_PG_USER" --echo-all -d "$OA_PG_DB"
 
   if [ "$cleanup" = true ]; then
     echo "Deleting all temporary flattened files and scripts"
