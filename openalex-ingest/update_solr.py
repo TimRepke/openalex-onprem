@@ -29,11 +29,11 @@ def update_solr(tmp_dir: Path,  # Directory where we can write temporary parsed 
     logging.info(f'Looks like there are {len(works)} works partitions '
                  f'and {len(merged)} merged_ids partitions since last update.')
 
-    for partition in works:
+    for pi, partition in enumerate(works):
         out_file = tmp_dir / f'solr-{name_part(partition)}.jsonl'
         out_file.parent.mkdir(exist_ok=True, parents=True)
 
-        logging.debug(f'Reading partition from "{partition}" and writing to "{out_file}"')
+        logging.debug(f'Reading partition ({pi:,}/{len(works):,}) from "{partition}" and writing to "{out_file}"')
         n_works, n_abstracts = transform_partition(partition, out_file)
         logging.info(f'Partition contained {n_works:,} works with {n_abstracts:,} abstracts (referring to {partition})')
 
