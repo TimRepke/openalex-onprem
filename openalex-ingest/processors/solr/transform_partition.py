@@ -37,8 +37,12 @@ def transform_partition(in_file: str | Path, out_file: str | Path) -> tuple[int,
             abstract = None
             if work.abstract_inverted_index is not None:
                 try:
-                    abstract = invert(work.abstract_inverted_index.InvertedIndex,
-                                      work.abstract_inverted_index.IndexLength)
+                    if type(work.abstract_inverted_index) is str:
+                        ia = decoder_ia.decode(work.abstract_inverted_index)
+                        abstract = invert(ia.InvertedIndex, ia.IndexLength)
+                    else:
+                        abstract = invert(work.abstract_inverted_index.InvertedIndex,
+                                          work.abstract_inverted_index.IndexLength)
                     if len(abstract.strip()) > 0:
                         n_abstracts += 1
                     else:
