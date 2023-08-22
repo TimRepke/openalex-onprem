@@ -33,9 +33,10 @@ def update_solr(tmp_dir: Path,  # Directory where we can write temporary parsed 
         out_file = tmp_dir / f'solr-{name_part(partition)}.jsonl'
         out_file.parent.mkdir(exist_ok=True, parents=True)
 
-        logging.debug(f'Reading partition ({pi:,}/{len(works):,}) from "{partition}" and writing to "{out_file}"')
+        logging.debug(f'Reading partition from "{partition}" and writing to "{out_file}"')
         n_works, n_abstracts = transform_partition(partition, out_file)
-        logging.info(f'Partition contained {n_works:,} works with {n_abstracts:,} abstracts (referring to {partition})')
+        logging.info(f'({pi:,}/{len(works):,}) Partition contained {n_works:,} works '
+                     f'with {n_abstracts:,} abstracts (referring to {partition})')
 
         subprocess.run([settings.solr_bin / 'post',
                         '-c', settings.solr_collection,
