@@ -212,7 +212,7 @@ class Society(Struct, kw_only=True, omit_defaults=True):
     organization: str | None = None
 
 
-SourceType = Literal['journal', 'repository', 'conference', 'ebook platform', 'book series']
+SourceType = Literal['journal', 'repository', 'conference', 'ebook platform', 'book series', 'other']
 
 
 class DehydratedSource(Struct, kw_only=True, omit_defaults=True):
