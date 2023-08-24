@@ -715,44 +715,44 @@ def flatten_works_partition(partition: Path | str,
                         'version': location.version
                     })
 
-                for concept in work.concepts:
-                    writer_concepts.writerow({
-                        'work_id': wid,
-                        'concept_id': strip_id(concept.id),
-                        'score': concept.score
-                    })
-                for ref in work.referenced_works:
-                    writer_references.writerow({
-                        'work_a_id': wid,
-                        'work_b_id': strip_id(ref)
-                    })
-                for rel in work.related_works:
-                    writer_related.writerow({
-                        'work_a_id': wid,
-                        'work_b_id': strip_id(rel)
-                    })
+            for concept in work.concepts:
+                writer_concepts.writerow({
+                    'work_id': wid,
+                    'concept_id': strip_id(concept.id),
+                    'score': concept.score
+                })
+            for ref in work.referenced_works:
+                writer_references.writerow({
+                    'work_a_id': wid,
+                    'work_b_id': strip_id(ref)
+                })
+            for rel in work.related_works:
+                writer_related.writerow({
+                    'work_a_id': wid,
+                    'work_b_id': strip_id(rel)
+                })
 
-            for del_row in generate_deletions(ids=work_ids, object_type='work', batch_size=1000):
-                f_sql_del.write(del_row + '\n')
+        for del_row in generate_deletions(ids=work_ids, object_type='work', batch_size=1000):
+            f_sql_del.write(del_row + '\n')
 
-            f_sql_cpy.write(f"COPY {settings.pg_schema}.works ({fieldnames(writer_works)}) "
-                            f"FROM PROGRAM 'gunzip -c {out_works.absolute()}' csv header;\n\n")
-            f_sql_cpy.write(f"COPY {settings.pg_schema}.works_locations ({fieldnames(writer_locations)}) "
-                            f"FROM PROGRAM 'gunzip -c {out_m2m_locations.absolute()}' csv header;\n\n")
-            f_sql_cpy.write(f"COPY {settings.pg_schema}.works_concepts "
-                            f"FROM PROGRAM 'gunzip -c {out_m2m_concepts.absolute()}' csv header;\n\n")
-            f_sql_cpy.write(f"COPY {settings.pg_schema}.works_authorships ({fieldnames(writer_authorships)}) "
-                            f"FROM PROGRAM 'gunzip -c {out_m2m_authorships.absolute()}' csv header;\n\n")
-            f_sql_cpy.write(f"COPY {settings.pg_schema}.works_references ({fieldnames(writer_references)}) "
-                            f"FROM PROGRAM 'gunzip -c {out_m2m_references.absolute()}' csv header;\n\n")
-            f_sql_cpy.write(f"COPY {settings.pg_schema}.works_related ({fieldnames(writer_related)}) "
-                            f"FROM PROGRAM 'gunzip -c {out_m2m_related.absolute()}' csv header;\n\n")
+        f_sql_cpy.write(f"COPY {settings.pg_schema}.works ({fieldnames(writer_works)}) "
+                        f"FROM PROGRAM 'gunzip -c {out_works.absolute()}' csv header;\n\n")
+        f_sql_cpy.write(f"COPY {settings.pg_schema}.works_locations ({fieldnames(writer_locations)}) "
+                        f"FROM PROGRAM 'gunzip -c {out_m2m_locations.absolute()}' csv header;\n\n")
+        f_sql_cpy.write(f"COPY {settings.pg_schema}.works_concepts "
+                        f"FROM PROGRAM 'gunzip -c {out_m2m_concepts.absolute()}' csv header;\n\n")
+        f_sql_cpy.write(f"COPY {settings.pg_schema}.works_authorships ({fieldnames(writer_authorships)}) "
+                        f"FROM PROGRAM 'gunzip -c {out_m2m_authorships.absolute()}' csv header;\n\n")
+        f_sql_cpy.write(f"COPY {settings.pg_schema}.works_references ({fieldnames(writer_references)}) "
+                        f"FROM PROGRAM 'gunzip -c {out_m2m_references.absolute()}' csv header;\n\n")
+        f_sql_cpy.write(f"COPY {settings.pg_schema}.works_related ({fieldnames(writer_related)}) "
+                        f"FROM PROGRAM 'gunzip -c {out_m2m_related.absolute()}' csv header;\n\n")
 
-        executionTime = (time.time() - startTime)
-        mins = int(executionTime / 60)
-        secs = executionTime - (mins * 60)
-        logging.info(f'Flattened {n_works:,} works with {n_abstracts:,} abstracts in'
-                     f' {mins}:{secs:.2f} from {partition}')
+    executionTime = (time.time() - startTime)
+    mins = int(executionTime / 60)
+    secs = executionTime - (mins * 60)
+    logging.info(f'Flattened {n_works:,} works with {n_abstracts:,} abstracts in'
+                 f' {mins}:{secs:.2f} from {partition}')
 
 
 def flatten_authors_partition_kw(kwargs):
