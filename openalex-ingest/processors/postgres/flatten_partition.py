@@ -754,40 +754,48 @@ def flatten_works_partition(partition: Path | str,
         logging.info(f'Flattened {n_works:,} works with {n_abstracts:,} abstracts in'
                      f' {mins}:{secs:.2f} from {partition}')
 
-    def flatten_authors_partition_kw(kwargs):
-        return flatten_authors_partition(**kwargs)
 
-    def flatten_institutions_partition_kw(kwargs):
-        return flatten_institutions_partition(**kwargs)
+def flatten_authors_partition_kw(kwargs):
+    return flatten_authors_partition(**kwargs)
 
-    def flatten_publisher_partition_kw(kwargs):
-        return flatten_publisher_partition(**kwargs)
 
-    def flatten_funder_partition_kw(kwargs):
-        return flatten_funder_partition(**kwargs)
+def flatten_institutions_partition_kw(kwargs):
+    return flatten_institutions_partition(**kwargs)
 
-    def flatten_concept_partition_kw(kwargs):
-        return flatten_concept_partition(**kwargs)
 
-    def flatten_sources_partition_kw(kwargs):
-        return flatten_sources_partition(**kwargs)
+def flatten_publisher_partition_kw(kwargs):
+    return flatten_publisher_partition(**kwargs)
 
-    def flatten_works_partition_kw(kwargs):
-        return flatten_works_partition(**kwargs)
 
-    if __name__ == '__main__':
-        # flatten_works_partition(partition='../data/work/part_001.gz',
-        #                         out_works='../data/work/out/wrks.csv.gz',
-        #                         out_sql_cpy='../data/work/out/wrks-cpy.sql',
-        #                         out_sql_del='../data/work/out/wrks-del.sql',
-        #                         out_m2m_concepts='../data/work/out/con.csv.gz',
-        #                         out_m2m_related='../data/work/out/rel.csv.gz',
-        #                         out_m2m_authorships='../data/work/out/aut.csv.gz',
-        #                         out_m2m_locations='../data/work/out/loc.csv.gz',
-        #                         out_m2m_references='../data/work/out/ref.csv.gz',
-        #                         preserve_ram=True)
-        flatten_sources_partition(partition='../data/source/part_000.gz',
-                                  out_sources='../data/source/out/src.csv.gz',
-                                  out_sql_cpy='../data/source/out/src-cpy.sql',
-                                  out_sql_del='../data/source/out/src-del.sql',
-                                  preserve_ram=True)
+def flatten_funder_partition_kw(kwargs):
+    return flatten_funder_partition(**kwargs)
+
+
+def flatten_concept_partition_kw(kwargs):
+    return flatten_concept_partition(**kwargs)
+
+
+def flatten_sources_partition_kw(kwargs):
+    return flatten_sources_partition(**kwargs)
+
+
+def flatten_works_partition_kw(kwargs):
+    return flatten_works_partition(**kwargs)
+
+
+if __name__ == '__main__':
+    # flatten_works_partition(partition='../data/work/part_001.gz',
+    #                         out_works='../data/work/out/wrks.csv.gz',
+    #                         out_sql_cpy='../data/work/out/wrks-cpy.sql',
+    #                         out_sql_del='../data/work/out/wrks-del.sql',
+    #                         out_m2m_concepts='../data/work/out/con.csv.gz',
+    #                         out_m2m_related='../data/work/out/rel.csv.gz',
+    #                         out_m2m_authorships='../data/work/out/aut.csv.gz',
+    #                         out_m2m_locations='../data/work/out/loc.csv.gz',
+    #                         out_m2m_references='../data/work/out/ref.csv.gz',
+    #                         preserve_ram=True)
+    flatten_sources_partition(partition='../data/source/part_000.gz',
+                              out_sources='../data/source/out/src.csv.gz',
+                              out_sql_cpy='../data/source/out/src-cpy.sql',
+                              out_sql_del='../data/source/out/src-del.sql',
+                              preserve_ram=True)
