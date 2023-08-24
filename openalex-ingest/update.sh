@@ -105,7 +105,7 @@ if [ "$sync_s3" = true ]; then
   # Go one up again so that s3 can sync it
   cd ..
   # Commission S3 sync
-  aws s3 sync "s3://openalex" "openalex-snapshot" --no-sign-request
+  aws s3 sync "s3://openalex" "openalex-snapshot" --no-sign-request --delete
   # Update group to openalex, so that everyone can read it later
   chgrp -R openalex .
   chmod -R 775 .
