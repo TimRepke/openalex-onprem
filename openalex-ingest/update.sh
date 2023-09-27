@@ -145,8 +145,7 @@ if [ "$update_pg" = true ]; then
   export PGPASSWORD="$OA_PG_PW"  # set for passwordless postgres
 
   echo "Dropping indexes to speed up imports..."
-  psql -c 'DROP INDEX IF EXISTS works_id_doi_idx;' -p "$OA_PG_PORT" -h "$OA_PG_HOST" -U "$OA_PG_USER" --echo-all -d "$OA_PG_DB"
-  psql -c 'DROP INDEX IF EXISTS works_publication_year_idx;' -p "$OA_PG_PORT" -h "$OA_PG_HOST" -U "$OA_PG_USER" --echo-all -d "$OA_PG_DB"
+  psql -f ./setup/pg_indices_drop.sql -p "$OA_PG_PORT" -h "$OA_PG_HOST" -U "$OA_PG_USER" --echo-all -d "$OA_PG_DB"
 
   if [ "$del_prior" = "--no-skip-deletion" ]; then
     echo "Deleting merged objects"
