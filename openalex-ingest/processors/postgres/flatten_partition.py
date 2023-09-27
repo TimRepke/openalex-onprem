@@ -597,8 +597,8 @@ def flatten_works_partition(partition: Path | str,
             'apc_paid', 'apc_list', 'license', 'cited_by_count',
             'is_paratext', 'is_retracted', 'mesh', 'grants',
             'created_date', 'updated_date'])
-        writer_authorships = get_writer(f_authorships, ['work_id', 'author_id', 'position',
-                                                        'raw_affiliation', 'is_corresponding'])
+        writer_authorships = get_writer(f_authorships, ['work_id', 'author_id', 'position', 'exact_position',
+                                                        'raw_author_name', 'raw_affiliation', 'is_corresponding'])
         writer_authorship_institutions = get_writer(f_authorship_institutions, ['work_id', 'author_id',
                                                                                 'institution_id'])
         writer_locations = get_writer(f_locations, ['work_id', 'source_id', 'is_oa', 'landing_page_url',
@@ -693,6 +693,7 @@ def flatten_works_partition(partition: Path | str,
                     'position': author.author_position,
                     'exact_position': ai,
                     'raw_affiliation': author.raw_affiliation_string,
+                    'raw_author_name': author.raw_author_name,
                     'is_corresponding': author.is_corresponding
                 })
                 if author.institutions is not None and len(author.institutions) > 0:

@@ -229,6 +229,7 @@ CREATE TABLE openalex.works_authorships
     position         text,
     exact_position   int,
     raw_affiliation  text,
+    raw_author_name  text,
     is_corresponding boolean
 );
 CREATE TABLE openalex.works_authorship_institutions
