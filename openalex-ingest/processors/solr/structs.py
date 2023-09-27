@@ -78,7 +78,7 @@ class LocationOut(Struct, omit_defaults=True, kw_only=True):
 
 
 class Work(Struct, kw_only=True, omit_defaults=True):
-    abstract_inverted_index: str | InvertedAbstract | None = None
+    abstract_inverted_index: dict[str, list[int]] | None = None
     authorships: list[Authorship] | None = None
     # apc_list
     # apc_paid
@@ -93,7 +93,6 @@ class Work(Struct, kw_only=True, omit_defaults=True):
     created_date: str | None = None
     display_name: str | None = None
     doi: str | None = None
-
     # grants
     id: str | None = None
     ids: WorkIds | None = None
@@ -101,7 +100,7 @@ class Work(Struct, kw_only=True, omit_defaults=True):
     is_paratext: bool | None = None
     is_retracted: bool | None = None
     language: str | None = None
-    # license:str
+    # license
     locations: list[Location] | None = None
     # locations_count
     # mesh
@@ -112,14 +111,11 @@ class Work(Struct, kw_only=True, omit_defaults=True):
     publication_year: int | None = None
     # referenced_works
     # related_works
+    # sustainable_development_goals
     title: str | None = None
     type: str | None = None
     # type_crossref
     updated_date: str | None = None
-    # ngram
-    # ngram_count
-    # ngram_tokens
-    # term_frequency
 
 
 class WorkOut(Struct, kw_only=True, omit_defaults=True):

@@ -158,8 +158,7 @@ if [ "$update_pg" = true ]; then
   find ./postgres -name "*-cpy.sql" -exec psql -f {} -p "$OA_PG_PORT" -h "$OA_PG_HOST" -U "$OA_PG_USER" --echo-all -d "$OA_PG_DB" \;
 
   echo "Creating indexes again..."
-  psql -c 'CREATE INDEX IF NOT EXISTS works_id_doi_idx ON openalex.works USING hash (id_doi);' -p "$OA_PG_PORT" -h "$OA_PG_HOST" -U "$OA_PG_USER" --echo-all -d "$OA_PG_DB"
-  psql -c 'CREATE INDEX IF NOT EXISTS works_publication_year_idx ON openalex.works USING btree (id_doi);' -p "$OA_PG_PORT" -h "$OA_PG_HOST" -U "$OA_PG_USER" --echo-all -d "$OA_PG_DB"
+  psql -f ./setup/pg_indices.sql -p "$OA_PG_PORT" -h "$OA_PG_HOST" -U "$OA_PG_USER" --echo-all -d "$OA_PG_DB"
 
   if [ "$cleanup" = true ]; then
     echo "Deleting all temporary flattened files and scripts"

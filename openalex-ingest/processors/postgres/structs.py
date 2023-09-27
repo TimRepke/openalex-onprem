@@ -304,6 +304,7 @@ class Authorship(Struct, kw_only=True, omit_defaults=True):
     institutions: list[DehydratedInstitution] | None = None
     is_corresponding: bool | None = None
     raw_affiliation_string: str | None = None
+    raw_author_name: str | None = None
 
 
 class CitationsByYear(Struct, kw_only=True, omit_defaults=True):
@@ -362,8 +363,14 @@ class OpenAccess(Struct, kw_only=True, omit_defaults=True):
     is_oa: bool | None = None
 
 
+class SustainableDevelopmentGoal(Struct, kw_only=True, omit_defaults=True):
+    id: str | None = None
+    display_name: str | None = None
+    score: float | None = None
+
+
 class Work(Struct, kw_only=True, omit_defaults=True):
-    abstract_inverted_index: str | InvertedAbstract | None = None
+    abstract_inverted_index: dict[str, list[int]] | None = None
     authorships: list[Authorship] | None = None
     apc_list: APC | None = None
     apc_paid: APC | list[APC] | None = None
@@ -395,10 +402,8 @@ class Work(Struct, kw_only=True, omit_defaults=True):
     publication_year: int | None = None
     referenced_works: list[str] | None = None
     related_works: list[str] | None = None
+    sustainable_development_goals: list[SustainableDevelopmentGoal] | None = None
     title: str | None = None
     type: str | None = None
     type_crossref: str | None = None
     updated_date: str | None = None
-    # //host_venue  # deprecated
-    # ngram
-    # ngrams_url: str | None = None

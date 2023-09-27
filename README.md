@@ -37,7 +37,7 @@ Here are some helpful commands for starting, stopping, or managing solr:
 cd /srv/solr
 
 # starting solr
-sudo -u solr solr/bin/solr start -c -h 0.0.0.0 -m 6g -s /srv/solr/solr-home -Denable.packages=true -Dsolr.modules=sql,clustering -Dsolr.max.booleanClauses=4096
+sudo -u solr solr/bin/solr start -c -h 0.0.0.0 -m 20g -s /srv/solr/solr-home -Denable.packages=true -Dsolr.modules=sql,clustering -Dsolr.max.booleanClauses=4096
 
 # stop and monitor solr
 sudo -u solr solr/bin/solr stop
@@ -97,3 +97,22 @@ Only running initial solr import:
 * The flattened postgres files have a size of around 163GB
 * The `/var/lib/postgresql/15/main/base` folder is around 1TB after the initial full snapshot import.
 * The temporary solr files usually around 1GB, but since each partition is processed one-by-one, there's no significant storage need here.
+
+## Some admin tricks
+```bash
+# See which postgres DBs are running
+pg_lsclusters
+
+# Create another database instance
+pg_createcluster 16 main -p 5439  # change "main" and "5439"
+
+# Adjust settings in the /etc/postgresql/[version]/[name]/hba_conf.conf
+# (esp. connection via external IP and login as user)
+# Adjust settings in the /etc/postgresql/[version]/[name]/postgres.conf
+# (esp. listen_address=0.0.0.0 and port)
+
+# Create the "oa" database
+sudo -u postgres createdb -p 5433 oa
+# Open SQL console
+sudo -u postgres psql -p  5433 oa
+```
