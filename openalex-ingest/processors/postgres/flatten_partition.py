@@ -729,13 +729,14 @@ def flatten_works_partition(partition: Path | str,
                     'concept_id': strip_id(concept.id),
                     'score': concept.score
                 })
-            for sdg in work.sustainable_development_goals:
-                writer_sdgs.writerow({
-                    'work_id': wid,
-                    'sdg_id': sdg.id,
-                    'display_name': sdg.display_name,
-                    'score': sdg.score
-                })
+            if author.sustainable_development_goals is not None and len(author.sustainable_development_goals) > 0:
+                for sdg in work.sustainable_development_goals:
+                    writer_sdgs.writerow({
+                        'work_id': wid,
+                        'sdg_id': sdg.id,
+                        'display_name': sdg.display_name,
+                        'score': sdg.score
+                    })
             for ref in work.referenced_works:
                 writer_references.writerow({
                     'work_a_id': wid,
