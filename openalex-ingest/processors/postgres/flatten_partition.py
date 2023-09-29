@@ -88,8 +88,8 @@ def flatten_authors_partition(partition: Path | str,
                 'i10_index': author.summary_stats.i10_index,
                 'display_name': author.display_name,
                 'display_name_alternatives': prepare_list(author.display_name_alternatives),
-                'last_known_institution': strip_id(author.last_known_institution.id) \
-                    if author.last_known_institution is not None else None,
+                'last_known_institution': (strip_id(author.last_known_institution.id)
+                                           if author.last_known_institution is not None else None),
                 'id_mag': author.ids.mag,
                 'id_orcid': author.ids.orcid,
                 'id_scopus': author.ids.scopus,
@@ -729,7 +729,7 @@ def flatten_works_partition(partition: Path | str,
                     'concept_id': strip_id(concept.id),
                     'score': concept.score
                 })
-            if author.sustainable_development_goals is not None and len(author.sustainable_development_goals) > 0:
+            if work.sustainable_development_goals is not None and len(work.sustainable_development_goals) > 0:
                 for sdg in work.sustainable_development_goals:
                     writer_sdgs.writerow({
                         'work_id': wid,
@@ -759,8 +759,9 @@ def flatten_works_partition(partition: Path | str,
                         f"FROM PROGRAM 'gunzip -c {out_m2m_concepts.absolute()}' csv header;\n\n")
         f_sql_cpy.write(f"COPY {settings.pg_schema}.works_authorships ({fieldnames(writer_authorships)}) "
                         f"FROM PROGRAM 'gunzip -c {out_m2m_authorships.absolute()}' csv header;\n\n")
-        f_sql_cpy.write(f"COPY {settings.pg_schema}.works_authorship_institutions ({fieldnames(writer_authorship_institutions)}) "
-                        f"FROM PROGRAM 'gunzip -c {out_m2m_authorship_institutions.absolute()}' csv header;\n\n")
+        f_sql_cpy.write(
+            f"COPY {settings.pg_schema}.works_authorship_institutions ({fieldnames(writer_authorship_institutions)}) "
+            f"FROM PROGRAM 'gunzip -c {out_m2m_authorship_institutions.absolute()}' csv header;\n\n")
         f_sql_cpy.write(f"COPY {settings.pg_schema}.works_references ({fieldnames(writer_references)}) "
                         f"FROM PROGRAM 'gunzip -c {out_m2m_references.absolute()}' csv header;\n\n")
         f_sql_cpy.write(f"COPY {settings.pg_schema}.works_related ({fieldnames(writer_related)}) "
