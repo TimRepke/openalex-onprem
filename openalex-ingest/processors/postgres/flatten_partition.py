@@ -758,10 +758,14 @@ def flatten_works_partition(partition: Path | str,
                         f"FROM PROGRAM 'gunzip -c {out_m2m_concepts.absolute()}' csv header;\n\n")
         f_sql_cpy.write(f"COPY {settings.pg_schema}.works_authorships ({fieldnames(writer_authorships)}) "
                         f"FROM PROGRAM 'gunzip -c {out_m2m_authorships.absolute()}' csv header;\n\n")
+        f_sql_cpy.write(f"COPY {settings.pg_schema}.works_authorship_institutions ({fieldnames(writer_authorship_institutions)}) "
+                        f"FROM PROGRAM 'gunzip -c {out_m2m_authorship_institutions.absolute()}' csv header;\n\n")
         f_sql_cpy.write(f"COPY {settings.pg_schema}.works_references ({fieldnames(writer_references)}) "
                         f"FROM PROGRAM 'gunzip -c {out_m2m_references.absolute()}' csv header;\n\n")
         f_sql_cpy.write(f"COPY {settings.pg_schema}.works_related ({fieldnames(writer_related)}) "
                         f"FROM PROGRAM 'gunzip -c {out_m2m_related.absolute()}' csv header;\n\n")
+        f_sql_cpy.write(f"COPY {settings.pg_schema}.works_sdgs ({fieldnames(writer_sdgs)}) "
+                        f"FROM PROGRAM 'gunzip -c {out_m2m_sdgs.absolute()}' csv header;\n\n")
 
     executionTime = (time.time() - startTime)
     mins = int(executionTime / 60)

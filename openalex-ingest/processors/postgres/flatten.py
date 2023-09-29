@@ -211,8 +211,10 @@ def flatten_works(tmp_dir: Path, parallelism: int = 8, skip_deletion: bool = Fal
                 'out_m2m_locations': tmp_dir / f'pg-work-{name_part(partition)}_works_locations.csv.gz',
                 'out_m2m_concepts': tmp_dir / f'pg-work-{name_part(partition)}_works_concepts.csv.gz',
                 'out_m2m_authorships': tmp_dir / f'pg-work-{name_part(partition)}_works_authorships.csv.gz',
+                'out_m2m_authorship_institutions': tmp_dir / f'pg-work-{name_part(partition)}_works_authorship_institutions.csv.gz',
                 'out_m2m_references': tmp_dir / f'pg-work-{name_part(partition)}_works_references.csv.gz',
                 'out_m2m_related': tmp_dir / f'pg-work-{name_part(partition)}_works_related.csv.gz',
+                'out_m2m_sdgs': tmp_dir / f'pg-work-{name_part(partition)}_works_sdgs.csv.gz',
                 'preserve_ram': preserve_ram
             }
             for partition in partitions
