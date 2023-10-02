@@ -234,11 +234,10 @@ CREATE TABLE openalex.works_authorships
 );
 CREATE TABLE openalex.works_authorship_institutions
 (
+    row_id         BIGSERIAL PRIMARY KEY,
     work_id        text NOT NULL,
     author_id      text NOT NULL,
-    institution_id text NOT NULL,
-
-    PRIMARY KEY (work_id, author_id, institution_id)
+    institution_id text NOT NULL
 );
 CREATE TABLE openalex.works_locations
 (
