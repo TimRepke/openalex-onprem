@@ -143,7 +143,10 @@ fi
 
 if [ "$update_pg" = true ]; then
   echo "Updating PostgreSQL..."
-  python update_postgres.py --loglevel INFO --parallelism "$jobs" "$preserve_ram" "$del_prior" "$override" "$tmp_dir/postgres"
+
+  if [ "$pg_flatten" = true ]; then
+    python update_postgres.py --loglevel INFO --parallelism "$jobs" "$preserve_ram" "$del_prior" "$override" "$tmp_dir/postgres"
+  fi
 
   # shellcheck disable=SC2034
   export PGPASSWORD="$OA_PG_PW"  # set for passwordless postgres
