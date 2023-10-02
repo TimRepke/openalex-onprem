@@ -8,6 +8,7 @@ sync_s3=true
 compile=true
 update_solr=true
 update_pg=true
+pg_flatten=true
 cleanup=true
 override="--no-override"
 preserve_ram="--preserve-ram"
@@ -23,6 +24,7 @@ usage() {
  echo " --skip-compile  Skip (re-)compilation of Cython code"
  echo " --skip-solr     Skip update of Solr collection"
  echo " --skip-pg       Skip update of postgres"
+ echo " --skip-flat     Skip flattening of import files for postgres"
  echo " --skip-del      Skip deletion of existing data in db/solr"
  echo " --skip-clean    Skip deleting all temporary files"
  echo " --override      Ignore existing flattened files and override them"
@@ -64,6 +66,9 @@ while [ $# -gt 0 ]; do
       ;;
     --skip-pg)
       update_pg=false
+      ;;
+    --skip-flat)
+      pg_flatten=false
       ;;
     --skip-del)
       del_prior="--skip-deletion"
@@ -140,12 +145,14 @@ if [ "$update_pg" = true ]; then
   echo "Updating PostgreSQL..."
   python update_postgres.py --loglevel INFO --parallelism "$jobs" "$preserve_ram" "$del_prior" "$override" "$tmp_dir/postgres"
 
-  cd "$tmp_dir"
   # shellcheck disable=SC2034
   export PGPASSWORD="$OA_PG_PW"  # set for passwordless postgres
 
   echo "Dropping indexes to speed up imports..."
   psql -f ./setup/pg_indices_drop.sql -p "$OA_PG_PORT" -h "$OA_PG_HOST" -U "$OA_PG_USER" --echo-all -d "$OA_PG_DB"
+
+  # Go to directory where all the data is
+  cd "$tmp_dir" || exit
 
   if [ "$del_prior" = "--no-skip-deletion" ]; then
     echo "Deleting merged objects"
@@ -155,6 +162,9 @@ if [ "$update_pg" = true ]; then
   fi
   echo "Import new or updated objects"
   find ./postgres -name "*-cpy.sql" -exec psql -f {} -p "$OA_PG_PORT" -h "$OA_PG_HOST" -U "$OA_PG_USER" --echo-all -d "$OA_PG_DB" \;
+
+  # Go back to the script directory
+  cd "$SCRIPT_DIR" || exit
 
   echo "Creating indexes again..."
   psql -f ./setup/pg_indices.sql -p "$OA_PG_PORT" -h "$OA_PG_HOST" -U "$OA_PG_USER" --echo-all -d "$OA_PG_DB"
