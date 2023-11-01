@@ -7,3 +7,6 @@ CREATE INDEX IF NOT EXISTS works_authorships_author_id_idx ON openalex.works_aut
 CREATE INDEX IF NOT EXISTS works_authorship_institutions_author_id_idx ON openalex.works_authorship_institutions USING hash (author_id);
 CREATE INDEX IF NOT EXISTS works_authorship_institutions_work_id_idx ON openalex.works_authorship_institutions USING hash (work_id);
 CREATE INDEX IF NOT EXISTS works_authorship_institutions_institution_id_idx ON openalex.works_authorship_institutions USING hash (institution_id);
+
+CREATE INDEX IF NOT EXISTS works_locations_work_id_idx ON openalex.works_locations USING hash (work_id);
+CREATE INDEX IF NOT EXISTS works_locations_source_id_idx ON openalex.works_locations USING hash (source_id);
