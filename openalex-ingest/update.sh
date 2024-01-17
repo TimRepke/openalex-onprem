@@ -23,6 +23,7 @@ run_pg_clr=false       # drop tmp files
 solr_skip_del="--skip-deletion"
 pg_skip_del="--skip-deletion"
 
+show_aws_progress=""   # set this to shut up aws progress in gitlab ci
 override="--no-override"
 preserve_ram="--preserve-ram"
 jobs=1
@@ -47,6 +48,7 @@ usage() {
  echo " --override      Ignore existing flattened files and override them"
  echo " --jobs N        Number of processes for parallel processing"
  echo " --use-ram       Will not try to preserve RAM for small performance boost"
+ echo " --no-progress   Set this to shut up aws sync updates (spams the gitlab-ci log)"
  echo ""
  echo " -h, --help      Display this help message"
 }
@@ -121,6 +123,9 @@ while [ $# -gt 0 ]; do
     --use-ram)
       preserve_ram="--no-preserve-ram"
       ;;
+    --no-progress)
+      show_aws_progress="--no-progress"
+      ;;
     *)
       echo "Invalid option: $1" >&2
       usage
@@ -177,7 +182,7 @@ if [ "$sync_s3" = true ] && [ "$TODAY" \> "$LAST_SYNC" ]; then
   cd ..
 
   # Commission S3 sync
-  aws s3 sync "s3://openalex" "openalex-snapshot" --no-sign-request --delete
+  aws s3 sync "s3://openalex" "openalex-snapshot" --no-sign-request --delete "$show_aws_progress"
 
   # Update group to openalex, so that everyone can read it later
   chgrp -R openalex .
