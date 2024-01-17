@@ -68,16 +68,9 @@ python setup.py build_ext --inplace
 Note: The `tmp_dir` must have `rwx` permissions for the postgres user in order for this to work; files at least `r`.
 You could get away with more restrictive permissions, but then you'd have to use `\copy` instead of `COPY`, which [the documentation says is slower](https://www.postgresql.org/docs/current/app-psql.html#APP-PSQL-META-COMMANDS-COPY).
 
-Assuming you already synced to the latest OpenAlex snapshot and you only want to flatten files for the initial 
-postgres import (not deleting flattened files after done and not generating deletion files);
+All steps are skipped by default. The following assumes you have the latest version of the snapshot synced and runs the full solr/postgres import:
 ```bash
-./update.sh /path/to/openalex/tmp_dir --skip-sync --skip-solr --skip-del --skip-clean --jobs 20
-```
-
-Only running initial solr import:
-
-```bash
-./update.sh /path/to/tmp_dir/ --skip-sync --skip-pg --skip-clean --skip-del
+./update.sh /path/to/openalex/tmp_dir  --config secret.env --solr --solr-del --solr-clr --pg-del-ind --pg-del-dat --pg-del-upd --pg-flat --pg --pg-ind --pg-clr --jobs 15 --override
 ```
 
 ## Caveats
