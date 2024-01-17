@@ -58,12 +58,13 @@ Setup-environment:
     - cd "$OA_SCRIPT_DIR" || exit
     #
     - echo "Dropping virtual environment"
+    - pwd
     - rm -rf venv
     - echo "Fetching updated source"
     - git stash  # "reset" softly by stashing (in case files changed)
     - git pull origin main  # pull from origin
     - echo "Creating new virtual environment"
-    - python3.10 -m venv venv
+    - python3.11 -m venv venv
     - source venv/bin/activate
     - which python
     - python -V
@@ -71,9 +72,10 @@ Setup-environment:
     - pip install -r requirements.txt
   when: manual
 
-Sync-S3-bucket:
+Fetch-S3-bucket:
   stage: build
   needs: ["Setup-environment"]
+  dependencies: ["Setup-environment"]
   when: on_success
   tags:
     - rechner
@@ -86,7 +88,7 @@ Sync-S3-bucket:
 
 Solr:
   stage: solr
-  needs: ["Sync-S3-bucket"]
+  needs: ["Fetch-S3-bucket"]
   when: on_success
   tags:
     - rechner
