@@ -60,6 +60,7 @@ Build:
 
 Sync-S3-bucket:
   stage: sync
+  needs: ["Build"]
   tags:
     - rechner
   script:
@@ -71,6 +72,7 @@ Sync-S3-bucket:
 
 Solr:
   stage: solr
+  needs: ["Sync-S3-bucket"]
   tags:
     - rechner
   script:
@@ -82,6 +84,7 @@ Solr:
 
 Postgres-prep:
   stage: postgres
+  needs: ["Solr"]
   tags:
     - rechner
   script:
