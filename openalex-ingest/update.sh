@@ -159,12 +159,14 @@ do_compile() {
 echo "-=# (1/3) S3 bucket sync #=-"
 
 LAST_SYNC=$([ -f "$OA_LAST_SYNC_FILE" ] && cat "$OA_LAST_SYNC_FILE" || echo "1970-01-01")
-LAST_UPDT=$([ -f "$OA_LAST_UPDATE_FILE" ] && cat "$OA_LAST_UPDATE_FILE" || echo "1970-01-01")
+LAST_UPDT_PG=$([ -f "$OA_LAST_UPDATE_PG_FILE" ] && cat "$OA_LAST_UPDATE_PG_FILE" || echo "1970-01-01")
+LAST_UPDT_SOLR=$([ -f "$OA_LAST_UPDATE_SOLR_FILE" ] && cat "$OA_LAST_UPDATE_SOLR_FILE" || echo "1970-01-01")
 TODAY=$(date +%Y-%m-%d)
 
 echo "Date for today: ${TODAY}"
 echo "Last S2 sync: ${LAST_SYNC} (from ${OA_LAST_SYNC_FILE})"
-echo "Last update: ${LAST_UPDT} (from ${OA_LAST_UPDATE_FILE})"
+echo "Last update: ${LAST_UPDT_PG} (from ${OA_LAST_UPDATE_PG_FILE})"
+echo "Last update: ${LAST_UPDT_SOLR} (from ${OA_LAST_UPDATE_SOLR_FILE})"
 
 if [ "$sync_s3" = true ] && [ "$TODAY" \> "$LAST_SYNC" ]; then
   echo "Syncing openalex S3 bucket..."
@@ -180,6 +182,10 @@ if [ "$sync_s3" = true ] && [ "$TODAY" \> "$LAST_SYNC" ]; then
   # Update group to openalex, so that everyone can read it later
   chgrp -R openalex .
   chmod -R 775 .
+
+  # Remember that we synced the snapshot
+  rm -f "$OA_LAST_SYNC_FILE"
+  echo "$TODAY" > "$OA_LAST_SYNC_FILE"
 else
   echo "Assuming the OpenAlex snapshot is up to date, not syncing!"
 fi
@@ -202,6 +208,10 @@ source ../venv/bin/activate
 if [ "$run_solr" = true ]; then
   echo "Running solr import..."
   python update_solr.py "$solr_skip_del" --loglevel INFO "$tmp_dir/solr"
+
+  # Remember that we synced the snapshot
+  rm -f "$OA_LAST_UPDATE_SOLR_FILE"
+  echo "$TODAY" > "$OA_LAST_UPDATE_SOLR_FILE"
 fi
 
 if [ "$run_solr_clr" = true ]; then
@@ -257,6 +267,10 @@ if [ "$run_pg_import" = true ]; then
   echo "Import new or updated objects"
   cd "$tmp_dir" || exit
   find ./postgres -name "*-cpy.sql" -exec psql -f {} -p "$OA_PG_PORT" -h "$OA_PG_HOST" -U "$OA_PG_USER" --echo-all -d "$OA_PG_DB" \;
+
+  # Remember that we synced the snapshot
+  rm -f "$OA_LAST_UPDATE_PG_FILE"
+  echo "$TODAY" > "$OA_LAST_UPDATE_PG_FILE"
 fi
 
 if [ "$run_pg_ind" = true ]; then
