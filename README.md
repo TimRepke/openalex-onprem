@@ -116,3 +116,17 @@ sudo -u postgres createdb -p 5433 oa
 # Open SQL console
 sudo -u postgres psql -p  5433 oa
 ```
+
+## Some random solr things
+```bash
+sudo -u solr vim solr/bin/solr.in.sh
+sudo -u solr vim solr/server/solr/solr.xml
+sudo -u solr vim managed-schema.xml
+sudo -u solr solr/bin/solr zk cp file:managed-schema.xml zk:/configs/._designer_openalex/managed-schema.xml -z 127.0.0.1:9983
+sudo -u solr solr/bin/solr status
+sudo -u solr solr/bin/solr stop -h 0.0.0.0
+sudo -u solr solr/bin/solr start -c  -h 0.0.0.0 -m 20g -s /srv/solr/solr-home -Denable.packages=true -Dsolr.modules=sql,clustering -Dsolr.max.booleanClauses=4096
+sudo -u solr solr/bin/solr start -c openalex -Denable.packages=true -Dsolr.modules=sql,clustering -Dhost=0.0.0.0 -memory=6g -solr.home=/srv/solr/solr-home -Dsolr.max.booleanClauses=4096 -Dsolr.jetty.host=0.0.0.0
+sudo -u solr solr/bin/solr start -c -Denable.packages=true -Dsolr.modules=sql,clustering -Dhost=0.0.0.0 -memory=6g -d /srv/solr/solr-home -Dsolr.max.booleanClauses=4096 -Dsolr.jetty.host=0.0.0.0
+sudo -u solr solr/bin/solr start -c -Denable.packages=true -Dsolr.modules=sql,clustering -h 0.0.0.0 -m 6g -d /srv/solr/solr-home -Dsolr.max.booleanClauses=4096 -h 0.0.0.0
+```

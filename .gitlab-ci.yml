@@ -30,11 +30,10 @@ before_script:
 
 stages:
   - build
-  - sync
   - solr
   - postgres
 
-Build:
+Setup-environment:
   stage: build
   tags:
     - rechner
@@ -59,8 +58,9 @@ Build:
   when: manual
 
 Sync-S3-bucket:
-  stage: sync
-  needs: ["Build"]
+  stage: build
+  needs: ["Setup-environment"]
+  when: on_success
   tags:
     - rechner
   script:
@@ -73,6 +73,7 @@ Sync-S3-bucket:
 Solr:
   stage: solr
   needs: ["Sync-S3-bucket"]
+  when: on_success
   tags:
     - rechner
   script:
@@ -85,6 +86,7 @@ Solr:
 Postgres-prep:
   stage: postgres
   needs: ["Solr"]
+  when: on_success
   tags:
     - rechner
   script:
@@ -97,6 +99,7 @@ Postgres-prep:
 Postgres-flat:
   stage: postgres
   needs: ["Postgres-prep"]
+  when: on_success
   tags:
     - rechner
   script:
@@ -109,6 +112,7 @@ Postgres-flat:
 Postgres-import:
   stage: postgres
   needs: ["Postgres-flat"]
+  when: on_success
   tags:
     - rechner
   script:
@@ -121,6 +125,7 @@ Postgres-import:
 Postgres-post:
   stage: postgres
   needs: ["Postgres-import"]
+  when: on_success
   tags:
     - rechner
   script:
