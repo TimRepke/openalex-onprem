@@ -30,6 +30,7 @@ before_script:
 
 stages:
   - build
+  - sync
   - solr
   - postgres
 
@@ -71,9 +72,10 @@ Setup-environment:
     - echo "Installing requirements"
     - pip install -r requirements.txt
   when: manual
+  allow_failure: false
 
 Fetch-S3-bucket:
-  stage: build
+  stage: sync
   needs: ["Setup-environment"]
   dependencies: ["Setup-environment"]
   when: on_success
