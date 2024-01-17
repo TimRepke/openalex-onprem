@@ -46,6 +46,7 @@ Setup-environment:
     - echo "Dropping virtual environment"
     - rm -rf venv
     - echo "Fetching updated source"
+    - git config --global --add safe.directory "$OA_SCRIPT_DIR"
     - git stash  # "reset" softly by stashing (in case files changed)
     - git pull origin main  # pull from origin
     - echo "Creating new virtual environment"
