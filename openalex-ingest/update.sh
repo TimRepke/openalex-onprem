@@ -3,30 +3,47 @@
 # Set this to exit the script when an error occurs
 set -e
 
+# Remember where we are right now, later we might change to other places and want to find our way back
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
 # Default variable values
-sync_s3=true
-compile=true
-update_solr=true
-update_pg=true
-pg_flatten=true
-cleanup=true
+config_file="secret.env"
+sync_s3=false
+run_solr=false
+run_solr_clr=false
+
+run_pg_flat=false      # flatten postgres files
+run_pg_drop_ind=false  # drop indices before import
+run_pg_drop_dat=false  # drop selected data before import
+run_pg_drop_full=false # drop all data before import
+run_pg_import=false    # import data
+run_pg_ind=false       # build indices
+run_pg_clr=false       # drop tmp files
+
+solr_skip_del="--skip-deletion"
+pg_skip_del="--skip-deletion"
+
 override="--no-override"
 preserve_ram="--preserve-ram"
 jobs=1
-del_prior="--no-skip-deletion"
 
 # Function to display script usage
 usage() {
  echo "Usage: $0 TMP_DIR [OPTIONS]"
  echo "   TMP_DIR is the absolute path to a directory where we can temporarily put files"
  echo "Options:"
- echo " --skip-sync     Skip synchronisation with OpenAlex S3 bucket"
- echo " --skip-compile  Skip (re-)compilation of Cython code"
- echo " --skip-solr     Skip update of Solr collection"
- echo " --skip-pg       Skip update of postgres"
- echo " --skip-flat     Skip flattening of import files for postgres"
- echo " --skip-del      Skip deletion of existing data in db/solr"
- echo " --skip-clean    Skip deleting all temporary files"
+ echo " --config FILE   .env config destination"
+ echo " --sync          Sync OpenAlex S3 bucket"
+ echo " --solr          Update Solr collection"
+ echo " --solr-del      Delete existing data in solr"
+ echo " --solr-clr      Clean temporary data (solr)"
+ echo " --pg-del-ind    Drop all indices in postgres to speed up import"
+ echo " --pg-del-dat    Drop all data from postgres before import"
+ echo " --pg-del-upd    Drop only deprecated data from postgres before import"
+ echo " --pg-flat       Flatten files for postgres"
+ echo " --pg            Run postgres import"
+ echo " --pg-ind        Create postgres indices"
+ echo " --pg-clr        Clean temporary data (postgres)"
  echo " --override      Ignore existing flattened files and override them"
  echo " --jobs N        Number of processes for parallel processing"
  echo " --use-ram       Will not try to preserve RAM for small performance boost"
@@ -55,33 +72,51 @@ while [ $# -gt 0 ]; do
       usage
       exit 0
       ;;
-    --skip-sync)
-      sync_s3=false
+    --config)
+      shift
+      config_file=$1
       ;;
-    --skip-compile)
-      compile=false
+    --sync)
+      sync_s3=true
       ;;
-    --skip-solr)
-      update_solr=false
+    --solr)
+      run_solr=true
       ;;
-    --skip-pg)
-      update_pg=false
+    --solr-del)
+      solr_skip_del="--no-skip-deletion"
       ;;
-    --skip-flat)
-      pg_flatten=false
+    --solr-clr)
+      run_solr=true
       ;;
-    --skip-del)
-      del_prior="--skip-deletion"
+    --pg-del-ind)
+      run_pg_drop_ind=true
       ;;
-    --skip-clean)
-      cleanup=false
+    --pg-del-dat)
+      run_pg_drop_full=true
+      pg_skip_del="--skip-deletion"
+      ;;
+    --pg-del-upd)
+      pg_skip_del="--no-skip-deletion"
+      run_pg_drop_dat=true
+      ;;
+    --pg-flat)
+      run_pg_flat=true
+      ;;
+    --pg)
+      run_pg_import=true
+      ;;
+    --pg-ind)
+      run_pg_ind=true
+      ;;
+    --pg-clr)
+      run_pg_clr=true
+      ;;
+    --override)
+      override="--override"
       ;;
     --jobs)
       shift
       jobs=$1
-      ;;
-    --override)
-      override="--override"
       ;;
     --use-ram)
       preserve_ram="--no-preserve-ram"
@@ -95,22 +130,53 @@ while [ $# -gt 0 ]; do
   shift
 done
 
-# Remember where we are right now, later we might change to other places and want to find our way back
-SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-export OA_CONFIG="secret.env"
+export OA_CONFIG="${config_file}"
 
 # Load config parameters from env file
 # shellcheck source=default.env
 source "${OA_CONFIG}"
 
-if [ "$sync_s3" = true ]; then
+do_compile() {
+  DIR_PRE=$(pwd)
+  # Go back to script directory
+  cd "$SCRIPT_DIR" || exit
+  # Load our python environment
+  source ../venv/bin/activate || exit
+
+  echo "Ensuring cython sources are compiled..."
+  cd shared/cyth
+  # Make sure cython stuff is compiled
+  python setup.py build_ext --inplace
+
+  # Go back and clear environment
+  cd "$DIR_PRE"
+  deactivate
+}
+
+# =======================================================
+# S3 bucket sync
+# =======================================================
+echo "-=# (1/3) S3 bucket sync #=-"
+
+LAST_SYNC=$([ -f "$OA_LAST_SYNC_FILE" ] && cat "$OA_LAST_SYNC_FILE" || echo "1970-01-01")
+LAST_UPDT=$([ -f "$OA_LAST_UPDATE_FILE" ] && cat "$OA_LAST_UPDATE_FILE" || echo "1970-01-01")
+TODAY=$(date +%Y-%m-%d)
+
+echo "Date for today: ${TODAY}"
+echo "Last S2 sync: ${LAST_SYNC} (from ${OA_LAST_SYNC_FILE})"
+echo "Last update: ${LAST_UPDT} (from ${OA_LAST_UPDATE_FILE})"
+
+if [ "$sync_s3" = true ] && [ "$TODAY" \> "$LAST_SYNC" ]; then
   echo "Syncing openalex S3 bucket..."
   # Go to snapshot directory
   cd "$OA_SNAPSHOT" || exit
+
   # Go one up again so that s3 can sync it
   cd ..
+
   # Commission S3 sync
   aws s3 sync "s3://openalex" "openalex-snapshot" --no-sign-request --delete
+
   # Update group to openalex, so that everyone can read it later
   chgrp -R openalex .
   chmod -R 775 .
@@ -118,69 +184,93 @@ else
   echo "Assuming the OpenAlex snapshot is up to date, not syncing!"
 fi
 
-# Go back to script directory
+
+# =======================================================
+# Solr
+# =======================================================
+echo "-=# (2/3) SOLR import #=-"
+
+# Go back to the script directory
 cd "$SCRIPT_DIR" || exit
+
+# Make sure code is compiled
+do_compile
 
 # Load our python environment
 source ../venv/bin/activate
 
-if [ "$compile" = true ]; then
-  echo "Ensuring cython sources are compiled..."
-  cd shared/cyth
-  # Make sure cython stuff is compiled
-  python setup.py build_ext --inplace
-  cd ../..
+if [ "$run_solr" = true ]; then
+  echo "Running solr import..."
+  python update_solr.py "$solr_skip_del" --loglevel INFO "$tmp_dir/solr"
 fi
 
-if [ "$update_solr" = true ]; then
-  echo "Updating solr..."
-  python update_solr.py "$del_prior" --loglevel INFO "$tmp_dir/solr"
+if [ "$run_solr_clr" = true ]; then
   echo "Clearing $tmp_dir/solr"
   rm -r "$tmp_dir/solr"
 else
-  echo "Skipping update of Solr collection!"
+  echo "Leaving $tmp_dir/solr untouched"
 fi
 
-if [ "$update_pg" = true ]; then
-  echo "Updating PostgreSQL..."
+deactivate
 
-  if [ "$pg_flatten" = true ]; then
-    python update_postgres.py --loglevel INFO --parallelism "$jobs" "$preserve_ram" "$del_prior" "$override" "$tmp_dir/postgres"
-  fi
+# =======================================================
+# Postgres
+# =======================================================
+echo "-=# (3/3) Postgres import #=-"
 
-  # shellcheck disable=SC2034
-  export PGPASSWORD="$OA_PG_PW"  # set for passwordless postgres
+# Go back to the script directory
+cd "$SCRIPT_DIR" || exit
 
+# Make sure code is compiled
+do_compile
+
+# Load our python environment
+source ../venv/bin/activate
+
+# shellcheck disable=SC2034
+export PGPASSWORD="$OA_PG_PW"  # set for passwordless postgres
+
+if [ "$run_pg_flat" = true ]; then
+  echo "Flattening files for postgres"
+  python update_postgres.py --loglevel INFO --parallelism "$jobs" "$preserve_ram" "$pg_skip_del" "$override" "$tmp_dir/postgres"
+fi
+
+if [ "$run_pg_drop_ind" = true ]; then
   echo "Dropping indexes to speed up imports..."
-  psql -f ./setup/pg_indices_drop.sql -p "$OA_PG_PORT" -h "$OA_PG_HOST" -U "$OA_PG_USER" --echo-all -d "$OA_PG_DB"
-
-  # Go to directory where all the data is
-  cd "$tmp_dir" || exit
-
-  if [ "$del_prior" = "--no-skip-deletion" ]; then
-    echo "Deleting merged objects"
-    find ./postgres -name "*-merged_del.sql" -exec psql -f {} -p "$OA_PG_PORT" -h "$OA_PG_HOST" -U "$OA_PG_USER" --echo-all -d "$OA_PG_DB" \;
-    echo "Deleting existing new objects"
-    find ./postgres -name "*-del.sql" -exec psql -f {} -p "$OA_PG_PORT" -h "$OA_PG_HOST" -U "$OA_PG_USER" --echo-all -d "$OA_PG_DB" \;
-  fi
-  echo "Import new or updated objects"
-  find ./postgres -name "*-cpy.sql" -exec psql -f {} -p "$OA_PG_PORT" -h "$OA_PG_HOST" -U "$OA_PG_USER" --echo-all -d "$OA_PG_DB" \;
-
-  # Go back to the script directory
   cd "$SCRIPT_DIR" || exit
-
-  echo "Creating indexes again..."
-  psql -f ./setup/pg_indices.sql -p "$OA_PG_PORT" -h "$OA_PG_HOST" -U "$OA_PG_USER" --echo-all -d "$OA_PG_DB"
-
-  if [ "$cleanup" = true ]; then
-    echo "Deleting all temporary flattened files and scripts"
-    rm -r "$tmp_dir/postgres"
-  fi
-
-  cd "$SCRIPT_DIR"
-else
-  echo "Skipping update of Postgres database!"
+  psql -f ./setup/pg_indices_drop.sql -p "$OA_PG_PORT" -h "$OA_PG_HOST" -U "$OA_PG_USER" --echo-all -d "$OA_PG_DB"
 fi
+
+if [ "$run_pg_drop_full" = true ]; then
+  echo "Dropping all data from the database..."
+  cd "$SCRIPT_DIR" || exit
+  psql -f ./setup/pg_clear.sql -p "$OA_PG_PORT" -h "$OA_PG_HOST" -U "$OA_PG_USER" --echo-all -d "$OA_PG_DB"
+elif [ "$run_pg_drop_dat" = true ]; then
+  echo "Deleting merged objects..."
+  cd "$tmp_dir" || exit
+  find ./postgres -name "*-merged_del.sql" -exec psql -f {} -p "$OA_PG_PORT" -h "$OA_PG_HOST" -U "$OA_PG_USER" --echo-all -d "$OA_PG_DB" \;
+  echo "Deleting existing new objects..."
+  find ./postgres -name "*-del.sql" -exec psql -f {} -p "$OA_PG_PORT" -h "$OA_PG_HOST" -U "$OA_PG_USER" --echo-all -d "$OA_PG_DB" \;
+fi
+
+if [ "$run_pg_import" = true ]; then
+  echo "Import new or updated objects"
+  cd "$tmp_dir" || exit
+  find ./postgres -name "*-cpy.sql" -exec psql -f {} -p "$OA_PG_PORT" -h "$OA_PG_HOST" -U "$OA_PG_USER" --echo-all -d "$OA_PG_DB" \;
+fi
+
+if [ "$run_pg_ind" = true ]; then
+  echo "Creating indexes again..."
+  cd "$SCRIPT_DIR" || exit
+  psql -f ./setup/pg_indices.sql -p "$OA_PG_PORT" -h "$OA_PG_HOST" -U "$OA_PG_USER" --echo-all -d "$OA_PG_DB"
+fi
+
+if [ "$run_pg_clr" = true ]; then
+  echo "Deleting all temporary flattened files and scripts"
+  rm -r "$tmp_dir/postgres"
+fi
+
+deactivate
 
 echo "All updates done!"
 echo "Remember to update the date in $OA_LAST_UPDTAE_FILE"

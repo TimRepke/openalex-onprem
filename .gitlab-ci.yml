@@ -1,0 +1,128 @@
+# Change pip's cache directory to be inside the project directory since we can
+# only cache local items.
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  OA_SCRIPT_DIR:
+    description: "Working directory containing the scripts"
+  OA_TMP_DIR:
+    description: "Directory for temporary files"
+  OA_ENV_FILE:
+    description: "Path to the .env file"
+  OA_N_JOBS:
+    description: "Number of jobs for postgres parallel flattening"
+    value: "15"
+
+# Pip's cache doesn't store the python packages
+# https://pip.pypa.io/en/stable/reference/pip_install/#caching
+#
+# If you want to also cache the installed packages, you have to install
+# them in a virtualenv and cache it as well.
+cache:
+  paths:
+    - .cache/pip
+    - venv/
+
+before_script:
+  # Provides credentials to pip to access private GitLab PyPi index.
+  - echo "machine gitlab.pik-potsdam.de" > ~/.netrc
+  - echo "login gitlab-ci-token" >> ~/.netrc
+  - echo "password ${CI_JOB_TOKEN}" >> ~/.netrc
+
+stages:
+  - build
+  - sync
+  - solr
+  - postgres
+
+Build:
+  stage: build
+  tags:
+    - rechner
+  script:
+    - echo "$OA_SCRIPT_DIR"
+    - echo "$OA_TMP_DIR"
+    - echo "$OA_ENV_FILE"
+    #
+    - cd "$OA_SCRIPT_DIR" || exit
+    - echo "Dropping virtual environment"
+    - rm -rf venv
+    - echo "Fetching updated source"
+    - git stash  # "reset" softly by stashing (in case files changed)
+    - git pull origin main  # pull from origin
+    - echo "Creating new virtual environment"
+    - python3.10 -m venv venv
+    - source venv/bin/activate
+    - which python
+    - python -V
+    - echo "Installing requirements"
+    - pip install -r requirements.txt
+  when: manual
+
+Sync-S3-bucket:
+  stage: sync
+  tags:
+    - rechner
+  script:
+    - echo "$OA_SCRIPT_DIR"
+    - echo "$OA_TMP_DIR"
+    - echo "$OA_ENV_FILE"
+    - cd "$OA_SCRIPT_DIR/openalex-ingest" || exit
+    - ./update.sh "$OA_TMP_DIR" --config "$OA_ENV_FILE" --sync
+
+Solr:
+  stage: solr
+  tags:
+    - rechner
+  script:
+    - echo "$OA_SCRIPT_DIR"
+    - echo "$OA_TMP_DIR"
+    - echo "$OA_ENV_FILE"
+    - cd "$OA_SCRIPT_DIR/openalex-ingest" || exit
+    - ./update.sh "$OA_TMP_DIR" --config "$OA_ENV_FILE" --solr-del --solr --solr-clr
+
+Postgres-prep:
+  stage: postgres
+  tags:
+    - rechner
+  script:
+    - echo "$OA_SCRIPT_DIR"
+    - echo "$OA_TMP_DIR"
+    - echo "$OA_ENV_FILE"
+    - cd "$OA_SCRIPT_DIR/openalex-ingest" || exit
+    - ./update.sh "$OA_TMP_DIR" --config "$OA_ENV_FILE" --pg-del-dat --pg-del-ind
+
+Postgres-flat:
+  stage: postgres
+  needs: ["Postgres-prep"]
+  tags:
+    - rechner
+  script:
+    - echo "$OA_SCRIPT_DIR"
+    - echo "$OA_TMP_DIR"
+    - echo "$OA_ENV_FILE"
+    - cd "$OA_SCRIPT_DIR/openalex-ingest" || exit
+    - ./update.sh "$OA_TMP_DIR" --config "$ENV_FILE" --pg-flat --override --jobs $OA_N_JOBS
+
+Postgres-import:
+  stage: postgres
+  needs: ["Postgres-flat"]
+  tags:
+    - rechner
+  script:
+    - echo "$SCRIPT_DIR"
+    - echo "$TMP_DIR"
+    - echo "$ENV_FILE"
+    - cd "$SCRIPT_DIR/openalex-ingest" || exit
+    - ./update.sh "$TMP_DIR" --config "$ENV_FILE" --pg
+
+Postgres-post:
+  stage: postgres
+  needs: ["Postgres-import"]
+  tags:
+    - rechner
+  script:
+    - echo "$SCRIPT_DIR"
+    - echo "$TMP_DIR"
+    - echo "$ENV_FILE"
+    - cd "$SCRIPT_DIR/openalex-ingest" || exit
+    - ./update.sh "$TMP_DIR" --config "$ENV_FILE" --pg-clr --pg-ind
