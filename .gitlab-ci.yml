@@ -101,7 +101,7 @@ Solr:
     - cd "$OA_SCRIPT_DIR/openalex-ingest" || exit
     - ./update.sh "$OA_TMP_DIR" --config "$OA_ENV_FILE" --solr-del --solr --solr-clr
 
-Postgres-prep:
+Postgres-flat:
   stage: postgres
   needs: ["Solr"]
   when: on_success
@@ -112,11 +112,11 @@ Postgres-prep:
     - echo "$OA_TMP_DIR"
     - echo "$OA_ENV_FILE"
     - cd "$OA_SCRIPT_DIR/openalex-ingest" || exit
-    - ./update.sh "$OA_TMP_DIR" --config "$OA_ENV_FILE" --pg-del-dat --pg-del-ind
+    - ./update.sh "$OA_TMP_DIR" --config "$ENV_FILE" --pg-flat --override --jobs $OA_N_JOBS
 
-Postgres-flat:
+Postgres-prep:
   stage: postgres
-  needs: ["Postgres-prep"]
+  needs: ["Postgres-flat"]
   when: on_success
   tags:
     - rechner
@@ -125,11 +125,11 @@ Postgres-flat:
     - echo "$OA_TMP_DIR"
     - echo "$OA_ENV_FILE"
     - cd "$OA_SCRIPT_DIR/openalex-ingest" || exit
-    - ./update.sh "$OA_TMP_DIR" --config "$ENV_FILE" --pg-flat --override --jobs $OA_N_JOBS
+    - ./update.sh "$OA_TMP_DIR" --config "$OA_ENV_FILE" --pg-del-dat --pg-del-ind
 
 Postgres-import:
   stage: postgres
-  needs: ["Postgres-flat"]
+  needs: ["Postgres-prep"]
   when: on_success
   tags:
     - rechner
