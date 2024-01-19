@@ -17,6 +17,7 @@ class Settings(BaseSettings):
 
     solr_host: str = 'localhost'  # solr host
     solr_port: int = 8983
+    solr_zoo: int = 9983
     solr_collection: str = 'openalex'  # Solr collection
     solr_bin: Path  # Path to solr bin directory
     solr_url: str | None = None
