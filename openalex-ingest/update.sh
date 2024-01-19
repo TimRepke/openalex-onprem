@@ -11,6 +11,7 @@ config_file="secret.env"
 sync_s3=false
 run_solr=false
 run_solr_clr=false
+run_solr_res=false
 
 run_pg_flat=false      # flatten postgres files
 run_pg_drop_ind=false  # drop indices before import
@@ -38,7 +39,8 @@ usage() {
  echo " --config FILE   .env config destination"
  echo " --sync          Sync OpenAlex S3 bucket"
  echo " --solr          Update Solr collection"
- echo " --solr-del      Delete existing data in solr"
+ echo " --solr-res      Reset solr index (start fresh)"
+ echo " --solr-del      Delete deprecated data in solr"
  echo " --solr-clr      Clean temporary data (solr)"
  echo " --pg-del-ind    Drop all indices in postgres to speed up import"
  echo " --pg-del-dat    Drop all data from postgres before import"
@@ -86,6 +88,9 @@ while [ $# -gt 0 ]; do
       ;;
     --solr)
       run_solr=true
+      ;;
+    --solr-res)
+      run_solr_res=true
       ;;
     --solr-del)
       solr_skip_del="--no-skip-deletion"
@@ -206,6 +211,18 @@ fi
 # Solr
 # =======================================================
 echo "-=# (2/3) SOLR import #=-"
+
+if [ "$run_solr_clr" = true ]; then
+  cd "$SCRIPT_DIR" || exit
+
+  echo "Dropping solr collection..."
+  "${OA_SOLR_BIN}/solr" delete -c "$OA_SOLR_COLLECTION" -p "$OA_SOLR_PORT"
+
+  echo "Creating empty solr collection..."
+  "${OA_SOLR_BIN}/solr" create -c "$OA_SOLR_COLLECTION" -n "setup/solr_managed-schema.xml" -p "$OA_SOLR_PORT"
+else
+  echo "Keeping existing index untouched."
+fi
 
 if [ "$run_solr" = true ]; then
   # Go back to the script directory
