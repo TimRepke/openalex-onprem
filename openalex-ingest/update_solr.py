@@ -43,9 +43,9 @@ def update_solr(tmp_dir: Path,  # Directory where we can write temporary parsed 
 
         subprocess.run([settings.solr_bin / 'solr',
                         'post',
-                        '-url', (f'http://{settings.solr_host}:{settings.solr_port}'
-                                 f'/solr/{settings.solr_collection}/update'),
-                        '-commit', 'yes',
+                        # '-commit',
+                        '-url', (f'"http://{settings.solr_host}:{settings.solr_port}'
+                                 f'/solr/{settings.solr_collection}/update"'),
                         out_file])
 
         logging.info('Partition posted to solr!')
