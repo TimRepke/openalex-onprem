@@ -41,23 +41,21 @@ def update_solr(tmp_dir: Path,  # Directory where we can write temporary parsed 
         logging.info(f'({pi:,}/{len(works):,}) Partition contained {n_works:,} works '
                      f'with {n_abstracts:,} abstracts (referring to {partition})')
 
-        print(['curl',
-                        (f'http://{settings.solr_host}:{settings.solr_port}'
-                         f'/api/collections/{settings.solr_collection}/update/json?commit=true'),
-                        '-H', "'Content-type:application/json'",
+
+        crl = ['curl',
+                        (f"'http://{settings.solr_host}:{settings.solr_port}"
+                         f"/api/collections/{settings.solr_collection}/update/json?commit=true'"),
                         '--data-binary',
-                        str(out_file)])
-        subprocess.run(['curl',
-                        (f'http://{settings.solr_host}:{settings.solr_port}'
-                         f'/api/collections/{settings.solr_collection}/update/json?commit=true'),
-                        '-H', "'Content-type:application/json'",
-                        '--data-binary',
-                        str(out_file)])
+                        str(out_file),
+                        '-H', "'Content-type:application/json'"]
+        print(crl)
+        # curl 'http://localhost:8983/api/collections/openalex/update/json?commit=true' -H 'Content-type:application/json' --data-binary tmp_dir/solr/solr-2023-05-25-000.jsonl
+        subprocess.run(crl)
 
         logging.info('Partition posted to solr!')
 
         # Cleaning up
-        out_file.unlink()
+        # out_file.unlink()
 
     if not skip_deletion and len(merged) > 0:
         logging.info('Going to delete merged works objects in batches...')
