@@ -48,7 +48,7 @@ class Settings(BaseSettings):
         )
 
     @field_validator('last_update_solr', mode='before')
-    def load_last_updated(cls, v: str | None, info: FieldValidationInfo) -> str:
+    def load_last_updated_solr(cls, v: str | None, info: FieldValidationInfo) -> str:
         assert info.config is not None
 
         if isinstance(v, str):
@@ -62,7 +62,7 @@ class Settings(BaseSettings):
             return '1970-01-01'
 
     @field_validator('last_update_pg', mode='before')
-    def load_last_updated(cls, v: str | None, info: FieldValidationInfo) -> str:
+    def load_last_updated_pg(cls, v: str | None, info: FieldValidationInfo) -> str:
         assert info.config is not None
 
         if isinstance(v, str):
