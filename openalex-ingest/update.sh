@@ -212,7 +212,7 @@ fi
 # =======================================================
 echo "-=# (2/3) SOLR import #=-"
 
-if [ "$run_solr_clr" = true ]; then
+if [ "$run_solr_res" = true ]; then
   cd "$SCRIPT_DIR" || exit
 
   echo "Dropping solr collection..."
