@@ -43,7 +43,7 @@ def transform_partition(in_file: str | Path, out_file: str | Path) -> tuple[int,
                     else:
                         abstract = None
                 except DecodeError:
-                    logging.warning(f'Failed to read abstract for {wid} in {partition}')
+                    logging.warning(f'Failed to read abstract for {wid} in {in_file}')
                     abstract = None
 
             ta = None
