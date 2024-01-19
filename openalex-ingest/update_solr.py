@@ -24,6 +24,9 @@ def update_solr(tmp_dir: Path,  # Directory where we can write temporary parsed 
     logging.info('Please ensure you synced the snapshot via\n'
                  '   $ aws s3 sync "s3://openalex" "openalex-snapshot" --no-sign-request')
 
+    logging.info(f'Looking for files younger than "{settings.last_update_solr}" '
+                 f'in snapshot folder at "{settings.snapshot}"')
+
     works, merged = get_globs(settings.snapshot, settings.last_update_solr, 'work')
 
     logging.info(f'Looks like there are {len(works)} works partitions '
