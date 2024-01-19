@@ -207,18 +207,21 @@ fi
 # =======================================================
 echo "-=# (2/3) SOLR import #=-"
 
-# Go back to the script directory
-cd "$SCRIPT_DIR" || exit
-
-# Make sure code is compiled
-do_compile
-
-# Load our python environment
-source ../venv/bin/activate
-
 if [ "$run_solr" = true ]; then
+  # Go back to the script directory
+  cd "$SCRIPT_DIR" || exit
+
+  # Make sure code is compiled
+  do_compile
+
+  # Load our python environment
+  source ../venv/bin/activate
+
   echo "Running solr import..."
   python update_solr.py "$solr_skip_del" --loglevel INFO "$tmp_dir/solr"
+
+  # Leave python environment
+  deactivate
 
   # Remember that we synced the snapshot
   rm -f "$OA_LAST_UPDATE_SOLR_FILE"
@@ -232,28 +235,30 @@ else
   echo "Leaving $tmp_dir/solr untouched"
 fi
 
-deactivate
 
 # =======================================================
 # Postgres
 # =======================================================
 echo "-=# (3/3) Postgres import #=-"
 
-# Go back to the script directory
-cd "$SCRIPT_DIR" || exit
-
-# Make sure code is compiled
-do_compile
-
-# Load our python environment
-source ../venv/bin/activate
-
 # shellcheck disable=SC2034
 export PGPASSWORD="$OA_PG_PW"  # set for passwordless postgres
 
 if [ "$run_pg_flat" = true ]; then
+  # Go back to the script directory
+  cd "$SCRIPT_DIR" || exit
+
+  # Make sure code is compiled
+  do_compile
+
+  # Load our python environment
+  source ../venv/bin/activate
+
   echo "Flattening files for postgres"
   python update_postgres.py --loglevel INFO --parallelism "$jobs" "$preserve_ram" "$pg_skip_del" "$override" "$tmp_dir/postgres"
+
+  # Leave python environment
+  deactivate
 fi
 
 if [ "$run_pg_drop_ind" = true ]; then
@@ -295,7 +300,6 @@ if [ "$run_pg_clr" = true ]; then
   rm -r "$tmp_dir/postgres"
 fi
 
-deactivate
 
 echo "All updates done!"
 echo "Remember to update the date in $OA_LAST_UPDTAE_FILE"
