@@ -41,16 +41,12 @@ def update_solr(tmp_dir: Path,  # Directory where we can write temporary parsed 
         logging.info(f'({pi:,}/{len(works):,}) Partition contained {n_works:,} works '
                      f'with {n_abstracts:,} abstracts (referring to {partition})')
 
-
-        crl = ['curl',
-                        (f"http://{settings.solr_host}:{settings.solr_port}"
-                         f"/api/collections/{settings.solr_collection}/update/json?commit=true"),
+        subprocess.run(['curl',
+                        (f'http://{settings.solr_host}:{settings.solr_port}'
+                         f'/api/collections/{settings.solr_collection}/update/json?commit=true'),
+                        '-H', 'Content-type:application/json',
                         '--data-binary',
-                        str(out_file),
-                        '-H', "Content-type:application/json"]
-        print(crl)
-        # curl 'http://localhost:8983/api/collections/openalex/update/json?commit=true' -H 'Content-type:application/json' --data-binary tmp_dir/solr/solr-2023-05-25-000.jsonl
-        subprocess.run(crl)
+                        '@' + str(out_file)])
 
         logging.info('Partition posted to solr!')
 
