@@ -129,6 +129,9 @@ while [ $# -gt 0 ]; do
     --no-progress)
       show_aws_progress="--no-progress"
       ;;
+    --with-sudo)
+      with_sudo="sudo"
+      ;;
     *)
       echo "Invalid option: $1" >&2
       usage
@@ -188,8 +191,8 @@ if [ "$sync_s3" = true ] && [ "$TODAY" \> "$LAST_SYNC" ]; then
   aws s3 sync "s3://openalex" "openalex-snapshot" --no-sign-request --delete "$show_aws_progress"
 
   # Update group to openalex, so that everyone can read it later
-  sudo chgrp -R openalex .
-  sudo chmod -R 775 .
+  $with_sudo chgrp -R openalex .
+  $with_sudo chmod -R 775 .
 
   # Remember that we synced the snapshot
   rm -f "$OA_LAST_SYNC_FILE"
