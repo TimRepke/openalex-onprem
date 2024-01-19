@@ -86,7 +86,7 @@ Fetch-S3-bucket:
     - echo "$OA_TMP_DIR"
     - echo "$OA_ENV_FILE"
     - cd "$OA_SCRIPT_DIR/openalex-ingest" || exit
-    - ./update.sh "$OA_TMP_DIR" --config "$OA_ENV_FILE" --sync --no-progress
+    - ./update.sh "$OA_TMP_DIR" --config "$OA_ENV_FILE" --sync --no-progress --with-sudo
 
 Solr:
   stage: solr
