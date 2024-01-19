@@ -28,6 +28,8 @@ override="--no-override"
 preserve_ram="--preserve-ram"
 jobs=1
 
+with_sudo=""
+
 # Function to display script usage
 usage() {
  echo "Usage: $0 TMP_DIR [OPTIONS]"
@@ -49,6 +51,7 @@ usage() {
  echo " --jobs N        Number of processes for parallel processing"
  echo " --use-ram       Will not try to preserve RAM for small performance boost"
  echo " --no-progress   Set this to shut up aws sync updates (spams the gitlab-ci log)"
+ echo " --with-sudo     Run some operations with sudo prefix"
  echo ""
  echo " -h, --help      Display this help message"
 }
@@ -185,8 +188,8 @@ if [ "$sync_s3" = true ] && [ "$TODAY" \> "$LAST_SYNC" ]; then
   aws s3 sync "s3://openalex" "openalex-snapshot" --no-sign-request --delete "$show_aws_progress"
 
   # Update group to openalex, so that everyone can read it later
-  chgrp -R openalex .
-  chmod -R 775 .
+  sudo chgrp -R openalex .
+  sudo chmod -R 775 .
 
   # Remember that we synced the snapshot
   rm -f "$OA_LAST_SYNC_FILE"
