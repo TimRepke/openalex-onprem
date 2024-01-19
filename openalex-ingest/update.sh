@@ -219,7 +219,7 @@ if [ "$run_solr_res" = true ]; then
   "${OA_SOLR_BIN}/solr" delete -c "$OA_SOLR_COLLECTION" -p "$OA_SOLR_PORT"  || echo "Collection '$OA_SOLR_COLLECTION' did not exist!"
 
   echo "Creating empty solr collection..."
-  "${OA_SOLR_BIN}/solr" zk cp file:setup/managed-schema.xml zk:/configs/._designer_openalex/managed-schema.xml -z "OA_SOLR_HOST:OA_SOLR_PORT"
+  "${OA_SOLR_BIN}/solr" zk cp file:setup/managed-schema.xml zk:/configs/._designer_openalex/managed-schema.xml -z "$OA_SOLR_HOST:$OA_SOLR_PORT"
   "${OA_SOLR_BIN}/solr" create -c "$OA_SOLR_COLLECTION" -n "._designer_openalex" -p "$OA_SOLR_PORT"
 else
   echo "Keeping existing index untouched."
