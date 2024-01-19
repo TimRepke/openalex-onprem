@@ -51,7 +51,7 @@ def update_solr(tmp_dir: Path,  # Directory where we can write temporary parsed 
         logging.info('Partition posted to solr!')
 
         # Cleaning up
-        # out_file.unlink()
+        out_file.unlink()
 
     if not skip_deletion and len(merged) > 0:
         logging.info('Going to delete merged works objects in batches...')
