@@ -25,3 +25,4 @@ build/
 configset/
 solr/
 !openalex-ingest/processors/solr
+!openalex-ingest/setup/configset

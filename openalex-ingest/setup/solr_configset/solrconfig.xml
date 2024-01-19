@@ -820,6 +820,33 @@
         </arr>
     </requestHandler>
 
+    <!--    <requestHandler name="/update/extract" startup="lazy" class="solr.extraction.ExtractingRequestHandler">-->
+    <!--        <lst name="defaults">-->
+    <!--            <str name="update.chain">add-unknown-fields-to-the-schema</str>-->
+    <!--        </lst>-->
+    <!--    </requestHandler>-->
+    <requestHandler name="/update/extract"
+                    startup="lazy"
+                    class="solr.extraction.ExtractingRequestHandler">
+        <lst name="defaults">
+            <str name="lowernames">true</str>
+            <str name="fmap.content">_text_</str>
+        </lst>
+    </requestHandler>
+    <!--    <requestHandler name="/update/extract"-->
+    <!--                    startup="lazy"-->
+    <!--                    class="solr.extraction.ExtractingRequestHandler">-->
+    <!--        <lst name="defaults">-->
+    <!--            <str name="lowernames">true</str>-->
+    <!--            <str name="uprefix">ignored_</str>-->
+
+    <!--            &lt;!&ndash; capture link hrefs but ignore div attributes &ndash;&gt;-->
+    <!--            <str name="captureAttr">true</str>-->
+    <!--            <str name="fmap.a">links</str>-->
+    <!--            <str name="fmap.div">ignored_</str>-->
+    <!--        </lst>-->
+    <!--    </requestHandler>-->
+
     <!-- Highlighting Component
 
          https://solr.apache.org/guide/solr/latest/query-guide/highlighting.html
