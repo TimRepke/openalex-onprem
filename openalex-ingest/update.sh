@@ -220,7 +220,9 @@ if [ "$run_solr_res" = true ]; then
 
   echo "Creating empty solr collection..."
 #  "${OA_SOLR_BIN}/solr" zk cp file:setup/solr_managed-schema.xml zk:/configs/._designer_openalex/managed-schema.xml -z "$OA_SOLR_HOST:$OA_SOLR_ZOO"
-  "${OA_SOLR_BIN}/solr" create -c "$OA_SOLR_COLLECTION" -d setup/solr_configset -n openalex_conf -p "$OA_SOLR_PORT"
+  "${OA_SOLR_BIN}/solr" zk upconfig -d setup/solr_configset -n _openalex_conf
+#  "${OA_SOLR_BIN}/solr" create -c "$OA_SOLR_COLLECTION" -d setup/solr_configset -n openalex_conf -p "$OA_SOLR_PORT"
+  "${OA_SOLR_BIN}/solr" create -c "$OA_SOLR_COLLECTION" -n _openalex_conf -p "$OA_SOLR_PORT"
 
   echo "Waiting a bit..."
   sleep 5
