@@ -42,7 +42,7 @@ def update_solr(tmp_dir: Path,  # Directory where we can write temporary parsed 
                      f'with {n_abstracts:,} abstracts (referring to {partition})')
 
         subprocess.run([settings.solr_bin / 'solr',
-                        'post'
+                        'post',
                         '-url', (f'http://{settings.solr_host}:{settings.solr_port}'
                                  f'/solr/{settings.solr_collection}/update'),
                         '-commit', 'yes',
