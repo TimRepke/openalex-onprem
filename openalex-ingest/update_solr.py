@@ -41,11 +41,11 @@ def update_solr(tmp_dir: Path,  # Directory where we can write temporary parsed 
         logging.info(f'({pi:,}/{len(works):,}) Partition contained {n_works:,} works '
                      f'with {n_abstracts:,} abstracts (referring to {partition})')
 
-        subprocess.run([settings.solr_bin / 'solr',
-                        'post',
-                        # '-commit',
-                        '-url', (f'"http://{settings.solr_host}:{settings.solr_port}'
-                                 f'/solr/{settings.solr_collection}/update"'),
+        subprocess.run(['curl',
+                        (f'"http://{settings.solr_host}:{settings.solr_port}'
+                         f'/api/collections/{settings.solr_collection}/update/json?commit=true"'),
+                        '-H', 'Content-type:application/json',
+                        '--data-binary',
                         out_file])
 
         logging.info('Partition posted to solr!')
