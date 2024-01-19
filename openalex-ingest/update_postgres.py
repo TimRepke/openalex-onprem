@@ -45,7 +45,7 @@ def update_postgres(tmp_dir: Path,  # Directory where we can write temporary par
     flatten_funders(tmp_dir=tmp_dir, parallelism=parallelism, skip_deletion=skip_deletion,
                     override=override, preserve_ram=preserve_ram)
     logging.info('Postgres files are flattened.')
-    logging.warning(f'Remember to update the date in "{settings.last_update_file}"')
+    logging.warning(f'Remember to update the date in "{settings.last_update_pg_file}"')
 
 
 if __name__ == "__main__":

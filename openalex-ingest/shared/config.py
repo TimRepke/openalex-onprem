@@ -8,8 +8,12 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     snapshot: Path  # Path to the openalex-snapshot root
-    last_update_file: Path  # Path to a file that only contains the date of the last update (YYYY-MM-DD)
-    last_update: str | None = None
+    last_update_pg: str | None = None
+    last_update_solr: str | None = None
+
+    last_update_pg_file: Path  # Path to a file that only contains the date of the last update (YYYY-MM-DD)
+    last_update_solr_file: Path  # Path to a file that only contains the date of the last update (YYYY-MM-DD)
+    last_sync_file: Path  # Path to a file that only contains the date of the last update (YYYY-MM-DD)
 
     solr_host: str = 'localhost'  # solr host
     solr_port: int = 8983
@@ -43,14 +47,28 @@ class Settings(BaseSettings):
             path=f'/{info.data.get("pg_db", "")}',
         )
 
-    @field_validator('last_update', mode='before')
+    @field_validator('last_update_solr', mode='before')
     def load_last_updated(cls, v: str | None, info: FieldValidationInfo) -> str:
         assert info.config is not None
 
         if isinstance(v, str):
             return v
 
-        fname: Path = info.data.get('last_update_file')
+        fname: Path = info.data.get('last_update_solr_file')
+        if fname is not None and fname.exists():
+            with open(fname, 'r') as f:
+                return f.read().strip()
+        else:
+            return '1970-01-01'
+
+    @field_validator('last_update_pg', mode='before')
+    def load_last_updated(cls, v: str | None, info: FieldValidationInfo) -> str:
+        assert info.config is not None
+
+        if isinstance(v, str):
+            return v
+
+        fname: Path = info.data.get('last_update_pg_file')
         if fname is not None and fname.exists():
             with open(fname, 'r') as f:
                 return f.read().strip()
