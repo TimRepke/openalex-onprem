@@ -43,8 +43,7 @@ def update_solr(tmp_dir: Path,  # Directory where we can write temporary parsed 
 
         subprocess.run([settings.solr_bin / 'solr',
                         'post',
-                        '-url', (f'http://{settings.solr_host}:{settings.solr_port}'
-                                 f'/solr/{settings.solr_collection}/update'),
+                        '-url', f'http://{settings.solr_host}:{settings.solr_port}/{settings.solr_collection}/update',
                         '-commit', 'yes',
                         out_file])
 
