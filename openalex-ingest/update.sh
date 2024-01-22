@@ -169,7 +169,7 @@ do_compile() {
   deactivate
 }
 
-if [ "$OA_SYNC_STAGE" = "ACTIVE" ]; then
+if [ -z "$OA_SKIP_SYNC_STAGE" ]; then
   # =======================================================
   # S3 bucket sync
   # =======================================================
@@ -209,7 +209,7 @@ if [ "$OA_SYNC_STAGE" = "ACTIVE" ]; then
 fi
 
 
-if [ "$OA_SOLR_STAGE" = "ACTIVE" ]; then
+if [ -z "$OA_SKIP_SOLR_STAGE" ]; then
   # =======================================================
   # Solr
   # =======================================================
@@ -263,7 +263,7 @@ if [ "$OA_SOLR_STAGE" = "ACTIVE" ]; then
 fi
 
 
-if [ "$OA_PG_STAGE" = "ACTIVE" ]; then
+if [ -z "$OA_SKIP_PG_STAGE" ]; then
   # =======================================================
   # Postgres
   # =======================================================
