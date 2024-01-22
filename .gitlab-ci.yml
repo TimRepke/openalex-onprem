@@ -112,7 +112,7 @@ Postgres-flat:
     - echo "$OA_TMP_DIR"
     - echo "$OA_ENV_FILE"
     - cd "$OA_SCRIPT_DIR/openalex-ingest" || exit
-    - ./update.sh "$OA_TMP_DIR" --config "$ENV_FILE" --pg-flat --override --jobs $OA_N_JOBS
+    - ./update.sh "$OA_TMP_DIR" --config "$OA_ENV_FILE" --pg-flat --override --jobs $OA_N_JOBS
 
 Postgres-prep:
   stage: postgres
@@ -137,8 +137,8 @@ Postgres-import:
     - echo "$SCRIPT_DIR"
     - echo "$TMP_DIR"
     - echo "$ENV_FILE"
-    - cd "$SCRIPT_DIR/openalex-ingest" || exit
-    - ./update.sh "$TMP_DIR" --config "$ENV_FILE" --pg
+    - cd "$OA_SCRIPT_DIR/openalex-ingest" || exit
+    - ./update.sh "$OA_TMP_DIR" --config "$OA_ENV_FILE" --pg
 
 Postgres-post:
   stage: postgres
@@ -150,5 +150,5 @@ Postgres-post:
     - echo "$SCRIPT_DIR"
     - echo "$TMP_DIR"
     - echo "$ENV_FILE"
-    - cd "$SCRIPT_DIR/openalex-ingest" || exit
-    - ./update.sh "$TMP_DIR" --config "$ENV_FILE" --pg-clr --pg-ind
+    - cd "$OA_SCRIPT_DIR/openalex-ingest" || exit
+    - ./update.sh "$OA_TMP_DIR" --config "$OA_ENV_FILE" --pg-clr --pg-ind
