@@ -11,6 +11,15 @@ variables:
   OA_N_JOBS:
     description: "Number of jobs for postgres parallel flattening"
     value: "15"
+  OA_SYNC_STAGE:
+    description: "Set to 'ACTIVE' to run the sync stage jobs"
+    value: "ACTIVE"
+  OA_SOLR_STAGE:
+    description: "Set to 'ACTIVE' to run the solr stage jobs"
+    value: "ACTIVE"
+  OA_PG_STAGE:
+    description: "Set to 'ACTIVE' to run the postgres stage jobs"
+    value: "ACTIVE"
 
 # Pip's cache doesn't store the python packages
 # https://pip.pypa.io/en/stable/reference/pip_install/#caching

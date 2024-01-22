@@ -169,160 +169,165 @@ do_compile() {
   deactivate
 }
 
-# =======================================================
-# S3 bucket sync
-# =======================================================
-echo "-=# (1/3) S3 bucket sync #=-"
+if [ "$OA_SYNC_STAGE" = "ACTIVE" ]; then
+  # =======================================================
+  # S3 bucket sync
+  # =======================================================
+  echo "-=# (1/3) S3 bucket sync #=-"
 
-LAST_SYNC=$([ -f "$OA_LAST_SYNC_FILE" ] && cat "$OA_LAST_SYNC_FILE" || echo "1970-01-01")
-LAST_UPDT_PG=$([ -f "$OA_LAST_UPDATE_PG_FILE" ] && cat "$OA_LAST_UPDATE_PG_FILE" || echo "1970-01-01")
-LAST_UPDT_SOLR=$([ -f "$OA_LAST_UPDATE_SOLR_FILE" ] && cat "$OA_LAST_UPDATE_SOLR_FILE" || echo "1970-01-01")
-TODAY=$(date +%Y-%m-%d)
+  LAST_SYNC=$([ -f "$OA_LAST_SYNC_FILE" ] && cat "$OA_LAST_SYNC_FILE" || echo "1970-01-01")
+  LAST_UPDT_PG=$([ -f "$OA_LAST_UPDATE_PG_FILE" ] && cat "$OA_LAST_UPDATE_PG_FILE" || echo "1970-01-01")
+  LAST_UPDT_SOLR=$([ -f "$OA_LAST_UPDATE_SOLR_FILE" ] && cat "$OA_LAST_UPDATE_SOLR_FILE" || echo "1970-01-01")
+  TODAY=$(date +%Y-%m-%d)
 
-echo "Date for today: ${TODAY}"
-echo "Last S2 sync: ${LAST_SYNC} (from ${OA_LAST_SYNC_FILE})"
-echo "Last update: ${LAST_UPDT_PG} (from ${OA_LAST_UPDATE_PG_FILE})"
-echo "Last update: ${LAST_UPDT_SOLR} (from ${OA_LAST_UPDATE_SOLR_FILE})"
+  echo "Date for today: ${TODAY}"
+  echo "Last S2 sync: ${LAST_SYNC} (from ${OA_LAST_SYNC_FILE})"
+  echo "Last update: ${LAST_UPDT_PG} (from ${OA_LAST_UPDATE_PG_FILE})"
+  echo "Last update: ${LAST_UPDT_SOLR} (from ${OA_LAST_UPDATE_SOLR_FILE})"
 
-if [ "$sync_s3" = true ] && [ "$TODAY" \> "$LAST_SYNC" ]; then
-  echo "Syncing openalex S3 bucket..."
-  # Go to snapshot directory
-  cd "$OA_SNAPSHOT" || exit
+  if [ "$sync_s3" = true ] && [ "$TODAY" \> "$LAST_SYNC" ]; then
+    echo "Syncing openalex S3 bucket..."
+    # Go to snapshot directory
+    cd "$OA_SNAPSHOT" || exit
 
-  # Go one up again so that s3 can sync it
-  cd ..
+    # Go one up again so that s3 can sync it
+    cd ..
 
-  # Commission S3 sync
-  aws s3 sync "s3://openalex" "openalex-snapshot" --no-sign-request --delete "$show_aws_progress"
+    # Commission S3 sync
+    aws s3 sync "s3://openalex" "openalex-snapshot" --no-sign-request --delete "$show_aws_progress"
 
-  # Update group to openalex, so that everyone can read it later
-  $with_sudo chgrp -R openalex .
-  $with_sudo chmod -R 775 .
+    # Update group to openalex, so that everyone can read it later
+    $with_sudo chgrp -R openalex .
+    $with_sudo chmod -R 775 .
 
-  # Remember that we synced the snapshot
-  rm -f "$OA_LAST_SYNC_FILE"
-  echo "$TODAY" > "$OA_LAST_SYNC_FILE"
-else
-  echo "Assuming the OpenAlex snapshot is up to date, not syncing!"
+    # Remember that we synced the snapshot
+    rm -f "$OA_LAST_SYNC_FILE"
+    echo "$TODAY" > "$OA_LAST_SYNC_FILE"
+  else
+    echo "Assuming the OpenAlex snapshot is up to date, not syncing!"
+  fi
 fi
 
 
-# =======================================================
-# Solr
-# =======================================================
-echo "-=# (2/3) SOLR import #=-"
+if [ "$OA_SOLR_STAGE" = "ACTIVE" ]; then
+  # =======================================================
+  # Solr
+  # =======================================================
+  echo "-=# (2/3) SOLR import #=-"
 
-if [ "$run_solr_res" = true ]; then
-  cd "$SCRIPT_DIR" || exit
+  if [ "$run_solr_res" = true ]; then
+    cd "$SCRIPT_DIR" || exit
 
-  echo "Dropping solr collection..."
-  "${OA_SOLR_BIN}/solr" delete -c "$OA_SOLR_COLLECTION" -p "$OA_SOLR_PORT"  || echo "Collection '$OA_SOLR_COLLECTION' did not exist!"
+    echo "Dropping solr collection..."
+    "${OA_SOLR_BIN}/solr" delete -c "$OA_SOLR_COLLECTION" -p "$OA_SOLR_PORT"  || echo "Collection '$OA_SOLR_COLLECTION' did not exist!"
 
-  echo "Creating empty solr collection..."
-#  "${OA_SOLR_BIN}/solr" zk cp file:setup/solr_managed-schema.xml zk:/configs/._designer_openalex/managed-schema.xml -z "$OA_SOLR_HOST:$OA_SOLR_ZOO"
-  "${OA_SOLR_BIN}/solr" zk upconfig -d setup/solr_configset -n _openalex_conf -z "$OA_SOLR_HOST:$OA_SOLR_ZOO"
-#  "${OA_SOLR_BIN}/solr" create -c "$OA_SOLR_COLLECTION" -d setup/solr_configset -n openalex_conf -p "$OA_SOLR_PORT"
-  "${OA_SOLR_BIN}/solr" create -c "$OA_SOLR_COLLECTION" -n _openalex_conf -p "$OA_SOLR_PORT"
+    echo "Creating empty solr collection..."
+  #  "${OA_SOLR_BIN}/solr" zk cp file:setup/solr_managed-schema.xml zk:/configs/._designer_openalex/managed-schema.xml -z "$OA_SOLR_HOST:$OA_SOLR_ZOO"
+    "${OA_SOLR_BIN}/solr" zk upconfig -d setup/solr_configset -n _openalex_conf -z "$OA_SOLR_HOST:$OA_SOLR_ZOO"
+  #  "${OA_SOLR_BIN}/solr" create -c "$OA_SOLR_COLLECTION" -d setup/solr_configset -n openalex_conf -p "$OA_SOLR_PORT"
+    "${OA_SOLR_BIN}/solr" create -c "$OA_SOLR_COLLECTION" -n _openalex_conf -p "$OA_SOLR_PORT"
 
-  echo "Waiting a bit..."
-  sleep 5
-else
-  echo "Keeping existing index untouched."
+    echo "Waiting a bit..."
+    sleep 5
+  else
+    echo "Keeping existing index untouched."
+  fi
+
+  if [ "$run_solr" = true ]; then
+    # Go back to the script directory
+    cd "$SCRIPT_DIR" || exit
+
+    # Make sure code is compiled
+    do_compile
+
+    # Load our python environment
+    source ../venv/bin/activate
+
+    echo "Running solr import..."
+    python update_solr.py "$solr_skip_del" --loglevel INFO "$tmp_dir/solr"
+
+    # Leave python environment
+    deactivate
+
+    # Remember that we synced the snapshot
+    rm -f "$OA_LAST_UPDATE_SOLR_FILE"
+    echo "$TODAY" > "$OA_LAST_UPDATE_SOLR_FILE"
+  fi
+
+  if [ "$run_solr_clr" = true ]; then
+    echo "Clearing $tmp_dir/solr"
+    rm -r "$tmp_dir/solr"
+  else
+    echo "Leaving $tmp_dir/solr untouched"
+  fi
 fi
 
-if [ "$run_solr" = true ]; then
-  # Go back to the script directory
-  cd "$SCRIPT_DIR" || exit
 
-  # Make sure code is compiled
-  do_compile
+if [ "$OA_PG_STAGE" = "ACTIVE" ]; then
+  # =======================================================
+  # Postgres
+  # =======================================================
+  echo "-=# (3/3) Postgres import #=-"
 
-  # Load our python environment
-  source ../venv/bin/activate
+  # shellcheck disable=SC2034
+  export PGPASSWORD="$OA_PG_PW"  # set for passwordless postgres
 
-  echo "Running solr import..."
-  python update_solr.py "$solr_skip_del" --loglevel INFO "$tmp_dir/solr"
+  if [ "$run_pg_flat" = true ]; then
+    # Go back to the script directory
+    cd "$SCRIPT_DIR" || exit
 
-  # Leave python environment
-  deactivate
+    # Make sure code is compiled
+    do_compile
 
-  # Remember that we synced the snapshot
-  rm -f "$OA_LAST_UPDATE_SOLR_FILE"
-  echo "$TODAY" > "$OA_LAST_UPDATE_SOLR_FILE"
+    # Load our python environment
+    source ../venv/bin/activate
+
+    echo "Flattening files for postgres"
+    python update_postgres.py --loglevel INFO --parallelism "$jobs" "$preserve_ram" "$pg_skip_del" "$override" "$tmp_dir/postgres"
+
+    # Leave python environment
+    deactivate
+  fi
+
+  if [ "$run_pg_drop_ind" = true ]; then
+    echo "Dropping indexes to speed up imports..."
+    cd "$SCRIPT_DIR" || exit
+    psql -f ./setup/pg_indices_drop.sql -p "$OA_PG_PORT" -h "$OA_PG_HOST" -U "$OA_PG_USER" --echo-all -d "$OA_PG_DB"
+  fi
+
+  if [ "$run_pg_drop_full" = true ]; then
+    echo "Dropping all data from the database..."
+    cd "$SCRIPT_DIR" || exit
+    psql -f ./setup/pg_clear.sql -p "$OA_PG_PORT" -h "$OA_PG_HOST" -U "$OA_PG_USER" --echo-all -d "$OA_PG_DB"
+  elif [ "$run_pg_drop_dat" = true ]; then
+    echo "Deleting merged objects..."
+    cd "$tmp_dir" || exit
+    find ./postgres -name "*-merged_del.sql" -exec psql -f {} -p "$OA_PG_PORT" -h "$OA_PG_HOST" -U "$OA_PG_USER" --echo-all -d "$OA_PG_DB" \;
+    echo "Deleting existing new objects..."
+    find ./postgres -name "*-del.sql" -exec psql -f {} -p "$OA_PG_PORT" -h "$OA_PG_HOST" -U "$OA_PG_USER" --echo-all -d "$OA_PG_DB" \;
+  fi
+
+  if [ "$run_pg_import" = true ]; then
+    echo "Import new or updated objects"
+    cd "$tmp_dir" || exit
+    find ./postgres -name "*-cpy.sql" -exec psql -f {} -p "$OA_PG_PORT" -h "$OA_PG_HOST" -U "$OA_PG_USER" --echo-all -d "$OA_PG_DB" \;
+
+    # Remember that we synced the snapshot
+    rm -f "$OA_LAST_UPDATE_PG_FILE"
+    echo "$TODAY" > "$OA_LAST_UPDATE_PG_FILE"
+  fi
+
+  if [ "$run_pg_ind" = true ]; then
+    echo "Creating indexes again..."
+    cd "$SCRIPT_DIR" || exit
+    psql -f ./setup/pg_indices.sql -p "$OA_PG_PORT" -h "$OA_PG_HOST" -U "$OA_PG_USER" --echo-all -d "$OA_PG_DB"
+  fi
+
+  if [ "$run_pg_clr" = true ]; then
+    echo "Deleting all temporary flattened files and scripts"
+    rm -r "$tmp_dir/postgres"
+  fi
 fi
-
-if [ "$run_solr_clr" = true ]; then
-  echo "Clearing $tmp_dir/solr"
-  rm -r "$tmp_dir/solr"
-else
-  echo "Leaving $tmp_dir/solr untouched"
-fi
-
-
-# =======================================================
-# Postgres
-# =======================================================
-echo "-=# (3/3) Postgres import #=-"
-
-# shellcheck disable=SC2034
-export PGPASSWORD="$OA_PG_PW"  # set for passwordless postgres
-
-if [ "$run_pg_flat" = true ]; then
-  # Go back to the script directory
-  cd "$SCRIPT_DIR" || exit
-
-  # Make sure code is compiled
-  do_compile
-
-  # Load our python environment
-  source ../venv/bin/activate
-
-  echo "Flattening files for postgres"
-  python update_postgres.py --loglevel INFO --parallelism "$jobs" "$preserve_ram" "$pg_skip_del" "$override" "$tmp_dir/postgres"
-
-  # Leave python environment
-  deactivate
-fi
-
-if [ "$run_pg_drop_ind" = true ]; then
-  echo "Dropping indexes to speed up imports..."
-  cd "$SCRIPT_DIR" || exit
-  psql -f ./setup/pg_indices_drop.sql -p "$OA_PG_PORT" -h "$OA_PG_HOST" -U "$OA_PG_USER" --echo-all -d "$OA_PG_DB"
-fi
-
-if [ "$run_pg_drop_full" = true ]; then
-  echo "Dropping all data from the database..."
-  cd "$SCRIPT_DIR" || exit
-  psql -f ./setup/pg_clear.sql -p "$OA_PG_PORT" -h "$OA_PG_HOST" -U "$OA_PG_USER" --echo-all -d "$OA_PG_DB"
-elif [ "$run_pg_drop_dat" = true ]; then
-  echo "Deleting merged objects..."
-  cd "$tmp_dir" || exit
-  find ./postgres -name "*-merged_del.sql" -exec psql -f {} -p "$OA_PG_PORT" -h "$OA_PG_HOST" -U "$OA_PG_USER" --echo-all -d "$OA_PG_DB" \;
-  echo "Deleting existing new objects..."
-  find ./postgres -name "*-del.sql" -exec psql -f {} -p "$OA_PG_PORT" -h "$OA_PG_HOST" -U "$OA_PG_USER" --echo-all -d "$OA_PG_DB" \;
-fi
-
-if [ "$run_pg_import" = true ]; then
-  echo "Import new or updated objects"
-  cd "$tmp_dir" || exit
-  find ./postgres -name "*-cpy.sql" -exec psql -f {} -p "$OA_PG_PORT" -h "$OA_PG_HOST" -U "$OA_PG_USER" --echo-all -d "$OA_PG_DB" \;
-
-  # Remember that we synced the snapshot
-  rm -f "$OA_LAST_UPDATE_PG_FILE"
-  echo "$TODAY" > "$OA_LAST_UPDATE_PG_FILE"
-fi
-
-if [ "$run_pg_ind" = true ]; then
-  echo "Creating indexes again..."
-  cd "$SCRIPT_DIR" || exit
-  psql -f ./setup/pg_indices.sql -p "$OA_PG_PORT" -h "$OA_PG_HOST" -U "$OA_PG_USER" --echo-all -d "$OA_PG_DB"
-fi
-
-if [ "$run_pg_clr" = true ]; then
-  echo "Deleting all temporary flattened files and scripts"
-  rm -r "$tmp_dir/postgres"
-fi
-
 
 echo "All updates done!"
 echo "Remember to update the date in $OA_LAST_UPDTAE_FILE"
