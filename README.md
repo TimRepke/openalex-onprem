@@ -88,7 +88,7 @@ All steps are skipped by default. The following assumes you have the latest vers
 * The solr-home folder has a size of around 340GB after the initial full snapshot import.
 * The openalex-snapshot folder has a size of around 312GB
 * The flattened postgres files have a size of around 163GB
-* The `/var/lib/postgresql/15/main/base` folder is around 1TB after the initial full snapshot import.
+* The `/var/lib/postgresql/16/main/base` folder is around 1TB after the initial full snapshot import.
 * The temporary solr files usually around 1GB, but since each partition is processed one-by-one, there's no significant storage need here.
 
 ## Some admin tricks
