@@ -10,3 +10,15 @@ DROP INDEX IF EXISTS oa.openalex.works_authorship_institutions_institution_id_id
 
 DROP INDEX IF EXISTS oa.openalex.works_locations_work_id_idx;
 DROP INDEX IF EXISTS oa.openalex.works_locations_source_id_idx;
+
+DROP INDEX IF EXISTS oa.openalex.works_concepts_work_id_idx;
+DROP INDEX IF EXISTS oa.openalex.works_concepts_concept_id_idx;
+
+DROP INDEX IF EXISTS oa.openalex.works_sdgs_work_id_idx;
+DROP INDEX IF EXISTS oa.openalex.works_sdgs_sdg_id_idx;
+
+DROP INDEX IF EXISTS oa.openalex.works_related_work_a_id_idx;
+DROP INDEX IF EXISTS oa.openalex.works_related_work_b_id_idx;
+
+DROP INDEX IF EXISTS oa.openalex.works_references_work_a_id_idx;
+DROP INDEX IF EXISTS oa.openalex.works_references_work_b_id_idx;

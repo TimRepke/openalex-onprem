@@ -253,34 +253,38 @@ CREATE TABLE openalex.works_locations
 );
 CREATE TABLE openalex.works_concepts
 (
+    row_id       BIGSERIAL PRIMARY KEY,
     work_id    text NOT NULL,
     concept_id text NOT NULL,
-    score      real,
+    score      real
 
-    PRIMARY KEY (work_id, concept_id)
+    -- PRIMARY KEY (work_id, concept_id)  -- unfortunately, some are not unique as promised
 );
 CREATE TABLE openalex.works_sdgs
 (
+    row_id       BIGSERIAL PRIMARY KEY,
     work_id      text NOT NULL,
     sdg_id       text NOT NULL,
     display_name text,
-    score        real,
+    score        real
 
-    PRIMARY KEY (work_id, sdg_id)
+    --PRIMARY KEY (work_id, sdg_id) -- unfortunately, some are not unique as promised
 );
 CREATE TABLE openalex.works_references
 (
+    row_id    BIGSERIAL PRIMARY KEY,
     work_a_id text NOT NULL,
-    work_b_id text NOT NULL,
+    work_b_id text NOT NULL
 
-    PRIMARY KEY (work_a_id, work_b_id)
+    -- PRIMARY KEY (work_a_id, work_b_id)-- unfortunately, some are not unique as promised
 );
 CREATE TABLE openalex.works_related
 (
+    row_id    BIGSERIAL PRIMARY KEY,
     work_a_id text NOT NULL,
-    work_b_id text NOT NULL,
+    work_b_id text NOT NULL
 
-    PRIMARY KEY (work_a_id, work_b_id)
+--     PRIMARY KEY (work_a_id, work_b_id)  -- unfortunately, some are not unique as promised
 );
 
 -- CREATE INDEX works_id_doi_idx ON openalex.works USING hash (id_doi);

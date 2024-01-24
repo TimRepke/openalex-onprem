@@ -10,3 +10,4 @@ ALTER USER openalex_rw SUPERUSER ; -- FIXME a little over the top
 CREATE USER openalex WITH PASSWORD '<PASSWORD>';
 GRANT CONNECT ON DATABASE oa TO openalex;
 GRANT SELECT ON ALL TABLES IN SCHEMA openalex TO openalex;
+GRANT USAGE ON SCHEMA openalex TO openalex;
