@@ -11,6 +11,7 @@ config_file="secret.env"
 sync_s3=false
 run_solr=false
 run_solr_import=false
+run_solr_import_full=false
 run_solr_tmp=false
 run_solr_clr=false
 run_solr_res=false
@@ -48,6 +49,7 @@ usage() {
  echo ""
  echo " --solr              Run solr-related tasks"
  echo " --solr-import       Update Solr collection"
+ echo " --solr-import-full  Do that update from scratch (i.e. not skipping partitions)"
  echo " --solr-tmp          Spin up temporary solr instance for import"
  echo " --solr-swp          Shut down temporary solr instance and transfer solr-home"
  echo " --solr-res          Reset solr index (start fresh)"
@@ -100,6 +102,9 @@ while [ $# -gt 0 ]; do
       ;;
     --solr-import)
       run_solr_import=true
+      ;;
+    --solr-import-full)
+      run_solr_import_full=true
       ;;
     --solr-tmp)
       with_tmp=true
@@ -315,15 +320,19 @@ if [ "$run_solr" = true ]; then
 
     # Load our python environment
     source ../venv/bin/activate
-    
+
+    LAST_UP=
+    if [ "$run_solr_import_full" = true ]; then
+      LAST_UP=" --last-solr-update=$LAST_UPDT_SOLR "
+    fi
+
     echo "Running solr import..."
     python update_solr.py --tmp-dir="$OA_TMP_DIR/solr" \
                           --snapshot-dir="$OA_SNAPSHOT" \
                           --solr-collection="$OA_SOLR_COLLECTION" \
                           --solr-host="$OA_SOLR_HOST" \
                           --solr-port="$OA_SOLR_PORT" \
-                          --last-solr-update="$LAST_UPDT_SOLR" \
-                          "$solr_skip_del" --loglevel=INFO
+                          "$LAST_UP" "$solr_skip_del" --loglevel=INFO
 
     # Leave python environment
     deactivate
