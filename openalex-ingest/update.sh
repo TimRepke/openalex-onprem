@@ -321,8 +321,9 @@ if [ "$run_solr" = true ]; then
     # Load our python environment
     source ../venv/bin/activate
 
-    LAST_UP=
     if [ "$run_solr_import_full" = true ]; then
+      LAST_UP=" --last-solr-update=1970-01-01 "
+    else
       LAST_UP=" --last-solr-update=$LAST_UPDT_SOLR "
     fi
 
