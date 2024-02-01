@@ -178,7 +178,7 @@ export OA_CONFIG="${config_file}"
 source "${OA_CONFIG}"
 
 
-if [ ! -d "OA_TMP_DIR" ]; then
+if [ ! -d "$OA_TMP_DIR" ]; then
   echo "The TMP_DIR='$OA_TMP_DIR' does not exist!"
   echo ""
   usage

@@ -109,7 +109,7 @@ Solr-import:
     - echo "$OA_SCRIPT_DIR"
     - echo "$OA_ENV_FILE"
     - cd "$OA_SCRIPT_DIR/openalex-ingest" || exit
-    - ./update.sh --config "$OA_ENV_FILE" --solr --solr-res --solr-import --solr-clr --with-tmp
+    - ./update.sh --config "$OA_ENV_FILE" --solr --solr-import --solr-clr --with-tmp # --solr-res
 Solr-switch:
   stage: solr
   needs: ["Solr-import"]
