@@ -322,9 +322,9 @@ if [ "$run_solr" = true ]; then
     source ../venv/bin/activate
 
     if [ "$run_solr_import_full" = true ]; then
-      LAST_UP=" --last-solr-update=\"1970-01-01\" "
+      LAST_UP="1970-01-01"
     else
-      LAST_UP=" --last-solr-update=\"$LAST_UPDT_SOLR\" "
+      LAST_UP="$LAST_UPDT_SOLR"
     fi
 
     echo "Running solr import..."
@@ -333,7 +333,8 @@ if [ "$run_solr" = true ]; then
                           --solr-collection="$OA_SOLR_COLLECTION" \
                           --solr-host="$OA_SOLR_HOST" \
                           --solr-port="$OA_SOLR_PORT" \
-                          "$LAST_UP" "$solr_skip_del" --loglevel=INFO
+                          --last-solr-update="$LAST_UP" \
+                          "$solr_skip_del" --loglevel=INFO
 
     # Leave python environment
     deactivate
