@@ -11,15 +11,6 @@ variables:
   OA_N_JOBS:
     description: "Number of jobs for postgres parallel flattening"
     value: "15"
-  OA_SKIP_SYNC_STAGE:
-    description: "Leave empty to run the sync stage jobs"
-    value: ""
-  OA_SKIP_SOLR_STAGE:
-    description: "Leave empty to run the solr stage jobs"
-    value: ""
-  OA_SKIP_PG_STAGE:
-    description: "Leave empty to run the postgres stage jobs"
-    value: ""
 
 # Pip's cache doesn't store the python packages
 # https://pip.pypa.io/en/stable/reference/pip_install/#caching
@@ -97,7 +88,7 @@ Fetch-S3-bucket:
     - cd "$OA_SCRIPT_DIR/openalex-ingest" || exit
     - ./update.sh "$OA_TMP_DIR" --config "$OA_ENV_FILE" --sync --no-progress --with-sudo
 
-Solr:
+Solr-second:
   stage: solr
   needs: ["Fetch-S3-bucket"]
   when: on_success
@@ -105,14 +96,35 @@ Solr:
     - rechner
   script:
     - echo "$OA_SCRIPT_DIR"
-    - echo "$OA_TMP_DIR"
     - echo "$OA_ENV_FILE"
     - cd "$OA_SCRIPT_DIR/openalex-ingest" || exit
-    - ./update.sh "$OA_TMP_DIR" --config "$OA_ENV_FILE" --solr-res --solr --solr-clr
+    - ./update.sh --config "$OA_ENV_FILE" --solr --solr-tmp --with-tmp
+Solr-import:
+  stage: solr
+  needs: ["Solr-second"]
+  when: on_success
+  tags:
+    - rechner
+  script:
+    - echo "$OA_SCRIPT_DIR"
+    - echo "$OA_ENV_FILE"
+    - cd "$OA_SCRIPT_DIR/openalex-ingest" || exit
+    - ./update.sh --config "$OA_ENV_FILE" --solr --solr-res --solr-import --solr-clr --with-tmp
+Solr-switch:
+  stage: solr
+  needs: ["Solr-import"]
+  when: on_success
+  tags:
+    - rechner
+  script:
+    - echo "$OA_SCRIPT_DIR"
+    - echo "$OA_ENV_FILE"
+    - cd "$OA_SCRIPT_DIR/openalex-ingest" || exit
+    - ./update.sh --config "$OA_ENV_FILE" --solr --solr-swp
 
 Postgres-flat:
   stage: postgres
-  needs: ["Solr"]
+  needs: ["Solr-switch"]
   when: on_success
   tags:
     - rechner
@@ -121,7 +133,7 @@ Postgres-flat:
     - echo "$OA_TMP_DIR"
     - echo "$OA_ENV_FILE"
     - cd "$OA_SCRIPT_DIR/openalex-ingest" || exit
-    - ./update.sh "$OA_TMP_DIR" --config "$OA_ENV_FILE" --pg-flat --override --jobs $OA_N_JOBS
+    - ./update.sh "$OA_TMP_DIR" --config "$OA_ENV_FILE" --pg --pg-flat --override --jobs $OA_N_JOBS
 
 Postgres-prep:
   stage: postgres
@@ -134,7 +146,7 @@ Postgres-prep:
     - echo "$OA_TMP_DIR"
     - echo "$OA_ENV_FILE"
     - cd "$OA_SCRIPT_DIR/openalex-ingest" || exit
-    - ./update.sh "$OA_TMP_DIR" --config "$OA_ENV_FILE" --pg-del-dat --pg-del-ind
+    - ./update.sh "$OA_TMP_DIR" --config "$OA_ENV_FILE" --pg --pg-del-dat --pg-del-ind
 
 Postgres-import:
   stage: postgres
@@ -147,7 +159,7 @@ Postgres-import:
     - echo "$TMP_DIR"
     - echo "$ENV_FILE"
     - cd "$OA_SCRIPT_DIR/openalex-ingest" || exit
-    - ./update.sh "$OA_TMP_DIR" --config "$OA_ENV_FILE" --pg
+    - ./update.sh "$OA_TMP_DIR" --config "$OA_ENV_FILE" --pg --pg-import
 
 Postgres-post:
   stage: postgres
@@ -160,4 +172,4 @@ Postgres-post:
     - echo "$TMP_DIR"
     - echo "$ENV_FILE"
     - cd "$OA_SCRIPT_DIR/openalex-ingest" || exit
-    - ./update.sh "$OA_TMP_DIR" --config "$OA_ENV_FILE" --pg-clr --pg-ind
+    - ./update.sh "$OA_TMP_DIR" --config "$OA_ENV_FILE" --pg --pg-clr --pg-ind
