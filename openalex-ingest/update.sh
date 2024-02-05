@@ -364,7 +364,7 @@ if [ "$run_solr" = true ]; then
 
     echo "Copying solr-home folders"
     $with_sudo chown -R "$USR_SELF:$USR_SELF" "$OA_SOLR_HOME_PROD"
-    rm -r "$OA_SOLR_HOME_PROD"
+    rm -r "$OA_SOLR_HOME_PROD/*"
     cp -r "$OA_SOLR_HOME_TMP/*" "$OA_SOLR_HOME_PROD"
     $with_sudo chown -R "$USR_SOLR:$USR_SOLR" "$OA_SOLR_HOME_PROD"
 
