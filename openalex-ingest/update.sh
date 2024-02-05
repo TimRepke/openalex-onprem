@@ -332,9 +332,7 @@ if [ "$run_solr" = true ]; then
                           --snapshot-dir="$OA_SNAPSHOT" \
                           --solr-collection="$OA_SOLR_COLLECTION" \
                           --solr-host="$OA_SOLR_HOST" \
-                          --solr-port="$OA_SOLR_PORT" \
-                          --last-solr-update="$LAST_UP" \
-                          "$solr_skip_del" --loglevel=INFO
+                          --solr-port="$OA_SOLR_PORT" --last-solr-update="$LAST_UP" "$solr_skip_del" --loglevel=INFO
 
     # Leave python environment
     deactivate
