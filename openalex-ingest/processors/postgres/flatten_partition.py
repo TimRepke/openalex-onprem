@@ -10,7 +10,6 @@ from msgspec import DecodeError
 
 from processors.postgres import structs
 from processors.postgres.deletion import generate_deletions
-from shared.config import settings
 from shared.util import strip_id
 from shared.cyth.invert_index import invert
 
@@ -46,6 +45,7 @@ def flatten_authors_partition(partition: Path | str,
                               out_sql_cpy: Path | str,
                               out_sql_del: Path | str,
                               out_authors: Path | str,
+                              pg_schema: str,
                               preserve_ram: bool):
     logging.info(f'Flattening partition file {partition}')
     partition: Path = Path(partition)
@@ -99,10 +99,10 @@ def flatten_authors_partition(partition: Path | str,
                 'updated_date': author.updated_date
             })
 
-        for del_row in generate_deletions(ids=author_ids, object_type='author', batch_size=1000):
+        for del_row in generate_deletions(ids=author_ids, object_type='author', batch_size=1000, pg_schema=pg_schema):
             f_sql_del.write(del_row + '\n')
 
-        f_sql_cpy.write(f"COPY {settings.pg_schema}.authors ({fieldnames(writer_authors)}) "
+        f_sql_cpy.write(f"COPY {pg_schema}.authors ({fieldnames(writer_authors)}) "
                         f"FROM PROGRAM 'gunzip -c {out_authors.absolute()}' csv header;\n\n")
 
     executionTime = (time.time() - startTime)
@@ -118,6 +118,7 @@ def flatten_institutions_partition(partition: Path | str,
                                    out_institutions: Path | str,
                                    out_m2m_association: Path | str,
                                    out_m2m_concepts: Path | str,
+                                   pg_schema: str,
                                    preserve_ram: bool):
     logging.info(f'Flattening partition file {partition}')
     partition: Path = Path(partition)
@@ -201,14 +202,15 @@ def flatten_institutions_partition(partition: Path | str,
                     'score': con.score
                 })
 
-        for del_row in generate_deletions(ids=institution_ids, object_type='institution', batch_size=1000):
+        for del_row in generate_deletions(ids=institution_ids, object_type='institution',
+                                          batch_size=1000, pg_schema=pg_schema):
             f_sql_del.write(del_row + '\n')
 
-        f_sql_cpy.write(f"COPY {settings.pg_schema}.institutions ({fieldnames(writer_inst)}) "
+        f_sql_cpy.write(f"COPY {pg_schema}.institutions ({fieldnames(writer_inst)}) "
                         f"FROM PROGRAM 'gunzip -c {out_institutions.absolute()}' csv header;\n\n")
-        f_sql_cpy.write(f"COPY {settings.pg_schema}.institutions_associations ({fieldnames(writer_m2m_ass)}) "
+        f_sql_cpy.write(f"COPY {pg_schema}.institutions_associations ({fieldnames(writer_m2m_ass)}) "
                         f"FROM PROGRAM 'gunzip -c {out_m2m_association.absolute()}' csv header;\n\n")
-        f_sql_cpy.write(f"COPY {settings.pg_schema}.institutions_concepts ({fieldnames(writer_m2m_con)}) "
+        f_sql_cpy.write(f"COPY {pg_schema}.institutions_concepts ({fieldnames(writer_m2m_con)}) "
                         f"FROM PROGRAM 'gunzip -c {out_m2m_concepts.absolute()}' csv header;\n\n")
 
     executionTime = (time.time() - startTime)
@@ -222,6 +224,7 @@ def flatten_publisher_partition(partition: Path | str,
                                 out_sql_cpy: Path | str,
                                 out_sql_del: Path | str,
                                 out_publishers: Path | str,
+                                pg_schema: str,
                                 preserve_ram: bool):
     logging.info(f'Flattening partition file {partition}')
     partition: Path = Path(partition)
@@ -282,10 +285,11 @@ def flatten_publisher_partition(partition: Path | str,
                 'updated_date': publisher.updated_date
             })
 
-        for del_row in generate_deletions(ids=publisher_ids, object_type='publisher', batch_size=1000):
+        for del_row in generate_deletions(ids=publisher_ids, object_type='publisher', batch_size=1000,
+                                          pg_schema=pg_schema):
             f_sql_del.write(del_row + '\n')
 
-        f_sql_cpy.write(f"COPY {settings.pg_schema}.publishers ({fieldnames(writer_pub)}) "
+        f_sql_cpy.write(f"COPY {pg_schema}.publishers ({fieldnames(writer_pub)}) "
                         f"FROM PROGRAM 'gunzip -c {out_publishers.absolute()}' csv header;\n\n")
 
     executionTime = (time.time() - startTime)
@@ -299,6 +303,7 @@ def flatten_funder_partition(partition: Path | str,
                              out_sql_cpy: Path | str,
                              out_sql_del: Path | str,
                              out_funders: Path | str,
+                             pg_schema: str,
                              preserve_ram: bool):
     logging.info(f'Flattening partition file {partition}')
     partition: Path = Path(partition)
@@ -354,10 +359,10 @@ def flatten_funder_partition(partition: Path | str,
                 'updated_date': funder.updated_date
             })
 
-        for del_row in generate_deletions(ids=funder_ids, object_type='funder', batch_size=1000):
+        for del_row in generate_deletions(ids=funder_ids, object_type='funder', batch_size=1000, pg_schema=pg_schema):
             f_sql_del.write(del_row + '\n')
 
-        f_sql_cpy.write(f"COPY {settings.pg_schema}.funders ({fieldnames(writer_funders)}) "
+        f_sql_cpy.write(f"COPY {pg_schema}.funders ({fieldnames(writer_funders)}) "
                         f"FROM PROGRAM 'gunzip -c {out_funders.absolute()}' csv header;\n\n")
 
     executionTime = (time.time() - startTime)
@@ -373,6 +378,7 @@ def flatten_concept_partition(partition: Path | str,
                               out_concepts: Path | str,
                               out_m2m_ancestor: Path | str,
                               out_m2m_related: Path | str,
+                              pg_schema: str,
                               preserve_ram: bool):
     logging.info(f'Flattening partition file {partition}')
     partition: Path = Path(partition)
@@ -444,14 +450,14 @@ def flatten_concept_partition(partition: Path | str,
                     'concept_b_id': strip_id(anc.id)
                 })
 
-        for del_row in generate_deletions(ids=concept_ids, object_type='concept', batch_size=1000):
+        for del_row in generate_deletions(ids=concept_ids, object_type='concept', batch_size=1000, pg_schema=pg_schema):
             f_sql_del.write(del_row + '\n')
 
-        f_sql_cpy.write(f"COPY {settings.pg_schema}.concepts ({fieldnames(writer_concepts)}) "
+        f_sql_cpy.write(f"COPY {pg_schema}.concepts ({fieldnames(writer_concepts)}) "
                         f"FROM PROGRAM 'gunzip -c {out_concepts.absolute()}' csv header;\n\n")
-        f_sql_cpy.write(f"COPY {settings.pg_schema}.concepts_ancestors ({fieldnames(writer_m2m_ancestor)}) "
+        f_sql_cpy.write(f"COPY {pg_schema}.concepts_ancestors ({fieldnames(writer_m2m_ancestor)}) "
                         f"FROM PROGRAM 'gunzip -c {out_m2m_ancestor.absolute()}' csv header;\n\n")
-        f_sql_cpy.write(f"COPY {settings.pg_schema}.concepts_related ({fieldnames(writer_m2m_related)}) "
+        f_sql_cpy.write(f"COPY {pg_schema}.concepts_related ({fieldnames(writer_m2m_related)}) "
                         f"FROM PROGRAM 'gunzip -c {out_m2m_related.absolute()}' csv header;\n\n")
 
     executionTime = (time.time() - startTime)
@@ -465,6 +471,7 @@ def flatten_sources_partition(partition: Path | str,
                               out_sql_cpy: Path | str,
                               out_sql_del: Path | str,
                               out_sources: Path | str,
+                              pg_schema: str,
                               preserve_ram: bool):
     logging.info(f'Flattening partition file {partition}')
     partition: Path = Path(partition)
@@ -538,10 +545,10 @@ def flatten_sources_partition(partition: Path | str,
                 'updated_date': source.updated_date
             })
 
-        for del_row in generate_deletions(ids=source_ids, object_type='source', batch_size=1000):
+        for del_row in generate_deletions(ids=source_ids, object_type='source', batch_size=1000, pg_schema=pg_schema):
             f_sql_del.write(del_row + '\n')
 
-        f_sql_cpy.write(f"COPY {settings.pg_schema}.sources ({fieldnames(writer_sources)}) "
+        f_sql_cpy.write(f"COPY {pg_schema}.sources ({fieldnames(writer_sources)}) "
                         f"FROM PROGRAM 'gunzip -c {out_sources.absolute()}' csv header;\n\n")
 
     executionTime = (time.time() - startTime)
@@ -562,6 +569,7 @@ def flatten_works_partition(partition: Path | str,
                             out_m2m_references: Path | str,
                             out_m2m_related: Path | str,
                             out_m2m_sdgs: Path | str,
+                            pg_schema: str,
                             preserve_ram: bool):
     logging.info(f'Flattening partition file {partition}')
     partition: Path = Path(partition)
@@ -748,25 +756,25 @@ def flatten_works_partition(partition: Path | str,
                     'work_b_id': strip_id(rel)
                 })
 
-        for del_row in generate_deletions(ids=work_ids, object_type='work', batch_size=1000):
+        for del_row in generate_deletions(ids=work_ids, object_type='work', batch_size=1000, pg_schema=pg_schema):
             f_sql_del.write(del_row + '\n')
 
-        f_sql_cpy.write(f"COPY {settings.pg_schema}.works ({fieldnames(writer_works)}) "
+        f_sql_cpy.write(f"COPY {pg_schema}.works ({fieldnames(writer_works)}) "
                         f"FROM PROGRAM 'gunzip -c {out_works.absolute()}' csv header;\n\n")
-        f_sql_cpy.write(f"COPY {settings.pg_schema}.works_locations ({fieldnames(writer_locations)}) "
+        f_sql_cpy.write(f"COPY {pg_schema}.works_locations ({fieldnames(writer_locations)}) "
                         f"FROM PROGRAM 'gunzip -c {out_m2m_locations.absolute()}' csv header;\n\n")
-        f_sql_cpy.write(f"COPY {settings.pg_schema}.works_concepts "
+        f_sql_cpy.write(f"COPY {pg_schema}.works_concepts "
                         f"FROM PROGRAM 'gunzip -c {out_m2m_concepts.absolute()}' csv header;\n\n")
-        f_sql_cpy.write(f"COPY {settings.pg_schema}.works_authorships ({fieldnames(writer_authorships)}) "
+        f_sql_cpy.write(f"COPY {pg_schema}.works_authorships ({fieldnames(writer_authorships)}) "
                         f"FROM PROGRAM 'gunzip -c {out_m2m_authorships.absolute()}' csv header;\n\n")
         f_sql_cpy.write(
-            f"COPY {settings.pg_schema}.works_authorship_institutions ({fieldnames(writer_authorship_institutions)}) "
+            f"COPY {pg_schema}.works_authorship_institutions ({fieldnames(writer_authorship_institutions)}) "
             f"FROM PROGRAM 'gunzip -c {out_m2m_authorship_institutions.absolute()}' csv header;\n\n")
-        f_sql_cpy.write(f"COPY {settings.pg_schema}.works_references ({fieldnames(writer_references)}) "
+        f_sql_cpy.write(f"COPY {pg_schema}.works_references ({fieldnames(writer_references)}) "
                         f"FROM PROGRAM 'gunzip -c {out_m2m_references.absolute()}' csv header;\n\n")
-        f_sql_cpy.write(f"COPY {settings.pg_schema}.works_related ({fieldnames(writer_related)}) "
+        f_sql_cpy.write(f"COPY {pg_schema}.works_related ({fieldnames(writer_related)}) "
                         f"FROM PROGRAM 'gunzip -c {out_m2m_related.absolute()}' csv header;\n\n")
-        f_sql_cpy.write(f"COPY {settings.pg_schema}.works_sdgs ({fieldnames(writer_sdgs)}) "
+        f_sql_cpy.write(f"COPY {pg_schema}.works_sdgs ({fieldnames(writer_sdgs)}) "
                         f"FROM PROGRAM 'gunzip -c {out_m2m_sdgs.absolute()}' csv header;\n\n")
 
     executionTime = (time.time() - startTime)
@@ -819,4 +827,5 @@ if __name__ == '__main__':
                               out_sources='../data/source/out/src.csv.gz',
                               out_sql_cpy='../data/source/out/src-cpy.sql',
                               out_sql_del='../data/source/out/src-del.sql',
-                              preserve_ram=True)
+                              preserve_ram=True,
+                              pg_schema='openalex')

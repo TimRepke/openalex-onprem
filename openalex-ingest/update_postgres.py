@@ -2,13 +2,16 @@ import logging
 from pathlib import Path
 
 import typer
+from typing_extensions import Annotated
 
 from processors.postgres.flatten import flatten_authors, flatten_concepts, flatten_funders, flatten_institutions, \
     flatten_publishers, flatten_sources, flatten_works
-from shared.config import settings
 
 
-def update_postgres(tmp_dir: Path,  # Directory where we can write temporary parsed partition files
+def update_postgres(tmp_dir: Annotated[Path, typer.Option(help='Directory for temporary parsed partition files')],
+                    snapshot_dir: Annotated[Path, typer.Option(help='Path to openalex snapshot from S3')],
+                    last_update: Annotated[str, typer.Option(help='YYYY-MM-DD of when PG was last updated')],
+                    pg_schema: Annotated[str, typer.Option(help='PG schema')],
                     skip_deletion: bool = False,
                     parallelism: int = 8,
                     override: bool = False,
@@ -24,28 +27,29 @@ def update_postgres(tmp_dir: Path,  # Directory where we can write temporary par
     (tmp_dir / 'postgres').mkdir(parents=True, exist_ok=True)
 
     logging.info('Flattening works')
-    flatten_works(tmp_dir=tmp_dir, parallelism=parallelism, skip_deletion=skip_deletion,
-                  override=override, preserve_ram=preserve_ram)
+    flatten_works(tmp_dir=tmp_dir, parallelism=parallelism, skip_deletion=skip_deletion, override=override,
+                  preserve_ram=preserve_ram, pg_schema=pg_schema, snapshot_dir=snapshot_dir, last_update=last_update)
     logging.info('Flattening authors')
-    flatten_authors(tmp_dir=tmp_dir, parallelism=parallelism, skip_deletion=skip_deletion,
-                    override=override, preserve_ram=preserve_ram)
+    flatten_authors(tmp_dir=tmp_dir, parallelism=parallelism, skip_deletion=skip_deletion, override=override,
+                    preserve_ram=preserve_ram, pg_schema=pg_schema, snapshot_dir=snapshot_dir, last_update=last_update)
     logging.info('Flattening publishers')
-    flatten_publishers(tmp_dir=tmp_dir, parallelism=parallelism, skip_deletion=skip_deletion,
-                       override=override, preserve_ram=preserve_ram)
+    flatten_publishers(tmp_dir=tmp_dir, parallelism=parallelism, skip_deletion=skip_deletion, override=override,
+                       preserve_ram=preserve_ram, pg_schema=pg_schema, snapshot_dir=snapshot_dir,
+                       last_update=last_update)
     logging.info('Flattening sources')
-    flatten_sources(tmp_dir=tmp_dir, parallelism=parallelism, skip_deletion=skip_deletion,
-                    override=override, preserve_ram=preserve_ram)
+    flatten_sources(tmp_dir=tmp_dir, parallelism=parallelism, skip_deletion=skip_deletion, override=override,
+                    preserve_ram=preserve_ram, pg_schema=pg_schema, snapshot_dir=snapshot_dir, last_update=last_update)
     logging.info('Flattening institutions')
-    flatten_institutions(tmp_dir=tmp_dir, parallelism=parallelism, skip_deletion=skip_deletion,
-                         override=override, preserve_ram=preserve_ram)
+    flatten_institutions(tmp_dir=tmp_dir, parallelism=parallelism, skip_deletion=skip_deletion, override=override,
+                         preserve_ram=preserve_ram, pg_schema=pg_schema, snapshot_dir=snapshot_dir,
+                         last_update=last_update)
     logging.info('Flattening concepts')
-    flatten_concepts(tmp_dir=tmp_dir, parallelism=parallelism, skip_deletion=skip_deletion,
-                     override=override, preserve_ram=preserve_ram)
+    flatten_concepts(tmp_dir=tmp_dir, parallelism=parallelism, skip_deletion=skip_deletion, override=override,
+                     preserve_ram=preserve_ram, pg_schema=pg_schema, snapshot_dir=snapshot_dir, last_update=last_update)
     logging.info('Flattening funders')
-    flatten_funders(tmp_dir=tmp_dir, parallelism=parallelism, skip_deletion=skip_deletion,
-                    override=override, preserve_ram=preserve_ram)
+    flatten_funders(tmp_dir=tmp_dir, parallelism=parallelism, skip_deletion=skip_deletion, override=override,
+                    preserve_ram=preserve_ram, pg_schema=pg_schema, snapshot_dir=snapshot_dir, last_update=last_update)
     logging.info('Postgres files are flattened.')
-    logging.warning(f'Remember to update the date in "{settings.last_update_pg_file}"')
 
 
 if __name__ == "__main__":

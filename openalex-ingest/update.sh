@@ -25,9 +25,11 @@ run_pg_drop_ind=false  # drop indices before import
 run_pg_drop_dat=false  # drop selected data before import
 run_pg_drop_full=false # drop all data before import
 run_pg_import=false    # import data
+run_pg_import_full=false  # import data
 run_pg_ind=false       # build indices
 run_pg_clr=false       # drop tmp files
-run_pg_tmp=false       # Spin up pg cluster
+run_pg_tmp=false       # Spin up temporary pg cluster
+run_pg_swp=false       # Move data from tmp cluster to "production"
 
 solr_skip_del="--skip-deletion"
 pg_skip_del="--skip-deletion"
@@ -64,7 +66,9 @@ usage() {
  echo " --pg-del-upd        Drop only deprecated data from postgres before import"
  echo " --pg-flat           Flatten files for postgres"
  echo " --pg-import         Run postgres import"
+ echo " --pg-import-full         Run postgres import"
  echo " --pg-tmp            Spin up temporary PG cluster for import"
+ echo " --pg-swp            Shut down temporary PG cluster and transfer data"
  echo " --pg-ind            Create postgres indices"
  echo " --pg-clr            Clean temporary data (postgres)"
  echo " --override          Ignore existing flattened files and override them"
@@ -106,6 +110,7 @@ while [ $# -gt 0 ]; do
       run_solr_import=true
       ;;
     --solr-import-full)
+      run_solr_import=true
       run_solr_import_full=true
       ;;
     --solr-tmp)
@@ -141,6 +146,10 @@ while [ $# -gt 0 ]; do
     --pg-import)
       run_pg_import=true
       ;;
+    --pg-import-full)
+      run_pg_import=true
+      run_pg_import_full=true
+      ;;
     --pg-ind)
       run_pg_ind=true
       ;;
@@ -149,6 +158,9 @@ while [ $# -gt 0 ]; do
       ;;
     --pg-tmp)
       run_pg_tmp=true
+      ;;
+    --pg-swp)
+      run_pg_swp=true
       ;;
     --override)
       override="--override"
@@ -364,7 +376,7 @@ if [ "$run_solr" = true ]; then
 
     echo "Copying solr-home folders"
     $with_sudo chown -R "$USR_SELF:$USR_SELF" "$OA_SOLR_HOME_PROD"
-    $with_sudo chown -R "$USR_SELF:$USR_SELF" "$OA_SOLR_HOME_PROD"
+    $with_sudo chown -R "$USR_SELF:$USR_SELF" "$OA_SOLR_HOME_TMP"
     rm -r "$OA_SOLR_HOME_PROD"/* || echo "solr home at '$OA_SOLR_HOME_PROD' already cleared."
     cp -r "$OA_SOLR_HOME_TMP"/* "$OA_SOLR_HOME_PROD"
     $with_sudo chown -R "$USR_SOLR:$USR_SOLR" "$OA_SOLR_HOME_PROD"
@@ -384,6 +396,20 @@ if [ "$run_pg" = true ]; then
   # =======================================================
   echo "-=# Postgres import #=-"
 
+  if [ "$with_tmp" = true ]; then
+    echo "Going to use tmp connection info"
+    OA_PG_PORT="${OA_PG_PORT_TMP}"
+  else
+    echo "Going to use production connection info"
+    OA_PG_PORT="${OA_PG_PORT_PROD}"
+  fi
+
+  if [ "$run_pg_import_full" = true ]; then
+    LAST_UP="1970-01-01"
+  else
+    LAST_UP="$LAST_UPDT_PG"
+  fi
+
   # shellcheck disable=SC2034
   export PGPASSWORD="$OA_PG_PW"  # set for passwordless postgres
 
@@ -398,7 +424,12 @@ if [ "$run_pg" = true ]; then
     source ../venv/bin/activate
 
     echo "Flattening files for postgres"
-    python update_postgres.py --loglevel INFO --parallelism "$jobs" "$preserve_ram" "$pg_skip_del" "$override" "$OA_TMP_DIR/postgres"
+    python update_postgres.py --tmp-dir="$OA_TMP_DIR/postgres" \
+                              --snapshot-dir="$OA_SNAPSHOT" \
+                              --pg-schema="$OA_PG_SCHEMA" \
+                              --last-update="$LAST_UP" \
+                              --loglevel INFO \
+                              --parallelism "$jobs" "$preserve_ram" "$pg_skip_del" "$override"
 
     # Leave python environment
     deactivate
@@ -423,23 +454,14 @@ if [ "$run_pg" = true ]; then
   fi
 
   if [ "$run_pg_tmp" = true ]; then
+    cd "$SCRIPT_DIR" || exit
+
     echo "Spinning up temporary PG cluster..."
-    pg_createcluster 16 oaimport -p 5434 -d "${pg_tmp_data}" --start
-    # create schema
-    # create users
-    # grant permissions
-    # [run import]
-    # [build indices]
-    # sudo pg_dropcluster 16 main
-    # sudo systemctl stop postgresql
-    # Drop old directory
-    # sudo rm /var/lib/postgresql/16/main
-    # Move new directory
-    # sudo mv "${pg_tmp_data}" /var/lib/postgresql/16/main
-    # edit /etc/postgresql/14/main/postgresql.conf
-    #    -> data_directory = '/var/lib/postgresql/16/main'
-    # sudo pg_dropcluster 16 oaimport
-    # start service again
+    sudo pg_createcluster 16 "$OA_PG_CLUSTER_TMP" -p "$OA_PG_PORT_TMP" -d "$OA_PG_DATADIR_TMP" -u postgres --start
+    sudo -u postgres createdb -p "$OA_PG_PORT_TMP" "$OA_PG_DB"
+    sudo -u postgres psql -f ./setup/pg_schema.sql -p "$OA_PG_PORT_TMP" -d "$OA_PG_DB" --echo-all
+    sudo -u postgres psql -f ./setup/pg_users_secret.sql -p "$OA_PG_PORT" -d "$OA_PG_DB"
+
   fi
 
   if [ "$run_pg_import" = true ]; then
@@ -456,6 +478,28 @@ if [ "$run_pg" = true ]; then
     echo "Creating indexes again..."
     cd "$SCRIPT_DIR" || exit
     psql -f ./setup/pg_indices.sql -p "$OA_PG_PORT" -h "$OA_PG_HOST" -U "$OA_PG_USER" --echo-all -d "$OA_PG_DB"
+  fi
+
+  if [ "$run_pg_swp" = true ]; then
+    cd "$SCRIPT_DIR" || exit
+
+    echo "Spinning up temporary PG cluster..."
+    sudo pg_ctlcluster 16 "$OA_PG_CLUSTER_TMP" stop
+    sudo pg_ctlcluster 16 "$OA_PG_CLUSTER_PROD" stop
+
+
+
+    sudo pg_dropcluster 16 "$OA_PG_CLUSTER_TMP" --stop
+    # sudo pg_dropcluster 16 main
+
+    # Drop old directory
+    # sudo rm /var/lib/postgresql/16/main
+    # Move new directory
+    # sudo mv "${pg_tmp_data}" /var/lib/postgresql/16/main
+    # edit /etc/postgresql/14/main/postgresql.conf
+    #    -> data_directory = '/var/lib/postgresql/16/main'
+    # sudo pg_dropcluster 16 oaimport
+    # start service again
   fi
 
   if [ "$run_pg_clr" = true ]; then
