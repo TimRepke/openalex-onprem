@@ -5,6 +5,8 @@ set -e
 
 # Remember where we are right now, later we might change to other places and want to find our way back
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+USR_SELF=$(whoami)
+USR_SOLR="solr"
 
 # Default variable values
 config_file="secret.env"
@@ -358,16 +360,17 @@ if [ "$run_solr" = true ]; then
 
     echo "Shutting down solr instances as to not confuse them too much"
     "${OA_SOLR_BIN_TMP}/solr"  stop -p "$OA_SOLR_PORT_TMP"
-    "${OA_SOLR_BIN_PROD}/solr" stop -p "$OA_SOLR_PORT_PROD"
+    $with_sudo /usr/bin/systemctl stop solr.service
 
     echo "Copying solr-home folders"
+    $with_sudo chown -R "$USR_SELF:$USR_SELF" "$OA_SOLR_HOME_PROD"
     rm -r "$OA_SOLR_HOME_PROD"
     cp -r "$OA_SOLR_HOME_TMP/*" "$OA_SOLR_HOME_PROD"
-    $with_sudo chown -R solr:solr "$OA_SOLR_HOME_PROD"
+    $with_sudo chown -R "$USR_SOLR:$USR_SOLR" "$OA_SOLR_HOME_PROD"
 
-    echo "Making sure tmp solr instance is running..."
-    # FIXME: move all settings to solr.in.sh
-    sudo -u solr "${OA_SOLR_BIN_PROD}/solr" start -c -h "$OA_SOLR_HOST_PROD" -m 20g -s "$OA_SOLR_HOME_PROD" -Denable.packages=true -Dsolr.modules=sql,clustering -Dsolr.max.booleanClauses=4096
+    echo "Starting up production solr again..."
+    $with_sudo /usr/bin/systemctl start solr.service
+    #sudo -u "$USR_SOLR" "${OA_SOLR_BIN_PROD}/solr" start -c -h "$OA_SOLR_HOST_PROD" -m 20g -s "$OA_SOLR_HOME_PROD" -Denable.packages=true -Dsolr.modules=sql,clustering -Dsolr.max.booleanClauses=4096
 
     echo "NOTE: not deleting the temporary solr-home at ${OA_SOLR_HOME_TMP}"
   fi

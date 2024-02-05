@@ -297,3 +297,5 @@ SOLR_MODULES=sql,clustering
 # Solr internally doesn't use cookies other than for modules such as Kerberos/Hadoop Auth. If you don't need any of those
 # And you don't need them for an external system (such as a load balancer), you can disable the use of a CookieStore with:
 # SOLR_OPTS="$SOLR_OPTS -Dsolr.http.disableCookies=true"
+
+#SOLR_OPTS="$SOLR_OPTS -m 20g -Denable.packages=true -Dsolr.modules=sql,clustering -Dsolr.max.booleanClauses=4096"
