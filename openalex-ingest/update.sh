@@ -147,7 +147,6 @@ while [ $# -gt 0 ]; do
       run_pg_import=true
       ;;
     --pg-import-full)
-      run_pg_import=true
       run_pg_import_full=true
       ;;
     --pg-ind)
@@ -249,8 +248,8 @@ if [ "$sync_s3" = true ] && [ "$TODAY" \> "$LAST_SYNC" ]; then
   aws s3 sync "s3://openalex" "openalex-snapshot" --no-sign-request --delete "$show_aws_progress"
 
   # Update group to openalex, so that everyone can read it later
-  $with_sudo chgrp -R openalex .
-  $with_sudo chmod -R 775 .
+  $with_sudo chgrp -R openalex "$OA_SNAPSHOT"
+  $with_sudo chmod -R 775 "$OA_SNAPSHOT"
 
   # Remember that we synced the snapshot
   rm -f "$OA_LAST_SYNC_FILE"
@@ -459,9 +458,8 @@ if [ "$run_pg" = true ]; then
     echo "Spinning up temporary PG cluster..."
     sudo pg_createcluster 16 "$OA_PG_CLUSTER_TMP" -p "$OA_PG_PORT_TMP" -d "$OA_PG_DATADIR_TMP" -u postgres --start
     sudo -u postgres createdb -p "$OA_PG_PORT_TMP" "$OA_PG_DB"
-    sudo -u postgres psql -f ./setup/pg_schema.sql -p "$OA_PG_PORT_TMP" -d "$OA_PG_DB" --echo-all
-    sudo -u postgres psql -f ./setup/pg_users_secret.sql -p "$OA_PG_PORT" -d "$OA_PG_DB"
-
+    sudo -u postgres psql -f "$SCRIPT_DIR"/openalex-ingest/setup/pg_schema.sql -p "$OA_PG_PORT_TMP" -d "$OA_PG_DB" --echo-all
+    sudo -u postgres psql -f "$SCRIPT_DIR"/openalex-ingest/setup/pg_users_secret.sql -p "$OA_PG_PORT" -d "$OA_PG_DB"
   fi
 
   if [ "$run_pg_import" = true ]; then
@@ -483,17 +481,21 @@ if [ "$run_pg" = true ]; then
   if [ "$run_pg_swp" = true ]; then
     cd "$SCRIPT_DIR" || exit
 
-    echo "Spinning up temporary PG cluster..."
+    echo "Transferring data from staging to production..."
+
+    echo "  - Stopping servers..."
     sudo pg_ctlcluster 16 "$OA_PG_CLUSTER_TMP" stop
     sudo pg_ctlcluster 16 "$OA_PG_CLUSTER_PROD" stop
 
+    echo "  - Dropping old data..."
+    $with_sudo rm -r "$OA_PG_DATADIR_PROD"
 
+    echo "  - Copying data directory..."
+    $with_sudo cp -r "$OA_PG_DATADIR_TMP" "$OA_PG_DATADIR_PROD"
+    $with_sudo chown -R postgres:postgres "$OA_PG_DATADIR_PROD"
 
-    sudo pg_dropcluster 16 "$OA_PG_CLUSTER_TMP" --stop
     # sudo pg_dropcluster 16 main
 
-    # Drop old directory
-    # sudo rm /var/lib/postgresql/16/main
     # Move new directory
     # sudo mv "${pg_tmp_data}" /var/lib/postgresql/16/main
     # edit /etc/postgresql/14/main/postgresql.conf

@@ -129,18 +129,19 @@ sudo -u solr solr/bin/solr start -c -Denable.packages=true -Dsolr.modules=sql,cl
 $ cat /etc/systemd/system/solr.service
 [Unit]
 Description=Apache SOLR
-After=syslog.target network.target remote-fs.target nss-lookup.target
+After=network.target
 
 [Service]
 Type=simple
-WorkingDirectory=/srv/solr
-PIDFile=/srv/solr/solr-home/pid/solr-8983.pid
-ExecStart=/srv/solr/solr/bin/solr start -c -h 0.0.0.0 -m 20g -s /srv/solr/solr-home -Denable.packages=true -Dsolr.modules=sql,clustering -Dsolr.max.booleanClauses=4096
 User=solr
-ExecReload=/opt/solr/bin/solr restart -p 8983
+WorkingDirectory=/srv/solr
+LimitNPROC=65000
+LimitNOFILE=65000
+PIDFile=/srv/solr/solr-home/pid/solr-8983.pid
+ExecStart=/srv/solr/solr/bin/solr start -c -p 8983 -h 0.0.0.0 -m 20g -s /srv/solr/solr-home -Denable.packages=true -Dsolr.modules=sql,clustering -Dsolr.max.booleanClauses=4096
+ExecReload=/srv/solr/solr/bin/solr restart -p 8983
 ExecStop=/srv/solr/solr/bin/solr stop -p 8983
-PrivateTmp=true
-Restart=on-failure
+Restart=always
 
 [Install]
 WantedBy=multi-user.target
@@ -149,13 +150,16 @@ WantedBy=multi-user.target
 ## sudoers
 ```
 $ cat /etc/sudoers.d/gitlab
-gitlab-runner ALL= NOPASSWD: /usr/bin/chgrp -R openalex .
-gitlab-runner ALL= NOPASSWD: /usr/bin/chmod -R 775 .
+gitlab-runner ALL= NOPASSWD: /usr/bin/chgrp -R openalex /mnt/bulk/openalex/openalex-snapshot
+gitlab-runner ALL= NOPASSWD: /usr/bin/chmod -R 775 /mnt/bulk/openalex/openalex-snapshot
 gitlab-runner ALL= NOPASSWD: /usr/bin/chown -R solr\:solr /srv/solr/solr-home
 gitlab-runner ALL= NOPASSWD: /usr/bin/chown -R gitlab-runner\:gitlab-runner /srv/solr/solr-home
 gitlab-runner ALL= NOPASSWD: /usr/bin/chown -R gitlab-runner\:gitlab-runner /mnt/bulk/openalex/tmp_data/solr-home
 
 gitlab-runner ALL= NOPASSWD: /usr/bin/systemctl start solr.service
 gitlab-runner ALL= NOPASSWD: /usr/bin/systemctl stop solr.service
-gitlab-runner ALL= NOPASSWD: sudo psql -f ./setup/pg_users_secret.sql -p 5434 -d oaimport
+gitlab-runner ALL= NOPASSWD: /usr/bin/pg_createcluster 16 oastaging -p 5434 -d /mnt/bulk/openalex/tmp_data/pg -u postgres --start
+gitlab-runner ALL=(postgres) NOPASSWD: /usr/bin/createdb -p 5434 oa
+gitlab-runner ALL=(postgres) NOPASSWD: /usr/bin/psql -f /mnt/bulk/openalex/nacsos-academic-search/openalex-ingest/setup/pg_schema.sql -p 5434 -d oa --echo-all
+gitlab-runner ALL=(postgres) NOPASSWD: /usr/bin/psql -f /mnt/bulk/openalex/nacsos-academic-search/openalex-ingest/setup/pg_users_secret.sql -p "5434 -d oa
 ```

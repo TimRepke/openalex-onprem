@@ -54,7 +54,7 @@ def flatten_authors(tmp_dir: Path, snapshot_dir: Path, last_update: str, pg_sche
     authors, merged_authors = get_globs(snapshot_dir, last_update, 'author')
 
     logging.info(f'Looks like there are {len(authors):,} author partitions '
-                 f'and {len(merged_authors):,} merged_ids partitions since last update.')
+                 f'and {len(merged_authors):,} merged_ids partitions since last update ({last_update}).')
     run(flatten_authors_partition_kw,
         [
             {
@@ -80,7 +80,7 @@ def flatten_institutions(tmp_dir: Path, snapshot_dir: Path, last_update: str, pg
                          override: bool = False, preserve_ram: bool = True):
     partitions, merged = get_globs(snapshot_dir, last_update, 'institution')
     logging.info(f'Looks like there are {len(partitions):,} institution partitions '
-                 f'and {len(merged):,} merged_ids partitions since last update.')
+                 f'and {len(merged):,} merged_ids partitions since last update ({last_update}).')
     run(flatten_institutions_partition_kw,
         [
             {
@@ -109,7 +109,7 @@ def flatten_publishers(tmp_dir: Path, snapshot_dir: Path, last_update: str, pg_s
                        override: bool = False, preserve_ram: bool = True):
     partitions, merged = get_globs(snapshot_dir, last_update, 'publisher')
     logging.info(f'Looks like there are {len(partitions):,} publisher partitions '
-                 f'and {len(merged):,} merged_ids partitions since last update.')
+                 f'and {len(merged):,} merged_ids partitions since last update ({last_update}).')
     run(flatten_publisher_partition_kw, [
         {
             'partition': partition,
@@ -135,7 +135,7 @@ def flatten_funders(tmp_dir: Path, snapshot_dir: Path, last_update: str, pg_sche
                     override: bool = False, preserve_ram: bool = True):
     partitions, merged = get_globs(snapshot_dir, last_update, 'funder')
     logging.info(f'Looks like there are {len(partitions):,} funder partitions '
-                 f'and {len(merged):,} merged_ids partitions since last update.')
+                 f'and {len(merged):,} merged_ids partitions since last update ({last_update}).')
     run(flatten_funder_partition_kw,
         [
             {
@@ -162,7 +162,7 @@ def flatten_concepts(tmp_dir: Path, snapshot_dir: Path, last_update: str, pg_sch
                      override: bool = False, preserve_ram: bool = True):
     partitions, merged = get_globs(snapshot_dir, last_update, 'concept')
     logging.info(f'Looks like there are {len(partitions):,} concepts partitions '
-                 f'and {len(merged):,} merged_ids partitions since last update.')
+                 f'and {len(merged):,} merged_ids partitions since last update ({last_update}).')
     run(flatten_concept_partition_kw,
         [
             {
@@ -191,7 +191,7 @@ def flatten_sources(tmp_dir: Path, snapshot_dir: Path, last_update: str, pg_sche
                     override: bool = False, preserve_ram: bool = True):
     partitions, merged = get_globs(snapshot_dir, last_update, 'source')
     logging.info(f'Looks like there are {len(partitions):,} source partitions '
-                 f'and {len(merged):,} merged_ids partitions since last update.')
+                 f'and {len(merged):,} merged_ids partitions since last update ({last_update}).')
     run(flatten_sources_partition_kw,
         [
             {
@@ -218,7 +218,7 @@ def flatten_works(tmp_dir: Path, snapshot_dir: Path, last_update: str, pg_schema
                   override: bool = False, preserve_ram: bool = True):
     partitions, merged = get_globs(snapshot_dir, last_update, 'work')
     logging.info(f'Looks like there are {len(partitions):,} works partitions '
-                 f'and {len(merged):,} merged_ids partitions since last update.')
+                 f'and {len(merged):,} merged_ids partitions since last update ({last_update}).')
     run(flatten_works_partition_kw,
         [
             {

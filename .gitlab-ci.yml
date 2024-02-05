@@ -133,7 +133,7 @@ Postgres-flat:
     - echo "$OA_TMP_DIR"
     - echo "$OA_ENV_FILE"
     - cd "$OA_SCRIPT_DIR/openalex-ingest" || exit
-    - ./update.sh --config "$OA_ENV_FILE" --pg --pg-flat --override --jobs $OA_N_JOBS
+    - ./update.sh --config "$OA_ENV_FILE" --pg --pg-flat --override --pg-import-full --jobs $OA_N_JOBS
 
 Postgres-prep:
   stage: postgres
