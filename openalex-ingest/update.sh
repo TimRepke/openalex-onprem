@@ -359,8 +359,8 @@ if [ "$run_solr" = true ]; then
     echo "  - Temporary solr-home: ${OA_SOLR_HOME_TMP}"
 
     echo "Shutting down solr instances as to not confuse them too much"
-    "${OA_SOLR_BIN_TMP}/solr" stop -p "$OA_OA_SOLR_PORT_TMP"
-    "${OA_SOLR_BIN_PROD}/solr" stop -p "$OA_OA_SOLR_PORT_PROD"
+    "${OA_SOLR_BIN_TMP}/solr"  stop -p "$OA_SOLR_PORT_TMP"
+    "${OA_SOLR_BIN_PROD}/solr" stop -p "$OA_SOLR_PORT_PROD"
 
     echo "Copying solr-home folders"
     rm -r "$OA_SOLR_HOME_PROD"
