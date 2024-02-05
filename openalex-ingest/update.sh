@@ -457,6 +457,7 @@ if [ "$run_pg" = true ]; then
 
     echo "Spinning up temporary PG cluster..."
     sudo pg_createcluster 16 "$OA_PG_CLUSTER_TMP" -p "$OA_PG_PORT_TMP" -d "$OA_PG_DATADIR_TMP" -u postgres --start
+    echo "Preparing staging cluster..."
     sudo -u postgres createdb -p "$OA_PG_PORT_TMP" "$OA_PG_DB"
     sudo -u postgres psql -f "$SCRIPT_DIR"/openalex-ingest/setup/pg_schema.sql -p "$OA_PG_PORT_TMP" -d "$OA_PG_DB" --echo-all
     sudo -u postgres psql -f "$SCRIPT_DIR"/openalex-ingest/setup/pg_users_secret.sql -p "$OA_PG_PORT" -d "$OA_PG_DB"
