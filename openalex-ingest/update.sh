@@ -359,7 +359,7 @@ if [ "$run_solr" = true ]; then
     echo "  - Temporary solr-home: ${OA_SOLR_HOME_TMP}"
 
     echo "Shutting down solr instances as to not confuse them too much"
-    "${OA_SOLR_BIN_TMP}/solr"  stop -p "$OA_SOLR_PORT_TMP"
+    "${OA_SOLR_BIN_TMP}/solr"  stop -p "$OA_SOLR_PORT_TMP" || echo "Temporary solr instance was already down."
     $with_sudo /usr/bin/systemctl stop solr.service
 
     echo "Copying solr-home folders"
