@@ -123,3 +123,25 @@ sudo -u solr solr/bin/solr start -c openalex -Denable.packages=true -Dsolr.modul
 sudo -u solr solr/bin/solr start -c -Denable.packages=true -Dsolr.modules=sql,clustering -Dhost=0.0.0.0 -memory=6g -d /srv/solr/solr-home -Dsolr.max.booleanClauses=4096 -Dsolr.jetty.host=0.0.0.0
 sudo -u solr solr/bin/solr start -c -Denable.packages=true -Dsolr.modules=sql,clustering -h 0.0.0.0 -m 6g -d /srv/solr/solr-home -Dsolr.max.booleanClauses=4096 -h 0.0.0.0
 ```
+
+## Solr as service
+```
+$ cat /etc/systemd/system/solr.service
+[Unit]
+Description=Apache SOLR
+After=syslog.target network.target remote-fs.target nss-lookup.target
+
+[Service]
+Type=simple
+WorkingDirectory=/srv/solr
+PIDFile=/srv/solr/solr-home/pid/solr-8983.pid
+ExecStart=/srv/solr/solr/bin/solr start -c -h 0.0.0.0 -m 20g -s /srv/solr/solr-home -Denable.packages=true -Dsolr.modules=sql,clustering -Dsolr.max.booleanClauses=4096
+User=solr
+ExecReload=/opt/solr/bin/solr restart -p 8983
+ExecStop=/srv/solr/solr/bin/solr stop -p 8983
+PrivateTmp=true
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+```
