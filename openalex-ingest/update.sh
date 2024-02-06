@@ -456,7 +456,8 @@ if [ "$run_pg" = true ]; then
     cd "$SCRIPT_DIR" || exit
 
     echo "Spinning up temporary PG cluster..."
-    sudo pg_createcluster 16 "$OA_PG_CLUSTER_TMP" -p "$OA_PG_PORT_TMP" -d "$OA_PG_DATADIR_TMP" -o work_mem=128MB -o temp_buffers=128MB -o shared_buffers=512MB -o listen_addresses=0.0.0.0 -u postgres --start
+    sudo pg_createcluster 16 "$OA_PG_CLUSTER_TMP" -p "$OA_PG_PORT_TMP" -d "$OA_PG_DATADIR_TMP" -o work_mem=128MB -o temp_buffers=128MB -o shared_buffers=512MB -u postgres --start
+    # -o "listen_addresses = 0.0.0.0"
 
     echo "Preparing staging cluster..."
     sudo -u postgres createdb -p "$OA_PG_PORT_TMP" "$OA_PG_DB"
