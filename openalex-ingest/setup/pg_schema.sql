@@ -253,7 +253,7 @@ CREATE TABLE openalex.works_locations
 );
 CREATE TABLE openalex.works_concepts
 (
-    row_id       BIGSERIAL PRIMARY KEY,
+    row_id     BIGSERIAL PRIMARY KEY,
     work_id    text NOT NULL,
     concept_id text NOT NULL,
     score      real
@@ -286,23 +286,3 @@ CREATE TABLE openalex.works_related
 
 --     PRIMARY KEY (work_a_id, work_b_id)  -- unfortunately, some are not unique as promised
 );
-
--- CREATE INDEX works_id_doi_idx ON openalex.works USING hash (id_doi);
--- CREATE INDEX IF NOT EXISTS works_publication_year_idx ON openalex.works USING btree (id_doi);
-
--- DROP INDEX IF EXISTS works_id_doi_idx;
--- DROP INDEX IF EXISTS works_publication_year_idx;
-
-
--- old stuff for reference:
--- CREATE INDEX concepts_ancestors_concept_id_idx ON openalex.concepts_ancestors USING btree (concept_id);
---
--- CREATE INDEX concepts_related_concepts_concept_id_idx ON openalex.concepts_related_concepts USING btree (concept_id);
---
--- CREATE INDEX concepts_related_concepts_related_concept_id_idx ON openalex.concepts_related_concepts USING btree (related_concept_id);
---
--- CREATE INDEX works_primary_locations_work_id_idx ON openalex.works_primary_locations USING btree (work_id);
---
--- CREATE INDEX works_locations_work_id_idx ON openalex.works_locations USING btree (work_id);
---
--- CREATE INDEX works_best_oa_locations_work_id_idx ON openalex.works_best_oa_locations USING btree (work_id);

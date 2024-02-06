@@ -763,7 +763,7 @@ def flatten_works_partition(partition: Path | str,
                         f"FROM PROGRAM 'gunzip -c {out_works.absolute()}' csv header;\n\n")
         f_sql_cpy.write(f"COPY {pg_schema}.works_locations ({fieldnames(writer_locations)}) "
                         f"FROM PROGRAM 'gunzip -c {out_m2m_locations.absolute()}' csv header;\n\n")
-        f_sql_cpy.write(f"COPY {pg_schema}.works_concepts "
+        f_sql_cpy.write(f"COPY {pg_schema}.works_concepts ({fieldnames(writer_concepts)}) "
                         f"FROM PROGRAM 'gunzip -c {out_m2m_concepts.absolute()}' csv header;\n\n")
         f_sql_cpy.write(f"COPY {pg_schema}.works_authorships ({fieldnames(writer_authorships)}) "
                         f"FROM PROGRAM 'gunzip -c {out_m2m_authorships.absolute()}' csv header;\n\n")

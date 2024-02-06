@@ -464,9 +464,16 @@ if [ "$run_pg" = true ]; then
   fi
 
   if [ "$run_pg_import" = true ]; then
-    echo "Import new or updated objects"
-    echo "  - Importing to cluster at $OA_PG_USER@$OA_PG_HOST:$OA_PG_PORT/$OA_PG_DB"
+    echo "Import new or updated objects to cluster at $OA_PG_USER@$OA_PG_HOST:$OA_PG_PORT/$OA_PG_DB"
     cd "$OA_TMP_DIR" || exit
+
+    echo "---------------------------"
+    echo "Listing of files to import:"
+    find ./postgres -name "*-cpy.sql"
+    echo "---------------------------"
+    echo "Number of files: $(find ./postgres -name "*-cpy.sql" | wc -l)"
+    echo "---------------------------"
+
     find ./postgres -name "*-cpy.sql" -exec psql -f {} -p "$OA_PG_PORT" -h "$OA_PG_HOST" -U "$OA_PG_USER" --echo-all -d "$OA_PG_DB" \;
 
     # Remember that we synced the snapshot
@@ -481,9 +488,6 @@ if [ "$run_pg" = true ]; then
   fi
 
   if [ "$run_pg_swp" = true ]; then
-    echo "not fully implemented; stopping for safety"
-    exit 1
-
     cd "$SCRIPT_DIR" || exit
 
     echo "Transferring data from staging to production..."
