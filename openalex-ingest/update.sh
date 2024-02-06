@@ -460,7 +460,7 @@ if [ "$run_pg" = true ]; then
     echo "Preparing staging cluster..."
     sudo -u postgres createdb -p "$OA_PG_PORT_TMP" "$OA_PG_DB"
     sudo -u postgres psql -f "$SCRIPT_DIR"/setup/pg_schema.sql -p "$OA_PG_PORT_TMP" -d "$OA_PG_DB" --echo-all
-    sudo -u postgres psql -f "$SCRIPT_DIR"/setup/pg_users_secret.sql -p "$OA_PG_PORT" -d "$OA_PG_DB"
+    sudo -u postgres psql -f "$SCRIPT_DIR"/setup/pg_users_secret.sql -p "$OA_PG_PORT_TMP" -d "$OA_PG_DB"
   fi
 
   if [ "$run_pg_import" = true ]; then
@@ -480,6 +480,9 @@ if [ "$run_pg" = true ]; then
   fi
 
   if [ "$run_pg_swp" = true ]; then
+    echo "not fully implemented; stopping for safety"
+    exit 1
+
     cd "$SCRIPT_DIR" || exit
 
     echo "Transferring data from staging to production..."
@@ -495,14 +498,15 @@ if [ "$run_pg" = true ]; then
     $with_sudo cp -r "$OA_PG_DATADIR_TMP" "$OA_PG_DATADIR_PROD"
     $with_sudo chown -R postgres:postgres "$OA_PG_DATADIR_PROD"
 
-    # sudo pg_dropcluster 16 main
-
-    # Move new directory
-    # sudo mv "${pg_tmp_data}" /var/lib/postgresql/16/main
+    echo "  - Adjusting config..."
     # edit /etc/postgresql/14/main/postgresql.conf
     #    -> data_directory = '/var/lib/postgresql/16/main'
-    # sudo pg_dropcluster 16 oaimport
-    # start service again
+
+    echo "  - Spinning up production cluster '$OA_PG_CLUSTER_PROD'"
+    sudo pg_ctlcluster 16 "$OA_PG_CLUSTER_PROD" start
+
+    echo "  - Dropping staging cluster..."
+    sudo pg_dropcluster 16 "$OA_PG_CLUSTER_TMP" --stop
   fi
 
   if [ "$run_pg_clr" = true ]; then

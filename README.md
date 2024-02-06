@@ -161,5 +161,5 @@ gitlab-runner ALL= NOPASSWD: /usr/bin/systemctl stop solr.service
 gitlab-runner ALL= NOPASSWD: /usr/bin/pg_createcluster 16 oastaging -p 5434 -d /mnt/bulk/openalex/tmp_data/pg -u postgres --start
 gitlab-runner ALL=(postgres) NOPASSWD: /usr/bin/createdb -p 5434 oa
 gitlab-runner ALL=(postgres) NOPASSWD: /usr/bin/psql -f /mnt/bulk/openalex/nacsos-academic-search/openalex-ingest/setup/pg_schema.sql -p 5434 -d oa --echo-all
-gitlab-runner ALL=(postgres) NOPASSWD: /usr/bin/psql -f /mnt/bulk/openalex/nacsos-academic-search/openalex-ingest/setup/pg_users_secret.sql -p "5434 -d oa
+gitlab-runner ALL=(postgres) NOPASSWD: /usr/bin/psql -f /mnt/bulk/openalex/nacsos-academic-search/openalex-ingest/setup/pg_users_secret.sql -p 5434 -d oa
 ```
