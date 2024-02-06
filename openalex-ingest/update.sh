@@ -465,6 +465,7 @@ if [ "$run_pg" = true ]; then
 
   if [ "$run_pg_import" = true ]; then
     echo "Import new or updated objects"
+    echo "  - Importing to cluster at $OA_PG_USER@$OA_PG_HOST:$OA_PG_PORT/$OA_PG_DB"
     cd "$OA_TMP_DIR" || exit
     find ./postgres -name "*-cpy.sql" -exec psql -f {} -p "$OA_PG_PORT" -h "$OA_PG_HOST" -U "$OA_PG_USER" --echo-all -d "$OA_PG_DB" \;
 
