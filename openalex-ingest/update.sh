@@ -469,12 +469,12 @@ if [ "$run_pg" = true ]; then
 
     echo "---------------------------"
     echo "Listing of files to import:"
-    find ./postgres -name "*-cpy.sql"
+    find ./postgres -name "*-cpy.sql" | sort
     echo "---------------------------"
     echo "Number of files: $(find ./postgres -name "*-cpy.sql" | wc -l)"
     echo "---------------------------"
 
-    find ./postgres -name "*-cpy.sql" -exec psql -f {} -p "$OA_PG_PORT" -h "$OA_PG_HOST" -U "$OA_PG_USER" --echo-all -d "$OA_PG_DB" \;
+    find ./postgres -name "*-cpy.sql" | sort | xargs -I {} psql -f {} -p "$OA_PG_PORT" -h "$OA_PG_HOST" -U "$OA_PG_USER" --echo-all -d "$OA_PG_DB"
 
     # Remember that we synced the snapshot
     rm -f "$OA_LAST_UPDATE_PG_FILE"
