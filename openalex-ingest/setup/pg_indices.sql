@@ -12,9 +12,18 @@ CREATE INDEX IF NOT EXISTS publishers_publisher_id_idx ON openalex.publishers US
 
 CREATE INDEX IF NOT EXISTS funders_funder_id_idx ON openalex.funders USING hash (funder_id);
 
+CREATE INDEX IF NOT EXISTS concepts_concept_id_idx ON openalex.concepts USING hash (concept_id);
 
+CREATE INDEX IF NOT EXISTS concepts_ancestors_parent_concept_id_idx ON openalex.concepts_ancestors USING hash (parent_concept_id);
+CREATE INDEX IF NOT EXISTS concepts_ancestors_child_concept_id_idx ON openalex.concepts_ancestors USING hash (child_concept_id);
 
-CREATE INDEX IF NOT EXISTS works_doi_idx ON openalex.works USING hash (id_doi);
+CREATE INDEX IF NOT EXISTS concepts_related_concept_a_id_idx ON openalex.concepts_related USING hash (concept_a_id);
+CREATE INDEX IF NOT EXISTS concepts_related_concept_b_id_idx ON openalex.concepts_related USING hash (concept_b_id);
+
+CREATE INDEX IF NOT EXISTS sources_source_id_idx ON openalex.sources USING hash (source_id);
+
+CREATE INDEX IF NOT EXISTS works_work_id_idx ON openalex.works USING hash (work_id);
+CREATE INDEX IF NOT EXISTS works_id_doi_idx ON openalex.works USING hash (id_doi);
 CREATE INDEX IF NOT EXISTS works_publication_year_idx ON openalex.works USING btree (publication_year);
 
 CREATE INDEX IF NOT EXISTS works_authorships_work_id_idx ON openalex.works_authorships USING hash (work_id);
@@ -33,8 +42,8 @@ CREATE INDEX IF NOT EXISTS works_concepts_concept_id_idx ON openalex.works_conce
 CREATE INDEX IF NOT EXISTS works_sdgs_work_id_idx ON openalex.works_sdgs USING hash (work_id);
 CREATE INDEX IF NOT EXISTS works_sdgs_sdg_id_idx ON openalex.works_sdgs USING hash (sdg_id);
 
-CREATE INDEX IF NOT EXISTS works_related_work_a_id_idx ON openalex.works_related USING hash (work_a_id);
-CREATE INDEX IF NOT EXISTS works_related_work_b_id_idx ON openalex.works_related USING hash (work_b_id);
-
 CREATE INDEX IF NOT EXISTS works_references_src_work_id_idx ON openalex.works_references USING hash (src_work_id);
 CREATE INDEX IF NOT EXISTS works_references_trgt_work_id_idx ON openalex.works_references USING hash (trgt_work_id);
+
+CREATE INDEX IF NOT EXISTS works_related_work_a_id_idx ON openalex.works_related USING hash (work_a_id);
+CREATE INDEX IF NOT EXISTS works_related_work_b_id_idx ON openalex.works_related USING hash (work_b_id);
