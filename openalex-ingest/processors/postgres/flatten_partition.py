@@ -58,7 +58,7 @@ def flatten_authors_partition(partition: Path | str,
           open(out_sql_del, 'w') as f_sql_del,
           open(out_sql_cpy, 'w') as f_sql_cpy,
           gzip.open(partition, 'rb') as f_in):
-        writer_authors = get_writer(f_authors, ['id',
+        writer_authors = get_writer(f_authors, ['author_id',
                                                 'cited_by_count', 'works_count', 'h_index', 'i10_index',
                                                 'display_name', 'display_name_alternatives',
                                                 'id_mag', 'id_orcid', 'id_scopus', 'id_twitter', 'id_wikipedia',
@@ -81,7 +81,7 @@ def flatten_authors_partition(partition: Path | str,
             author_ids.append(aid)
 
             writer_authors.writerow({
-                'id': aid,
+                'author_id': aid,
                 'cited_by_count': author.cited_by_count,
                 'works_count': author.works_count,
                 'h_index': author.summary_stats.h_index,
@@ -135,14 +135,14 @@ def flatten_institutions_partition(partition: Path | str,
           open(out_sql_del, 'w') as f_sql_del,
           open(out_sql_cpy, 'w') as f_sql_cpy,
           gzip.open(partition, 'rb') as f_in):
-        writer_inst = get_writer(f_inst, ['id', 'type', 'homepage_url',
+        writer_inst = get_writer(f_inst, ['institution_id', 'type', 'homepage_url',
                                           'cited_by_count', 'works_count', 'h_index', 'i10_index',
                                           'display_name', 'display_name_alternatives', 'display_name_acronyms',
                                           'id_ror', 'id_mag', 'id_wikipedia', 'id_wikidata', 'id_grid',
                                           'city', 'geonames_city_id', 'region', 'country', 'country_code',
                                           'latitude', 'longitude',
                                           'created_date', 'updated_date'])
-        writer_m2m_ass = get_writer(f_m2m_ass, ['institution_a_id', 'institution_b_id', 'relationship'])
+        writer_m2m_ass = get_writer(f_m2m_ass, ['parent_institution_id', 'child_institution_id', 'relationship'])
         writer_m2m_con = get_writer(f_m2m_con, ['institution_id', 'concept_id', 'score'])
 
         decoder = Decoder(structs.Institution)
@@ -162,7 +162,7 @@ def flatten_institutions_partition(partition: Path | str,
             institution_ids.append(iid)
 
             writer_inst.writerow({
-                'id': iid,
+                'institution_id': iid,
                 'type': institution.type,
                 'homepage_url': institution.homepage_url,
                 'cited_by_count': institution.cited_by_count,
@@ -190,8 +190,8 @@ def flatten_institutions_partition(partition: Path | str,
 
             for ass in institution.associated_institutions:
                 writer_m2m_ass.writerow({
-                    'institution_a_id': iid,
-                    'institution_b_id': ass.id[21:],
+                    'parent_institution_id': iid,
+                    'child_institution_id': ass.id[21:],
                     'relationship': ass.relationship
                 })
 
@@ -238,7 +238,7 @@ def flatten_publisher_partition(partition: Path | str,
           open(out_sql_cpy, 'w') as f_sql_cpy,
           gzip.open(partition, 'rb') as f_in):
         writer_pub = csv.DictWriter(f_pub,
-                                    fieldnames=['id',
+                                    fieldnames=['publisher_id',
                                                 'cited_by_count', 'works_count', 'h_index', 'i10_index',
                                                 'display_name', 'alternate_titles', 'country_codes',
                                                 'id_ror', 'id_wikidata', 'hierarchy_level', 'lineage', 'parent',
@@ -268,7 +268,7 @@ def flatten_publisher_partition(partition: Path | str,
             publisher_ids.append(pid)
 
             writer_pub.writerow({
-                'id': pid,
+                'publisher_id': pid,
                 'cited_by_count': publisher.cited_by_count,
                 'works_count': publisher.works_count,
                 'h_index': publisher.summary_stats.h_index,
@@ -317,7 +317,7 @@ def flatten_funder_partition(partition: Path | str,
           open(out_sql_cpy, 'w') as f_sql_cpy,
           gzip.open(partition, 'rb') as f_in):
         writer_funders = csv.DictWriter(f_funders,
-                                        fieldnames=['id',
+                                        fieldnames=['funder_id',
                                                     'cited_by_count', 'works_count', 'h_index', 'i10_index',
                                                     'display_name', 'alternate_titles', 'description', 'homepage_url',
                                                     'id_ror', 'id_wikidata', 'id_crossref', 'id_doi',
@@ -342,7 +342,7 @@ def flatten_funder_partition(partition: Path | str,
             funder_ids.append(fid)
 
             writer_funders.writerow({
-                'id': fid,
+                'funder_id': fid,
                 'cited_by_count': funder.cited_by_count,
                 'works_count': funder.works_count,
                 'h_index': funder.summary_stats.h_index,
@@ -395,14 +395,14 @@ def flatten_concept_partition(partition: Path | str,
           open(out_sql_del, 'w') as f_sql_del,
           open(out_sql_cpy, 'w') as f_sql_cpy,
           gzip.open(partition, 'rb') as f_in):
-        writer_concepts = get_writer(f_concepts, ['id',
+        writer_concepts = get_writer(f_concepts, ['concept_id',
                                                   'cited_by_count', 'works_count', 'h_index', 'i10_index',
                                                   'display_name', 'description', 'level',
                                                   'id_mag', 'id_umls_cui', 'id_umls_aui',
                                                   'id_wikidata', 'id_wikipedia',
                                                   'created_date', 'updated_date'])
         writer_m2m_related = get_writer(f_m2m_related, ['concept_a_id', 'concept_b_id', 'score'])
-        writer_m2m_ancestor = get_writer(f_m2m_ancestor, ['concept_a_id', 'concept_b_id'])
+        writer_m2m_ancestor = get_writer(f_m2m_ancestor, ['parent_concept_id', 'child_concept_id'])
 
         decoder = Decoder(structs.Concept)
 
@@ -421,7 +421,7 @@ def flatten_concept_partition(partition: Path | str,
             concept_ids.append(cid)
 
             writer_concepts.writerow({
-                'id': concept.id,
+                'concept_id': concept.id,
                 'cited_by_count': concept.cited_by_count,
                 'works_count': concept.works_count,
                 'h_index': concept.summary_stats.h_index,
@@ -444,10 +444,10 @@ def flatten_concept_partition(partition: Path | str,
                     'concept_b_id': strip_id(rel.id),
                     'score': rel.score
                 })
-            for anc in concept.related_concepts:
+            for anc in concept.ancestors:
                 writer_m2m_ancestor.writerow({
-                    'concept_a_id': cid,
-                    'concept_b_id': strip_id(anc.id)
+                    'parent_concept_id': strip_id(anc.id),
+                    'child_concept_id': cid
                 })
 
         for del_row in generate_deletions(ids=concept_ids, object_type='concept', batch_size=1000, pg_schema=pg_schema):
@@ -485,7 +485,7 @@ def flatten_sources_partition(partition: Path | str,
           open(out_sql_cpy, 'w') as f_sql_cpy,
           gzip.open(partition, 'rb') as f_in):
         writer_sources = csv.DictWriter(f_sources,
-                                        fieldnames=['id',
+                                        fieldnames=['source_id',
                                                     'cited_by_count', 'works_count', 'h_index', 'i10_index',
                                                     'display_name', 'abbreviated_title', 'alternate_titles',
                                                     'country_code', 'homepage_url', 'type', 'apc_usd',
@@ -518,7 +518,7 @@ def flatten_sources_partition(partition: Path | str,
                 societies = [s.organization for s in source.societies]
 
             writer_sources.writerow({
-                'id': sid,
+                'source_id': sid,
                 'cited_by_count': source.cited_by_count,
                 'works_count': source.works_count,
                 'h_index': source.summary_stats.h_index,
@@ -597,7 +597,7 @@ def flatten_works_partition(partition: Path | str,
           open(out_sql_cpy, 'w') as f_sql_cpy,
           gzip.open(partition, 'rb') as f_in):
         writer_works = get_writer(f_works, [
-            'id',
+            'work_id',
             'title', 'abstract', 'display_name', 'language', 'publication_date', 'publication_year',
             'volume', 'issue', 'first_page', 'last_page', 'primary_location', 'type', 'type_crossref',
             'id_doi', 'id_mag', 'id_pmid', 'id_pmcid',
@@ -612,7 +612,7 @@ def flatten_works_partition(partition: Path | str,
         writer_locations = get_writer(f_locations, ['work_id', 'source_id', 'is_oa', 'landing_page_url',
                                                     'license', 'pdf_url', 'version'])
         writer_concepts = get_writer(f_concepts, ['work_id', 'concept_id', 'score'])
-        writer_references = get_writer(f_references, ['work_a_id', 'work_b_id'])
+        writer_references = get_writer(f_references, ['src_work_id', 'trgt_work_id'])
         writer_related = get_writer(f_related, ['work_a_id', 'work_b_id'])
         writer_sdgs = get_writer(f_sdgs, ['work_id', 'sdg_id', 'display_name', 'score'])
 
@@ -654,7 +654,7 @@ def flatten_works_partition(partition: Path | str,
                 } for g in work.grants]).decode()
 
             writer_works.writerow({
-                'id': wid,
+                'work_id': wid,
                 'title': work.title,
                 'abstract': abstract,
                 'display_name': work.display_name,
@@ -747,8 +747,8 @@ def flatten_works_partition(partition: Path | str,
                     })
             for ref in work.referenced_works:
                 writer_references.writerow({
-                    'work_a_id': wid,
-                    'work_b_id': strip_id(ref)
+                    'src_work_id': wid,
+                    'trgt_work_id': strip_id(ref)
                 })
             for rel in work.related_works:
                 writer_related.writerow({

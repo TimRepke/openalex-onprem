@@ -22,7 +22,7 @@ SET default_table_access_method = heap;
 
 CREATE TABLE openalex.authors
 (
-    id                        text NOT NULL PRIMARY KEY,
+    author_id                 text NOT NULL,
     cited_by_count            integer,
     works_count               integer,
     h_index                   integer,
@@ -36,11 +36,12 @@ CREATE TABLE openalex.authors
     id_wikipedia              text,
     created_date              timestamp without time zone,
     updated_date              timestamp without time zone
+--  PRIMARY KEY (author_id)
 );
 
 CREATE TABLE openalex.institutions
 (
-    id                        text NOT NULL PRIMARY KEY,
+    institution_id            text NOT NULL,
     type                      text,
     homepage_url              text,
     cited_by_count            integer,
@@ -64,29 +65,26 @@ CREATE TABLE openalex.institutions
     longitude                 real,
     created_date              timestamp without time zone,
     updated_date              timestamp without time zone
-
-
+--  PRIMARY KEY (institution_id)
 );
 CREATE TABLE openalex.institutions_associations
 (
-    institution_a_id text NOT NULL,
-    institution_b_id text NOT NULL,
-    relationship     text,
-
-    PRIMARY KEY (institution_a_id, institution_b_id)
+    parent_institution_id text NOT NULL,
+    child_institution_id text NOT NULL,
+    relationship     text
+--  PRIMARY KEY (parent_institution_id, child_institution_id)
 );
 CREATE TABLE openalex.institutions_concepts
 (
     institution_id text NOT NULL,
     concept_id     text NOT NULL,
-    score          real,
-
-    PRIMARY KEY (institution_id, concept_id)
+    score          real
+--  PRIMARY KEY (institution_id, concept_id)
 );
 
 CREATE TABLE openalex.publishers
 (
-    id               text NOT NULL PRIMARY KEY,
+    publisher_id     text NOT NULL,
     cited_by_count   integer,
     works_count      integer,
     h_index          integer,
@@ -101,11 +99,12 @@ CREATE TABLE openalex.publishers
     parent           text,
     created_date     timestamp without time zone,
     updated_date     timestamp without time zone
+--  PRIMARY KEY (publisher_id)
 );
 
 CREATE TABLE openalex.funders
 (
-    id               text NOT NULL PRIMARY KEY,
+    funder_id        text NOT NULL,
     cited_by_count   integer,
     works_count      integer,
     h_index          integer,
@@ -120,11 +119,12 @@ CREATE TABLE openalex.funders
     id_doi           text,
     created_date     timestamp without time zone,
     updated_date     timestamp without time zone
+--  PRIMARY KEY (funder_id)
 );
 
 CREATE TABLE openalex.concepts
 (
-    id             text NOT NULL PRIMARY KEY,
+    concept_id     text NOT NULL,
     cited_by_count integer,
     works_count    integer,
     h_index        integer,
@@ -139,26 +139,25 @@ CREATE TABLE openalex.concepts
     id_wikipedia   text,
     created_date   timestamp without time zone,
     updated_date   timestamp without time zone
+--  PRIMARY KEY (concept_id)
 );
 CREATE TABLE openalex.concepts_ancestors
 (
-    concept_a_id text NOT NULL,
-    concept_b_id text NOT NULL,
-
-    PRIMARY KEY (concept_a_id, concept_b_id)
+    parent_concept_id text NOT NULL,
+    child_concept_id text NOT NULL
+--  PRIMARY KEY (parent_concept_id, child_concept_id)
 );
 CREATE TABLE openalex.concepts_related
 (
     concept_a_id text NOT NULL,
     concept_b_id text NOT NULL,
-    score        real,
-
-    PRIMARY KEY (concept_a_id, concept_b_id)
+    score        real
+--  PRIMARY KEY (concept_a_id, concept_b_id)
 );
 
 CREATE TABLE openalex.sources
 (
-    id                        text PRIMARY KEY,
+    source_id                 text NOT NULL,
     cited_by_count            integer,
     works_count               integer,
     h_index                   integer,
@@ -183,12 +182,13 @@ CREATE TABLE openalex.sources
     id_wikidata               text,
     created_date              timestamp without time zone,
     updated_date              timestamp without time zone
+--  PRIMARY KEY (source_id)
 );
 
 
 CREATE TABLE openalex.works
 (
-    id                             text PRIMARY KEY,
+    work_id                        text NOT NULL,
     title                          text,
     abstract                       text,
     display_name                   text,
@@ -220,10 +220,10 @@ CREATE TABLE openalex.works
     grants                         json,
     created_date                   timestamp without time zone,
     updated_date                   timestamp without time zone
+--  PRIMARY KEY (work_id)
 );
 CREATE TABLE openalex.works_authorships
 (
-    row_id           BIGSERIAL PRIMARY KEY,
     work_id          text NOT NULL,
     author_id        text, -- this should never be null, but some are
     position         text,
@@ -231,17 +231,17 @@ CREATE TABLE openalex.works_authorships
     raw_affiliation  text,
     raw_author_name  text,
     is_corresponding boolean
+--  PRIMARY KEY (work_id, author_id)
 );
 CREATE TABLE openalex.works_authorship_institutions
 (
-    row_id         BIGSERIAL PRIMARY KEY,
     work_id        text NOT NULL,
     author_id      text NOT NULL,
     institution_id text NOT NULL
+--  PRIMARY KEY (work_id, author_id, institution_id)
 );
 CREATE TABLE openalex.works_locations
 (
-    row_id           BIGSERIAL PRIMARY KEY,
     work_id          text NOT NULL,
     source_id        text, -- this should never be null, but some are
     is_oa            boolean,
@@ -250,39 +250,32 @@ CREATE TABLE openalex.works_locations
     license          text,
     pdf_url          text,
     version          text
+--  PRIMARY KEY (work_id, source_id)
 );
 CREATE TABLE openalex.works_concepts
 (
-    row_id     BIGSERIAL PRIMARY KEY,
     work_id    text NOT NULL,
     concept_id text NOT NULL,
     score      real
-
-    -- PRIMARY KEY (work_id, concept_id)  -- unfortunately, some are not unique as promised
+--  PRIMARY KEY (work_id, concept_id)  -- unfortunately, some are not unique as promised
 );
 CREATE TABLE openalex.works_sdgs
 (
-    row_id       BIGSERIAL PRIMARY KEY,
     work_id      text NOT NULL,
     sdg_id       text NOT NULL,
     display_name text,
     score        real
-
-    --PRIMARY KEY (work_id, sdg_id) -- unfortunately, some are not unique as promised
+--  PRIMARY KEY (work_id, sdg_id) -- unfortunately, some are not unique as promised
 );
 CREATE TABLE openalex.works_references
 (
-    row_id    BIGSERIAL PRIMARY KEY,
-    work_a_id text NOT NULL,
-    work_b_id text NOT NULL
-
-    -- PRIMARY KEY (work_a_id, work_b_id)-- unfortunately, some are not unique as promised
+    src_work_id text NOT NULL,
+    trgt_work_id text NOT NULL
+--  PRIMARY KEY (src_work_id, trgt_work_id) -- unfortunately, some are not unique as promised
 );
 CREATE TABLE openalex.works_related
 (
-    row_id    BIGSERIAL PRIMARY KEY,
     work_a_id text NOT NULL,
     work_b_id text NOT NULL
-
---     PRIMARY KEY (work_a_id, work_b_id)  -- unfortunately, some are not unique as promised
+--  PRIMARY KEY (work_a_id, work_b_id)  -- unfortunately, some are not unique as promised
 );
