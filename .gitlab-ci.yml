@@ -172,7 +172,7 @@ Postgres-indices:
     - echo "$TMP_DIR"
     - echo "$ENV_FILE"
     - cd "$OA_SCRIPT_DIR/openalex-ingest" || exit
-    - ./update.sh --config "$OA_ENV_FILE" --pg --pg-clr --pg-ind
+    - ./update.sh --config "$OA_ENV_FILE" --pg --pg-ind
 
 Postgres-swap:
   stage: postgres
@@ -186,3 +186,16 @@ Postgres-swap:
     - echo "$ENV_FILE"
     - cd "$OA_SCRIPT_DIR/openalex-ingest" || exit
     - ./update.sh --config "$OA_ENV_FILE" --pg --pg-swp
+
+Postgres-clean:
+  stage: postgres
+  needs: ["Postgres-swap"]
+  when: on_success
+  tags:
+    - rechner
+  script:
+    - echo "$SCRIPT_DIR"
+    - echo "$TMP_DIR"
+    - echo "$ENV_FILE"
+    - cd "$OA_SCRIPT_DIR/openalex-ingest" || exit
+    - ./update.sh --config "$OA_ENV_FILE" --pg --pg-clr
