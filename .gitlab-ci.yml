@@ -185,7 +185,7 @@ Postgres-swap:
     - echo "$TMP_DIR"
     - echo "$ENV_FILE"
     - cd "$OA_SCRIPT_DIR/openalex-ingest" || exit
-    - ./update.sh --config "$OA_ENV_FILE" --pg --pg-swp
+    - ./update.sh --config "$OA_ENV_FILE" --pg --pg-swp --with-tmp
 
 Postgres-clean:
   stage: postgres
