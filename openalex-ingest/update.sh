@@ -511,12 +511,12 @@ if [ "$run_pg" = true ]; then
 
     echo "  - Spinning up production cluster '$OA_PG_CLUSTER_PROD'"
     sudo pg_ctlcluster 16 "$OA_PG_CLUSTER_PROD" start
-
-    echo "  - Dropping staging cluster..."
-    sudo pg_dropcluster 16 "$OA_PG_CLUSTER_TMP" --stop
   fi
 
   if [ "$run_pg_clr" = true ]; then
+    echo "  - Dropping staging cluster..."
+    sudo pg_dropcluster 16 "$OA_PG_CLUSTER_TMP" --stop
+
     echo "Deleting all temporary flattened files and scripts"
     rm -r "$OA_TMP_DIR/postgres"
   fi
