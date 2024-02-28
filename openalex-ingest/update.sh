@@ -495,11 +495,12 @@ if [ "$run_pg" = true ]; then
     echo "Transferring data from staging to production..."
 
     echo "  - Stopping servers..."
-    sudo pg_ctlcluster 16 "$OA_PG_CLUSTER_TMP" stop
-    sudo pg_ctlcluster 16 "$OA_PG_CLUSTER_PROD" stop
+    $with_sudo pg_ctlcluster 16 "$OA_PG_CLUSTER_TMP" stop
+    $with_sudo pg_ctlcluster 16 "$OA_PG_CLUSTER_PROD" stop
 
     echo "  - Dropping old data..."
-    $with_sudo rm -r "$OA_PG_DATADIR_PROD"
+    $with_sudo chown -R gitlab-runner:gitlab-runner "$OA_PG_DATADIR_PROD"
+    $with_sudo rm -rf "$OA_PG_DATADIR_PROD"
 
     echo "  - Copying data directory..."
     $with_sudo cp -r "$OA_PG_DATADIR_TMP" "$OA_PG_DATADIR_PROD"
@@ -510,12 +511,12 @@ if [ "$run_pg" = true ]; then
     #    -> data_directory = '/var/lib/postgresql/16/main'
 
     echo "  - Spinning up production cluster '$OA_PG_CLUSTER_PROD'"
-    sudo pg_ctlcluster 16 "$OA_PG_CLUSTER_PROD" start
+    $with_sudo pg_ctlcluster 16 "$OA_PG_CLUSTER_PROD" start
   fi
 
   if [ "$run_pg_clr" = true ]; then
     echo "  - Dropping staging cluster..."
-    sudo pg_dropcluster 16 "$OA_PG_CLUSTER_TMP" --stop
+    $with_sudo pg_dropcluster 16 "$OA_PG_CLUSTER_TMP" --stop
 
     echo "Deleting all temporary flattened files and scripts"
     rm -r "$OA_TMP_DIR/postgres"
