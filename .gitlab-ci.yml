@@ -146,7 +146,7 @@ Postgres-prep:
     - echo "$TMP_DIR"
     - echo "$ENV_FILE"
     - cd "$OA_SCRIPT_DIR/openalex-ingest" || exit
-    - ./update.sh --config "$OA_ENV_FILE" --pg --pg-tmp
+    - ./update.sh --config "$OA_ENV_FILE" --pg --pg-tmp --with-sudo
 
 Postgres-import:
   stage: postgres
@@ -198,4 +198,4 @@ Postgres-clean:
     - echo "$TMP_DIR"
     - echo "$ENV_FILE"
     - cd "$OA_SCRIPT_DIR/openalex-ingest" || exit
-    - ./update.sh --config "$OA_ENV_FILE" --pg --pg-clr
+    - ./update.sh --config "$OA_ENV_FILE" --pg --pg-clr --with-sudo
