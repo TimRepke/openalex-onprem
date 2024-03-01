@@ -27,6 +27,7 @@ class DehydratedInstitution(Struct, kw_only=True, omit_defaults=True):
     id: str | None = None
     ror: str | None = None
     type: str | None = None
+    lineage: list[str] | None = None
 
 
 class DehydratedAuthor(Struct, omit_defaults=True):
@@ -38,9 +39,12 @@ class DehydratedAuthor(Struct, omit_defaults=True):
 class Authorship(Struct):
     author: DehydratedAuthor | None = None
     author_position: str | None = None
+    countries: list[str] | None = None
     institutions: list[DehydratedInstitution] | None = None
     is_corresponding: bool | None = None
     raw_affiliation_string: str | None = None
+    raw_affiliation_strings: list[str] | None = None
+    raw_author_name: str | None = None
 
 
 class DehydratedSource(Struct, omit_defaults=True, kw_only=True):
@@ -57,9 +61,9 @@ class DehydratedSource(Struct, omit_defaults=True, kw_only=True):
 
 
 class Location(Struct, omit_defaults=True, kw_only=True):
-    # is_accepted: bool | None = None
-    # is_published: bool | None = None
+    is_accepted: bool | None = None
     is_oa: bool | None = None
+    is_published: bool | None = None
     landing_page_url: str | None = None
     license: str | None = None
     source: DehydratedSource | None = None
@@ -68,13 +72,28 @@ class Location(Struct, omit_defaults=True, kw_only=True):
 
 
 class LocationOut(Struct, omit_defaults=True, kw_only=True):
+    is_accepted: bool | None = None
     is_oa: bool | None = None
-    is_primary: bool | None = None
+    is_published: bool | None = None
     landing_page_url: str | None = None
     license: str | None = None
     source: DehydratedSource | None = None
     pdf_url: str | None = None
     version: str | None = None
+
+
+class TopicHierarchy(Struct, omit_defaults=True, kw_only=True):
+    id: str | None = None
+    display_name: str | None = None
+
+
+class Topic(Struct, omit_defaults=True, kw_only=True):
+    id: str | None = None
+    display_name: str | None = None
+    score: float | None = None
+    subfield: TopicHierarchy | None = None
+    field: TopicHierarchy | None = None
+    domain: TopicHierarchy | None = None
 
 
 class Work(Struct, kw_only=True, omit_defaults=True):
@@ -89,13 +108,20 @@ class Work(Struct, kw_only=True, omit_defaults=True):
     # concepts
     # corresponding_author_ids
     # corresponding_institution_ids
+    countries_distinct_count: int | None = None
     # counts_by_year
     created_date: str | None = None
     display_name: str | None = None
     doi: str | None = None
+    fulltext_origin: str | None = None
     # grants
+    has_fulltext: bool | None = None
+    # indexed_in
     id: str | None = None
     ids: WorkIds | None = None
+    indexed_in: list[str] | None = None
+    institutions_distinct_count: int | None = None
+    is_authors_truncated: bool | None = None
     is_oa: bool | None = None
     is_paratext: bool | None = None
     is_retracted: bool | None = None
@@ -107,12 +133,14 @@ class Work(Struct, kw_only=True, omit_defaults=True):
     # ngrams_url
     # open_access
     primary_location: Location | None = None
+    # primary_topic
     publication_date: str | None = None
     publication_year: int | None = None
     # referenced_works
     # related_works
     # sustainable_development_goals
     title: str | None = None
+    topics: list[Topic] | None = None
     type: str | None = None
     # type_crossref
     updated_date: str | None = None
@@ -134,12 +162,14 @@ class WorkOut(Struct, kw_only=True, omit_defaults=True):
     pmid: str | None = None
     pmcid: str | None = None
 
+    indexed_in: str | None = None
     is_oa: bool | None = None
     is_paratext: bool | None = None
     is_retracted: bool | None = None
     language: str | None = None
 
     locations: str | None = None  # list[Location]
+    topics: str | None = None  # list[Topic]
 
     publication_date: str | None = None
     publication_year: int | None = None

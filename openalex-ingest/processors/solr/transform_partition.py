@@ -9,7 +9,7 @@ from msgspec.json import Decoder, Encoder
 
 from shared.cyth.invert_index import invert
 
-from processors.solr.structs import LocationOut
+from processors.solr.structs import LocationOut, Topic
 from shared.util import strip_id
 
 from processors.solr import structs
@@ -74,6 +74,10 @@ def transform_partition(in_file: str | Path, out_file: str | Path) -> tuple[int,
                     )
                     for loc in work.locations]).decode()
 
+            topics = None
+            if work.topics is not None and len(work.topics) > 0:
+                topics = encoder.encode(work.topics).decode()
+
             biblio = None
             if work.biblio is not None and work.biblio.volume is not None:
                 biblio = encoder.encode(work.biblio).decode()
@@ -99,6 +103,7 @@ def transform_partition(in_file: str | Path, out_file: str | Path) -> tuple[int,
                                  mag=mag,
                                  pmid=pmid,
                                  pmcid=pmcid,
+                                 indexed_in=work.indexed_in,
                                  is_oa=work.is_oa,
                                  is_paratext=work.is_paratext,
                                  is_retracted=work.is_retracted,
@@ -106,6 +111,7 @@ def transform_partition(in_file: str | Path, out_file: str | Path) -> tuple[int,
                                  locations=locations,
                                  publication_date=work.publication_date,
                                  publication_year=work.publication_year,
+                                 topics=topics,
                                  type=work.type,
                                  updated_date=work.updated_date)
 
