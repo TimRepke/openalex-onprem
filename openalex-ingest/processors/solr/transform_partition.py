@@ -17,7 +17,6 @@ from processors.solr import structs
 
 def transform_partition(in_file: str | Path, out_file: str | Path) -> tuple[int, int]:
     decoder_work = Decoder(structs.Work)
-    decoder_ia = Decoder(structs.InvertedAbstract)
     encoder = Encoder()
 
     n_abstracts: int = 0
@@ -78,6 +77,10 @@ def transform_partition(in_file: str | Path, out_file: str | Path) -> tuple[int,
             if work.topics is not None and len(work.topics) > 0:
                 topics = encoder.encode(work.topics).decode()
 
+            indexed_in = None
+            if work.indexed_in is not None and len(work.indexed_in) > 0:
+                indexed_in = encoder.encode(work.indexed_in).decode()
+
             biblio = None
             if work.biblio is not None and work.biblio.volume is not None:
                 biblio = encoder.encode(work.biblio).decode()
@@ -103,10 +106,12 @@ def transform_partition(in_file: str | Path, out_file: str | Path) -> tuple[int,
                                  mag=mag,
                                  pmid=pmid,
                                  pmcid=pmcid,
-                                 indexed_in=work.indexed_in,
+                                 indexed_in=indexed_in,
                                  is_oa=work.is_oa,
                                  is_paratext=work.is_paratext,
                                  is_retracted=work.is_retracted,
+                                 is_published=work.primary_location.is_published,
+                                 is_accepted=work.primary_location.is_accepted,
                                  language=work.language,
                                  locations=locations,
                                  publication_date=work.publication_date,

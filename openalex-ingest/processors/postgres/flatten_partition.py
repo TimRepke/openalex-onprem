@@ -63,6 +63,7 @@ def flatten_authors_partition(partition: Path | str,
                                                 'display_name', 'display_name_alternatives',
                                                 'id_mag', 'id_orcid', 'id_scopus', 'id_twitter', 'id_wikipedia',
                                                 'created_date', 'updated_date'])
+        # TODO: affiliations
 
         decoder = Decoder(structs.Author)
 
@@ -77,7 +78,7 @@ def flatten_authors_partition(partition: Path | str,
         for line in lines:
             n_authors += 1
             author = decoder.decode(line)
-            aid = author.id[21:]
+            aid = strip_id(author.id)
             author_ids.append(aid)
 
             writer_authors.writerow({
@@ -158,7 +159,7 @@ def flatten_institutions_partition(partition: Path | str,
         for line in lines:
             n_institutions += 1
             institution: structs.Institution = decoder.decode(line)
-            iid = institution.id[21:]
+            iid = strip_id(institution.id)
             institution_ids.append(iid)
 
             writer_inst.writerow({
@@ -191,14 +192,14 @@ def flatten_institutions_partition(partition: Path | str,
             for ass in institution.associated_institutions:
                 writer_m2m_ass.writerow({
                     'parent_institution_id': iid,
-                    'child_institution_id': ass.id[21:],
+                    'child_institution_id': strip_id(ass.id),
                     'relationship': ass.relationship
                 })
 
             for con in institution.x_concepts:
                 writer_m2m_con.writerow({
                     'institution_id': iid,
-                    'concept_id': con.id[21:],
+                    'concept_id': strip_id(con.id),
                     'score': con.score
                 })
 
@@ -421,7 +422,7 @@ def flatten_concept_partition(partition: Path | str,
             concept_ids.append(cid)
 
             writer_concepts.writerow({
-                'concept_id': concept.id,
+                'concept_id': cid,
                 'cited_by_count': concept.cited_by_count,
                 'works_count': concept.works_count,
                 'h_index': concept.summary_stats.h_index,
@@ -558,6 +559,67 @@ def flatten_sources_partition(partition: Path | str,
                  f' {mins}:{secs:.2f} from {partition}')
 
 
+def flatten_topic_partition(partition: Path | str,
+                            out_sql_cpy: Path | str,
+                            out_sql_del: Path | str,
+                            out_topics: Path | str,
+                            pg_schema: str,
+                            preserve_ram: bool):
+    logging.info(f'Flattening partition file {partition}')
+    partition: Path = Path(partition)
+    out_sql_cpy: Path = Path(out_sql_cpy)
+    out_topics: Path = Path(out_topics)
+    startTime = time.time()
+
+    with (gzip.open(out_topics, 'wt', encoding='utf-8') as f_topics,
+          open(out_sql_cpy, 'w') as f_sql_cpy,
+          gzip.open(partition, 'rb') as f_in):
+
+        writer_topics = get_writer(f_topics, ['topic_id', 'id_wikipedia', 'display_name', 'description', 'keywords',
+                                              'subfield_id', 'subfield', 'field_id', 'field', 'domain_id', 'domain',
+                                              'works_count', 'cited_by_count', 'created_date',
+                                              'updated_date'])
+        decoder = Decoder(structs.Topic)
+        n_topics = 0
+
+        if preserve_ram:
+            lines = f_in
+        else:
+            lines = f_in.readlines()
+
+        for line in lines:
+            n_topics += 1
+            topic = decoder.decode(line)
+            tid = strip_id(topic.id)
+
+            writer_topics.writerow({
+                'topic_id': tid,
+                'id_wikipedia': topic.ids.wikipedia,
+                'display_name': topic.display_name,
+                'description': topic.description,
+                'keywords': prepare_list(topic.keywords, strip=True),
+                'subfield_id': topic.subfield.id,
+                'subfield': topic.subfield.display_name,
+                'field_id': topic.subfield.id,
+                'field': topic.subfield.display_name,
+                'domain_id': topic.subfield.id,
+                'domain': topic.subfield.display_name,
+                'works_count': topic.works_count,
+                'cited_by_count': topic.cited_by_count,
+                'created_date': topic.created_date,
+                'updated_date': topic.updated_date
+            })
+
+        f_sql_cpy.write(f"COPY {pg_schema}.topics ({fieldnames(writer_topics)}) "
+                        f"FROM PROGRAM 'gunzip -c {out_topics.absolute()}' csv header;\n\n")
+
+    executionTime = (time.time() - startTime)
+    mins = int(executionTime / 60)
+    secs = executionTime - (mins * 60)
+    logging.info(f'Flattened {n_topics:,} topics in '
+                 f'{mins}:{secs:.2f} from {partition}')
+
+
 def flatten_works_partition(partition: Path | str,
                             out_sql_cpy: Path | str,
                             out_sql_del: Path | str,
@@ -569,6 +631,7 @@ def flatten_works_partition(partition: Path | str,
                             out_m2m_references: Path | str,
                             out_m2m_related: Path | str,
                             out_m2m_sdgs: Path | str,
+                            out_m2m_topics: Path | str,
                             pg_schema: str,
                             preserve_ram: bool):
     logging.info(f'Flattening partition file {partition}')
@@ -583,6 +646,7 @@ def flatten_works_partition(partition: Path | str,
     out_m2m_references: Path = Path(out_m2m_references)
     out_m2m_related: Path = Path(out_m2m_related)
     out_m2m_sdgs: Path = Path(out_m2m_sdgs)
+    out_m2m_topics: Path = Path(out_m2m_topics)
     startTime = time.time()
 
     with (gzip.open(out_works, 'wt', encoding='utf-8') as f_works,
@@ -593,6 +657,7 @@ def flatten_works_partition(partition: Path | str,
           gzip.open(out_m2m_references, 'wt', encoding='utf-8') as f_references,
           gzip.open(out_m2m_related, 'wt', encoding='utf-8') as f_related,
           gzip.open(out_m2m_sdgs, 'wt', encoding='utf-8') as f_sdgs,
+          gzip.open(out_m2m_topics, 'wt', encoding='utf-8') as f_topics,
           open(out_sql_del, 'w') as f_sql_del,
           open(out_sql_cpy, 'w') as f_sql_cpy,
           gzip.open(partition, 'rb') as f_in):
@@ -615,6 +680,7 @@ def flatten_works_partition(partition: Path | str,
         writer_references = get_writer(f_references, ['src_work_id', 'trgt_work_id'])
         writer_related = get_writer(f_related, ['work_a_id', 'work_b_id'])
         writer_sdgs = get_writer(f_sdgs, ['work_id', 'sdg_id', 'display_name', 'score'])
+        writer_topics = get_writer(f_sdgs, ['work_id', 'topic_id', 'score', 'rank'])
 
         decoder = Decoder(structs.Work)
         encoder = Encoder()
@@ -657,6 +723,7 @@ def flatten_works_partition(partition: Path | str,
                 'work_id': wid,
                 'title': work.title,
                 'abstract': abstract,
+                'countries_distinct_count': work.countries_distinct_count,
                 'display_name': work.display_name,
                 'language': work.language,
                 'publication_date': work.publication_date,
@@ -686,6 +753,11 @@ def flatten_works_partition(partition: Path | str,
                 'license': work.license,
                 'is_paratext': work.is_paratext,
                 'is_retracted': work.is_retracted,
+                'fulltext_origin': work.fulltext_origin,
+                'has_fulltext': work.has_fulltext,
+                'indexed_in': prepare_list(work.indexed_in, strip=True),
+                'institutions_distinct_count': work.institutions_distinct_count,
+                'is_authors_truncated': work.is_authors_truncated,
                 'mesh': (encoder.encode(work.mesh).decode()
                          if work.mesh is not None and len(work.mesh) > 0 else None),
                 'grants': grants,
@@ -719,13 +791,17 @@ def flatten_works_partition(partition: Path | str,
                         'source_id': strip_id(location.source.id) if location.source is not None else None,
                         'is_oa': location.is_oa,
                         'landing_page_url': location.landing_page_url,
-                        'is_primary': (work.primary_location is not None
-                                       and work.primary_location.source is not None
-                                       and location.source is not None
-                                       and work.primary_location.source.id == location.source.id
-                                       and work.primary_location.source.display_name == location.source.display_name
-                                       and work.primary_location.pdf_url == location.pdf_url
-                                       and work.primary_location.version == location.version),
+                        'is_primary': (
+                                work.primary_location is not None
+                                and work.primary_location.source is not None
+                                and location.source is not None
+                                and work.primary_location.source.id == location.source.id
+                                and work.primary_location.source.display_name == location.source.display_name
+                                and work.primary_location.pdf_url == location.pdf_url
+                                and work.primary_location.version == location.version
+                        ),
+                        'is_accepted': location.is_accepted,
+                        'is_published': location.is_published,
                         'license': location.license,
                         'pdf_url': location.pdf_url,
                         'version': location.version
@@ -755,6 +831,13 @@ def flatten_works_partition(partition: Path | str,
                     'work_a_id': wid,
                     'work_b_id': strip_id(rel)
                 })
+            for topic_rank, topic in enumerate(work.topics):
+                writer_related.writerow({
+                    'work_id': wid,
+                    'topic_id': strip_id(topic.id),
+                    'score': topic.score,
+                    'rank': topic_rank + 1
+                })
 
         for del_row in generate_deletions(ids=work_ids, object_type='work', batch_size=1000, pg_schema=pg_schema):
             f_sql_del.write(del_row + '\n')
@@ -776,6 +859,8 @@ def flatten_works_partition(partition: Path | str,
                         f"FROM PROGRAM 'gunzip -c {out_m2m_related.absolute()}' csv header;\n\n")
         f_sql_cpy.write(f"COPY {pg_schema}.works_sdgs ({fieldnames(writer_sdgs)}) "
                         f"FROM PROGRAM 'gunzip -c {out_m2m_sdgs.absolute()}' csv header;\n\n")
+        f_sql_cpy.write(f"COPY {pg_schema}.works_topics ({fieldnames(writer_sdgs)}) "
+                        f"FROM PROGRAM 'gunzip -c {out_m2m_topics.absolute()}' csv header;\n\n")
 
     executionTime = (time.time() - startTime)
     mins = int(executionTime / 60)
@@ -802,6 +887,10 @@ def flatten_funder_partition_kw(kwargs):
 
 def flatten_concept_partition_kw(kwargs):
     return flatten_concept_partition(**kwargs)
+
+
+def flatten_topic_partition_kw(kwargs):
+    return flatten_topic_partition(**kwargs)
 
 
 def flatten_sources_partition_kw(kwargs):

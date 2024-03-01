@@ -47,3 +47,7 @@ DROP INDEX IF EXISTS oa.openalex.works_references_trgt_work_id_idx;
 
 DROP INDEX IF EXISTS oa.openalex.works_related_work_a_id_idx;
 DROP INDEX IF EXISTS oa.openalex.works_related_work_b_id_idx;
+
+DROP INDEX IF EXISTS topics_topic_id_idx;
+DROP INDEX IF EXISTS works_topics_work_id_idx;
+DROP INDEX IF EXISTS works_topics_topic_id_idx;

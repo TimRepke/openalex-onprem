@@ -166,6 +166,8 @@ class WorkOut(Struct, kw_only=True, omit_defaults=True):
     is_oa: bool | None = None
     is_paratext: bool | None = None
     is_retracted: bool | None = None
+    is_published: bool | None = None
+    is_accepted: bool | None = None
     language: str | None = None
 
     locations: str | None = None  # list[Location]

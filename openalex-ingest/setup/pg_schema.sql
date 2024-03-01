@@ -70,8 +70,8 @@ CREATE TABLE openalex.institutions
 CREATE TABLE openalex.institutions_associations
 (
     parent_institution_id text NOT NULL,
-    child_institution_id text NOT NULL,
-    relationship     text
+    child_institution_id  text NOT NULL,
+    relationship          text
 --  PRIMARY KEY (parent_institution_id, child_institution_id)
 );
 CREATE TABLE openalex.institutions_concepts
@@ -141,10 +141,29 @@ CREATE TABLE openalex.concepts
     updated_date   timestamp without time zone
 --  PRIMARY KEY (concept_id)
 );
+CREATE TABLE openalex.topics
+(
+    topic_id       text NOT NULL,
+    id_wikipedia   text,
+    display_name   text,
+    description    text,
+    keywords       text[],
+    subfield_id    integer,
+    subfield       text,
+    field_id       integer,
+    field          text,
+    domain_id      integer,
+    domain         text,
+    works_count    integer,
+    cited_by_count integer,
+    created_date   timestamp without time zone,
+    updated_date   timestamp without time zone
+--  PRIMARY KEY (topic_id)
+);
 CREATE TABLE openalex.concepts_ancestors
 (
     parent_concept_id text NOT NULL,
-    child_concept_id text NOT NULL
+    child_concept_id  text NOT NULL
 --  PRIMARY KEY (parent_concept_id, child_concept_id)
 );
 CREATE TABLE openalex.concepts_related
@@ -191,6 +210,7 @@ CREATE TABLE openalex.works
     work_id                        text NOT NULL,
     title                          text,
     abstract                       text,
+    countries_distinct_count       integer,
     display_name                   text,
     language                       text,
     publication_date               text,
@@ -216,6 +236,11 @@ CREATE TABLE openalex.works
     cited_by_count                 integer,
     is_paratext                    boolean,
     is_retracted                   boolean,
+    fulltext_origin                text,
+    has_fulltext                   boolean,
+    indexed_in                     text[],
+    institutions_distinct_count    integer,
+    is_authors_truncated           boolean,
     mesh                           json,
     grants                         json,
     created_date                   timestamp without time zone,
@@ -224,13 +249,15 @@ CREATE TABLE openalex.works
 );
 CREATE TABLE openalex.works_authorships
 (
-    work_id          text NOT NULL,
-    author_id        text, -- this should never be null, but some are
-    position         text,
-    exact_position   int,
-    raw_affiliation  text,
-    raw_author_name  text,
-    is_corresponding boolean
+    work_id                 text NOT NULL,
+    author_id               text, -- this should never be null, but some are
+    countries               text[],
+    position                text,
+    exact_position          int,
+    raw_affiliation         text,
+    raw_author_name         text,
+    raw_affiliation_strings text[],
+    is_corresponding        boolean
 --  PRIMARY KEY (work_id, author_id)
 );
 CREATE TABLE openalex.works_authorship_institutions
@@ -246,6 +273,8 @@ CREATE TABLE openalex.works_locations
     source_id        text, -- this should never be null, but some are
     is_oa            boolean,
     is_primary       boolean,
+    is_accepted      boolean,
+    is_published     boolean,
     landing_page_url text,
     license          text,
     pdf_url          text,
@@ -269,7 +298,7 @@ CREATE TABLE openalex.works_sdgs
 );
 CREATE TABLE openalex.works_references
 (
-    src_work_id text NOT NULL,
+    src_work_id  text NOT NULL,
     trgt_work_id text NOT NULL
 --  PRIMARY KEY (src_work_id, trgt_work_id) -- unfortunately, some are not unique as promised
 );
@@ -277,5 +306,13 @@ CREATE TABLE openalex.works_related
 (
     work_a_id text NOT NULL,
     work_b_id text NOT NULL
+--  PRIMARY KEY (work_a_id, work_b_id)  -- unfortunately, some are not unique as promised
+);
+CREATE TABLE openalex.works_topics
+(
+    work_id  text NOT NULL,
+    topic_id text NOT NULL,
+    score    real,
+    rank     int
 --  PRIMARY KEY (work_a_id, work_b_id)  -- unfortunately, some are not unique as promised
 );
