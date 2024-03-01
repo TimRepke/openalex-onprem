@@ -2,7 +2,7 @@ import gzip
 from pathlib import Path
 from typing import Literal, Generator, Iterable
 
-ObjectType = Literal['work', 'author', 'funder', 'publisher', 'source', 'institution', 'concept']
+ObjectType = Literal['work', 'author', 'funder', 'publisher', 'source', 'institution', 'concept', 'topic']
 
 
 def get_globs(snapshot: Path,  # /path/to/openalex-snapshot

@@ -4,8 +4,16 @@ from pathlib import Path
 import typer
 from typing_extensions import Annotated
 
-from processors.postgres.flatten import flatten_authors, flatten_concepts, flatten_funders, flatten_institutions, \
-    flatten_publishers, flatten_sources, flatten_works
+from processors.postgres.flatten import (
+    flatten_authors,
+    flatten_concepts,
+    flatten_funders,
+    flatten_institutions,
+    flatten_publishers,
+    flatten_sources,
+    flatten_works,
+    flatten_topics
+)
 
 
 def update_postgres(tmp_dir: Annotated[Path, typer.Option(help='Directory for temporary parsed partition files')],
@@ -26,6 +34,9 @@ def update_postgres(tmp_dir: Annotated[Path, typer.Option(help='Directory for te
 
     (tmp_dir / 'postgres').mkdir(parents=True, exist_ok=True)
 
+    logging.info('Flattening topics')
+    flatten_topics(tmp_dir=tmp_dir, parallelism=parallelism, skip_deletion=skip_deletion, override=override,
+                   preserve_ram=preserve_ram, pg_schema=pg_schema, snapshot_dir=snapshot_dir, last_update=last_update)
     logging.info('Flattening works')
     flatten_works(tmp_dir=tmp_dir, parallelism=parallelism, skip_deletion=skip_deletion, override=override,
                   preserve_ram=preserve_ram, pg_schema=pg_schema, snapshot_dir=snapshot_dir, last_update=last_update)
