@@ -76,8 +76,8 @@ Setup-environment:
 
 Fetch-S3-bucket:
   stage: sync
-  needs: ["Setup-environment"]
-  dependencies: ["Setup-environment"]
+  needs: [ "Setup-environment" ]
+  dependencies: [ "Setup-environment" ]
   when: on_success
   tags:
     - rechner
@@ -90,7 +90,7 @@ Fetch-S3-bucket:
 
 Solr-second:
   stage: solr
-  needs: ["Fetch-S3-bucket"]
+  needs: [ "Fetch-S3-bucket" ]
   when: on_success
   tags:
     - rechner
@@ -101,7 +101,7 @@ Solr-second:
     - ./update.sh --config "$OA_ENV_FILE" --solr --solr-tmp --with-tmp
 Solr-import:
   stage: solr
-  needs: ["Solr-second"]
+  needs: [ "Solr-second" ]
   when: on_success
   tags:
     - rechner
@@ -112,7 +112,7 @@ Solr-import:
     - ./update.sh --config "$OA_ENV_FILE" --solr --solr-import-full --solr-clr --with-tmp
 Solr-switch:
   stage: solr
-  needs: ["Solr-import"]
+  needs: [ "Solr-import" ]
   when: on_success
   tags:
     - rechner
@@ -124,7 +124,7 @@ Solr-switch:
 
 Postgres-flat:
   stage: postgres
-  needs: ["Solr-switch"]
+  needs: [ "Solr-switch" ]
   when: on_success
   tags:
     - rechner
@@ -137,7 +137,7 @@ Postgres-flat:
 
 Postgres-prep:
   stage: postgres
-  needs: ["Postgres-flat"]
+  needs: [ "Postgres-flat" ]
   when: on_success
   tags:
     - rechner
@@ -150,7 +150,7 @@ Postgres-prep:
 
 Postgres-import:
   stage: postgres
-  needs: ["Postgres-prep"]
+  needs: [ "Postgres-prep" ]
   when: on_success
   tags:
     - rechner
@@ -161,9 +161,22 @@ Postgres-import:
     - cd "$OA_SCRIPT_DIR/openalex-ingest" || exit
     - ./update.sh --config "$OA_ENV_FILE" --pg --pg-import --with-tmp
 
+Postgres-swap:
+  stage: postgres
+  needs: [ "Postgres-import" ]
+  when: on_success
+  tags:
+    - rechner
+  script:
+    - echo "$SCRIPT_DIR"
+    - echo "$TMP_DIR"
+    - echo "$ENV_FILE"
+    - cd "$OA_SCRIPT_DIR/openalex-ingest" || exit
+    - ./update.sh --config "$OA_ENV_FILE" --pg --pg-swp --with-tmp
+    -
 Postgres-indices:
   stage: postgres
-  needs: ["Postgres-import"]
+  needs: [ "Postgres-swap" ]
   when: on_success
   tags:
     - rechner
@@ -174,22 +187,10 @@ Postgres-indices:
     - cd "$OA_SCRIPT_DIR/openalex-ingest" || exit
     - ./update.sh --config "$OA_ENV_FILE" --pg --pg-ind
 
-Postgres-swap:
-  stage: postgres
-  needs: ["Postgres-indices"]
-  when: on_success
-  tags:
-    - rechner
-  script:
-    - echo "$SCRIPT_DIR"
-    - echo "$TMP_DIR"
-    - echo "$ENV_FILE"
-    - cd "$OA_SCRIPT_DIR/openalex-ingest" || exit
-    - ./update.sh --config "$OA_ENV_FILE" --pg --pg-swp --with-tmp
 
 Postgres-clean:
   stage: postgres
-  needs: ["Postgres-swap"]
+  needs: [ "Postgres-indices" ]
   when: on_success
   tags:
     - rechner
