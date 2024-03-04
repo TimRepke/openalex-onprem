@@ -299,6 +299,7 @@ class Author(Struct, kw_only=True, omit_defaults=True):
 class Location(Struct, omit_defaults=True, kw_only=True):
     is_accepted: bool | None = None
     is_oa: bool | None = None
+    is_primary: bool | None = None
     is_published: bool | None = None
     landing_page_url: str | None = None
     license: str | None = None

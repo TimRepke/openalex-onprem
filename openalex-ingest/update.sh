@@ -295,6 +295,7 @@ if [ "$run_solr" = true ]; then
     echo "  - Temporary solr-home: ${OA_SOLR_HOME_TMP}"
 
     echo "Making sure tmp solr instance is running..."
+    "${OA_SOLR_BIN}/solr" stop -p "$OA_SOLR_PORT_TMP" -h "$OA_SOLR_HOST_TMP" || echo "Tried to stop solr, but wasn't running"
     "${OA_SOLR_BIN}/solr" start -c -p "$OA_SOLR_PORT_TMP" -s "$OA_SOLR_HOME_TMP" -h "$OA_SOLR_HOST_TMP"
 
     echo "Dropping solr collection..."
