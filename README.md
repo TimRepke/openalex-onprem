@@ -150,11 +150,12 @@ WantedBy=multi-user.target
 ## sudoers
 ```
 $ cat /etc/sudoers.d/gitlab
-gitlab-runner ALL= NOPASSWD: /usr/bin/chgrp -R openalex /mnt/bulk/openalex/openalex-snapshot
-gitlab-runner ALL= NOPASSWD: /usr/bin/chmod -R 775 /mnt/bulk/openalex/openalex-snapshot
+gitlab-runner ALL= NOPASSWD: /usr/bin/chgrp -R openalex /mnt/bulk/openalex/openalex-snapshot/
+gitlab-runner ALL= NOPASSWD: /usr/bin/chmod -R 775 /mnt/bulk/openalex/openalex-snapshot/
 gitlab-runner ALL= NOPASSWD: /usr/bin/chown -R solr\:solr /srv/solr/solr-home
 gitlab-runner ALL= NOPASSWD: /usr/bin/chown -R gitlab-runner\:gitlab-runner /srv/solr/solr-home
 gitlab-runner ALL= NOPASSWD: /usr/bin/chown -R gitlab-runner\:gitlab-runner /mnt/bulk/openalex/tmp_data/solr-home
+
 
 gitlab-runner ALL= NOPASSWD: /usr/bin/systemctl start solr.service
 gitlab-runner ALL= NOPASSWD: /usr/bin/systemctl stop solr.service

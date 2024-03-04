@@ -295,14 +295,14 @@ if [ "$run_solr" = true ]; then
     echo "  - Temporary solr-home: ${OA_SOLR_HOME_TMP}"
 
     echo "Making sure tmp solr instance is running..."
-    "${OA_SOLR_BIN}/solr" start -c -p "$OA_SOLR_BIN_TMP"
+    "${OA_SOLR_BIN}/solr" start -c -p "$OA_SOLR_PORT_TMP" -s "$OA_SOLR_HOME_TMP" -h "$OA_SOLR_HOST_TMP"
 
     echo "Dropping solr collection..."
-    "${OA_SOLR_BIN}/solr" delete -c "$OA_SOLR_COLLECTION" -p "$OA_SOLR_BIN_TMP"  || echo "Collection '$OA_SOLR_COLLECTION' did not exist!"
+    "${OA_SOLR_BIN}/solr" delete -c "$OA_SOLR_COLLECTION" -p "$OA_SOLR_PORT_TMP" -h "$OA_SOLR_HOST_TMP"  || echo "Collection '$OA_SOLR_COLLECTION' did not exist!"
 
     echo "Creating empty solr collection..."
     "${OA_SOLR_BIN}/solr" zk upconfig -d setup/solr_configset -n _openalex_conf -z "$OA_SOLR_HOST_TMP:$OA_SOLR_ZOO_TMP"
-    "${OA_SOLR_BIN}/solr" create -c "$OA_SOLR_COLLECTION" -n _openalex_conf -p "$OA_SOLR_PORT_TMP"
+    "${OA_SOLR_BIN}/solr" create -c "$OA_SOLR_COLLECTION" -n _openalex_conf -p "$OA_SOLR_PORT_TMP" -h "$OA_SOLR_HOST_TMP"
 
     echo "Waiting a bit..."
     sleep 5
@@ -312,13 +312,13 @@ if [ "$run_solr" = true ]; then
     cd "$SCRIPT_DIR" || exit
 
     echo "Dropping solr collection..."
-    "${OA_SOLR_BIN}/solr" delete -c "$OA_SOLR_COLLECTION" -p "$OA_SOLR_PORT"  || echo "Collection '$OA_SOLR_COLLECTION' did not exist!"
+    "${OA_SOLR_BIN}/solr" delete -c "$OA_SOLR_COLLECTION" -p "$OA_SOLR_PORT" -h "$OA_SOLR_HOST"  || echo "Collection '$OA_SOLR_COLLECTION' did not exist!"
 
     echo "Creating empty solr collection..."
     # "${OA_SOLR_BIN}/solr" zk cp file:setup/solr_managed-schema.xml zk:/configs/._designer_openalex/managed-schema.xml -z "$OA_SOLR_HOST:$OA_SOLR_ZOO"
     # "${OA_SOLR_BIN}/solr" create -c "$OA_SOLR_COLLECTION" -d setup/solr_configset -n openalex_conf -p "$OA_SOLR_PORT"
     "${OA_SOLR_BIN}/solr" zk upconfig -d setup/solr_configset -n _openalex_conf -z "$OA_SOLR_HOST:$OA_SOLR_ZOO"
-    "${OA_SOLR_BIN}/solr" create -c "$OA_SOLR_COLLECTION" -n _openalex_conf -p "$OA_SOLR_PORT"
+    "${OA_SOLR_BIN}/solr" create -c "$OA_SOLR_COLLECTION" -n _openalex_conf -p "$OA_SOLR_PORT" -h "$OA_SOLR_HOST"
 
     echo "Waiting a bit..."
     sleep 5
