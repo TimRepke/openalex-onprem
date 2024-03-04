@@ -84,7 +84,7 @@ class LocationOut(Struct, omit_defaults=True, kw_only=True):
 
 
 class TopicHierarchy(Struct, omit_defaults=True, kw_only=True):
-    id: str | None = None
+    id: int | None = None
     display_name: str | None = None
 
 
