@@ -160,6 +160,56 @@ CREATE TABLE openalex.topics
     updated_date   timestamp without time zone
 --  PRIMARY KEY (topic_id)
 );
+CREATE TABLE openalex.subfields
+(
+    subfield_id               integer NOT NULL,
+    id_wikipedia              text,
+    id_wikidata               text,
+    display_name              text,
+    description               text,
+    display_name_alternatives text[],
+    field_id                  integer,
+    field                     text,
+    domain_id                 integer,
+    domain                    text,
+    works_count               integer,
+    cited_by_count            integer,
+    created_date              timestamp without time zone,
+    updated_date              timestamp without time zone
+--  PRIMARY KEY (subfield_id)
+);
+CREATE TABLE openalex.fields
+(
+    field_id                  integer NOT NULL,
+    id_wikipedia              text,
+    id_wikidata               text,
+    display_name              text,
+    description               text,
+    display_name_alternatives text[],
+    domain_id                 integer,
+    domain                    text,
+    works_count               integer,
+    cited_by_count            integer,
+    created_date              timestamp without time zone,
+    updated_date              timestamp without time zone
+--  PRIMARY KEY (field_id)
+);
+CREATE TABLE openalex.domains
+(
+    domain_id                 integer NOT NULL,
+    id_wikipedia              text,
+    id_wikidata               text,
+    display_name              text,
+    description               text,
+    display_name_alternatives text[],
+    works_count               integer,
+    cited_by_count            integer,
+    created_date              timestamp without time zone,
+    updated_date              timestamp without time zone
+--  PRIMARY KEY (domain_id)
+);
+
+
 CREATE TABLE openalex.concepts_ancestors
 (
     parent_concept_id text NOT NULL,

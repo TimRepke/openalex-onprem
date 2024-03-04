@@ -2,7 +2,8 @@ import gzip
 from pathlib import Path
 from typing import Literal, Generator, Iterable
 
-ObjectType = Literal['work', 'author', 'funder', 'publisher', 'source', 'institution', 'concept', 'topic']
+ObjectType = Literal['work', 'author', 'funder', 'publisher', 'source',
+                     'institution', 'concept', 'topic', 'subfield', 'field', 'domain']
 
 
 def get_globs(snapshot: Path,  # /path/to/openalex-snapshot
@@ -34,6 +35,12 @@ def strip_id(s: str | None) -> str | None:
             return s[21:]
         if len(s) > 0:
             return s
+    return None
+
+
+def parse_id(s: str | None, prefix: str) -> int | None:
+    if s is not None and len(s) > len(prefix):
+        return int(s[len(prefix):])
     return None
 
 

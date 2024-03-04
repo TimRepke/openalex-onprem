@@ -17,3 +17,8 @@ DELETE FROM oa.openalex.works_locations;
 DELETE FROM oa.openalex.works_references;
 DELETE FROM oa.openalex.works_related;
 DELETE FROM oa.openalex.works_sdgs;
+DELETE FROM oa.openalex.works_topics;
+DELETE FROM oa.openalex.topics;
+DELETE FROM oa.openalex.subfields;
+DELETE FROM oa.openalex.fields;
+DELETE FROM oa.openalex.domains;

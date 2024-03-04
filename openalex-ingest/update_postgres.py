@@ -12,7 +12,10 @@ from processors.postgres.flatten import (
     flatten_publishers,
     flatten_sources,
     flatten_works,
-    flatten_topics
+    flatten_topics,
+    flatten_subfields,
+    flatten_fields,
+    flatten_domains
 )
 
 
@@ -37,6 +40,16 @@ def update_postgres(tmp_dir: Annotated[Path, typer.Option(help='Directory for te
     logging.info('Flattening topics')
     flatten_topics(tmp_dir=tmp_dir, parallelism=parallelism, skip_deletion=skip_deletion, override=override,
                    preserve_ram=preserve_ram, pg_schema=pg_schema, snapshot_dir=snapshot_dir, last_update=last_update)
+    logging.info('Flattening subfields')
+    flatten_subfields(tmp_dir=tmp_dir, parallelism=parallelism, skip_deletion=skip_deletion, override=override,
+                      preserve_ram=preserve_ram, pg_schema=pg_schema, snapshot_dir=snapshot_dir,
+                      last_update=last_update)
+    logging.info('Flattening fields')
+    flatten_fields(tmp_dir=tmp_dir, parallelism=parallelism, skip_deletion=skip_deletion, override=override,
+                   preserve_ram=preserve_ram, pg_schema=pg_schema, snapshot_dir=snapshot_dir, last_update=last_update)
+    logging.info('Flattening domains')
+    flatten_domains(tmp_dir=tmp_dir, parallelism=parallelism, skip_deletion=skip_deletion, override=override,
+                    preserve_ram=preserve_ram, pg_schema=pg_schema, snapshot_dir=snapshot_dir, last_update=last_update)
     logging.info('Flattening works')
     flatten_works(tmp_dir=tmp_dir, parallelism=parallelism, skip_deletion=skip_deletion, override=override,
                   preserve_ram=preserve_ram, pg_schema=pg_schema, snapshot_dir=snapshot_dir, last_update=last_update)

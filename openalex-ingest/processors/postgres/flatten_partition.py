@@ -10,7 +10,7 @@ from msgspec import DecodeError
 
 from processors.postgres import structs
 from processors.postgres.deletion import generate_deletions
-from shared.util import strip_id
+from shared.util import strip_id, parse_id
 from shared.cyth.invert_index import invert
 
 
@@ -221,12 +221,12 @@ def flatten_institutions_partition(partition: Path | str,
                  f'{mins}:{secs:.2f} from {partition}')
 
 
-def flatten_publisher_partition(partition: Path | str,
-                                out_sql_cpy: Path | str,
-                                out_sql_del: Path | str,
-                                out_publishers: Path | str,
-                                pg_schema: str,
-                                preserve_ram: bool):
+def flatten_publishers_partition(partition: Path | str,
+                                 out_sql_cpy: Path | str,
+                                 out_sql_del: Path | str,
+                                 out_publishers: Path | str,
+                                 pg_schema: str,
+                                 preserve_ram: bool):
     logging.info(f'Flattening partition file {partition}')
     partition: Path = Path(partition)
     out_sql_cpy: Path = Path(out_sql_cpy)
@@ -300,12 +300,12 @@ def flatten_publisher_partition(partition: Path | str,
                  f'{mins}:{secs:.2f} from {partition}')
 
 
-def flatten_funder_partition(partition: Path | str,
-                             out_sql_cpy: Path | str,
-                             out_sql_del: Path | str,
-                             out_funders: Path | str,
-                             pg_schema: str,
-                             preserve_ram: bool):
+def flatten_funders_partition(partition: Path | str,
+                              out_sql_cpy: Path | str,
+                              out_sql_del: Path | str,
+                              out_funders: Path | str,
+                              pg_schema: str,
+                              preserve_ram: bool):
     logging.info(f'Flattening partition file {partition}')
     partition: Path = Path(partition)
     out_sql_cpy: Path = Path(out_sql_cpy)
@@ -373,14 +373,14 @@ def flatten_funder_partition(partition: Path | str,
                  f'{mins}:{secs:.2f} from {partition}')
 
 
-def flatten_concept_partition(partition: Path | str,
-                              out_sql_cpy: Path | str,
-                              out_sql_del: Path | str,
-                              out_concepts: Path | str,
-                              out_m2m_ancestor: Path | str,
-                              out_m2m_related: Path | str,
-                              pg_schema: str,
-                              preserve_ram: bool):
+def flatten_concepts_partition(partition: Path | str,
+                               out_sql_cpy: Path | str,
+                               out_sql_del: Path | str,
+                               out_concepts: Path | str,
+                               out_m2m_ancestor: Path | str,
+                               out_m2m_related: Path | str,
+                               pg_schema: str,
+                               preserve_ram: bool):
     logging.info(f'Flattening partition file {partition}')
     partition: Path = Path(partition)
     out_sql_cpy: Path = Path(out_sql_cpy)
@@ -559,12 +559,11 @@ def flatten_sources_partition(partition: Path | str,
                  f' {mins}:{secs:.2f} from {partition}')
 
 
-def flatten_topic_partition(partition: Path | str,
-                            out_sql_cpy: Path | str,
-                            out_sql_del: Path | str,
-                            out_topics: Path | str,
-                            pg_schema: str,
-                            preserve_ram: bool):
+def flatten_topics_partition(partition: Path | str,
+                             out_sql_cpy: Path | str,
+                             out_topics: Path | str,
+                             pg_schema: str,
+                             preserve_ram: bool):
     logging.info(f'Flattening partition file {partition}')
     partition: Path = Path(partition)
     out_sql_cpy: Path = Path(out_sql_cpy)
@@ -598,12 +597,12 @@ def flatten_topic_partition(partition: Path | str,
                 'display_name': topic.display_name,
                 'description': topic.description,
                 'keywords': prepare_list(topic.keywords, strip=True),
-                'subfield_id': topic.subfield.id,
+                'subfield_id': parse_id(topic.subfield.id, 'https://openalex.org/subfields/'),
                 'subfield': topic.subfield.display_name,
-                'field_id': topic.subfield.id,
-                'field': topic.subfield.display_name,
-                'domain_id': topic.subfield.id,
-                'domain': topic.subfield.display_name,
+                'field_id': parse_id(topic.field.id, 'https://openalex.org/fields/'),
+                'field': topic.field.display_name,
+                'domain_id': parse_id(topic.domain.id, 'https://openalex.org/domains/'),
+                'domain': topic.domain.display_name,
                 'works_count': topic.works_count,
                 'cited_by_count': topic.cited_by_count,
                 'created_date': topic.created_date,
@@ -617,6 +616,172 @@ def flatten_topic_partition(partition: Path | str,
     mins = int(executionTime / 60)
     secs = executionTime - (mins * 60)
     logging.info(f'Flattened {n_topics:,} topics in '
+                 f'{mins}:{secs:.2f} from {partition}')
+
+
+def flatten_subfields_partition(partition: Path | str,
+                                out_sql_cpy: Path | str,
+                                out_subfields: Path | str,
+                                pg_schema: str,
+                                preserve_ram: bool):
+    logging.info(f'Flattening partition file {partition}')
+    partition: Path = Path(partition)
+    out_sql_cpy: Path = Path(out_sql_cpy)
+    out_subfields: Path = Path(out_subfields)
+    startTime = time.time()
+
+    with (gzip.open(out_subfields, 'wt', encoding='utf-8') as f_subfields,
+          open(out_sql_cpy, 'w') as f_sql_cpy,
+          gzip.open(partition, 'rb') as f_in):
+        writer_subfields = get_writer(f_subfields, [
+            'subfield_id', 'id_wikipedia', 'id_wikidata', 'display_name', 'description', 'display_name_alternatives',
+            'field_id', 'field', 'domain_id', 'domain',
+            'works_count', 'cited_by_count', 'created_date', 'updated_date'])
+        decoder = Decoder(structs.Subfield)
+        n_subfields = 0
+
+        if preserve_ram:
+            lines = f_in
+        else:
+            lines = f_in.readlines()
+
+        for line in lines:
+            n_subfields += 1
+            subfield = decoder.decode(line)
+            sfid = parse_id(subfield.id, 'https://openalex.org/subfields/')
+
+            writer_subfields.writerow({
+                'subfield_id': sfid,
+                'id_wikipedia': subfield.ids.wikipedia,
+                'id_wikidata': subfield.ids.wikidata,
+                'display_name': subfield.display_name,
+                'description': subfield.description,
+                'field_id': parse_id(subfield.field.id, 'https://openalex.org/fields/'),
+                'field': subfield.field.display_name,
+                'domain_id': parse_id(subfield.domain.id, 'https://openalex.org/domains/'),
+                'domain': subfield.domain.display_name,
+                'keywords': prepare_list(subfield.display_name_alternatives, strip=True),
+                'works_count': subfield.works_count,
+                'cited_by_count': subfield.cited_by_count,
+                'created_date': subfield.created_date,
+                'updated_date': subfield.updated_date
+            })
+
+        f_sql_cpy.write(f"COPY {pg_schema}.subfields ({fieldnames(writer_subfields)}) "
+                        f"FROM PROGRAM 'gunzip -c {out_subfields.absolute()}' csv header;\n\n")
+
+    executionTime = (time.time() - startTime)
+    mins = int(executionTime / 60)
+    secs = executionTime - (mins * 60)
+    logging.info(f'Flattened {n_subfields:,} subfields in '
+                 f'{mins}:{secs:.2f} from {partition}')
+
+
+def flatten_fields_partition(partition: Path | str,
+                             out_sql_cpy: Path | str,
+                             out_fields: Path | str,
+                             pg_schema: str,
+                             preserve_ram: bool):
+    logging.info(f'Flattening partition file {partition}')
+    partition: Path = Path(partition)
+    out_sql_cpy: Path = Path(out_sql_cpy)
+    out_fields: Path = Path(out_fields)
+    startTime = time.time()
+
+    with (gzip.open(out_fields, 'wt', encoding='utf-8') as f_fields,
+          open(out_sql_cpy, 'w') as f_sql_cpy,
+          gzip.open(partition, 'rb') as f_in):
+        writer_fields = get_writer(f_fields, [
+            'field_id', 'id_wikipedia', 'id_wikidata', 'display_name', 'description', 'display_name_alternatives',
+            'domain_id', 'domain', 'works_count', 'cited_by_count', 'created_date', 'updated_date'])
+        decoder = Decoder(structs.Field)
+        n_fields = 0
+
+        if preserve_ram:
+            lines = f_in
+        else:
+            lines = f_in.readlines()
+
+        for line in lines:
+            n_fields += 1
+            field = decoder.decode(line)
+            sfid = parse_id(field.id, 'https://openalex.org/fields/')
+
+            writer_fields.writerow({
+                'field_id': sfid,
+                'id_wikipedia': field.ids.wikipedia,
+                'id_wikidata': field.ids.wikidata,
+                'display_name': field.display_name,
+                'description': field.description,
+                'domain_id': parse_id(field.domain.id, 'https://openalex.org/domains/'),
+                'domain': field.domain.display_name,
+                'keywords': prepare_list(field.display_name_alternatives, strip=True),
+                'works_count': field.works_count,
+                'cited_by_count': field.cited_by_count,
+                'created_date': field.created_date,
+                'updated_date': field.updated_date
+            })
+
+        f_sql_cpy.write(f"COPY {pg_schema}.fields ({fieldnames(writer_fields)}) "
+                        f"FROM PROGRAM 'gunzip -c {out_fields.absolute()}' csv header;\n\n")
+
+    executionTime = (time.time() - startTime)
+    mins = int(executionTime / 60)
+    secs = executionTime - (mins * 60)
+    logging.info(f'Flattened {n_fields:,} fields in '
+                 f'{mins}:{secs:.2f} from {partition}')
+
+
+def flatten_domains_partition(partition: Path | str,
+                              out_sql_cpy: Path | str,
+                              out_domains: Path | str,
+                              pg_schema: str,
+                              preserve_ram: bool):
+    logging.info(f'Flattening partition file {partition}')
+    partition: Path = Path(partition)
+    out_sql_cpy: Path = Path(out_sql_cpy)
+    out_domains: Path = Path(out_domains)
+    startTime = time.time()
+
+    with (gzip.open(out_domains, 'wt', encoding='utf-8') as f_domains,
+          open(out_sql_cpy, 'w') as f_sql_cpy,
+          gzip.open(partition, 'rb') as f_in):
+        writer_domains = get_writer(f_domains, [
+            'domain_id', 'id_wikipedia', 'id_wikidata', 'display_name', 'description', 'display_name_alternatives',
+            'works_count', 'cited_by_count', 'created_date', 'updated_date'])
+        decoder = Decoder(structs.Domain)
+        n_domains = 0
+
+        if preserve_ram:
+            lines = f_in
+        else:
+            lines = f_in.readlines()
+
+        for line in lines:
+            n_domains += 1
+            domain = decoder.decode(line)
+            did = int(domain.id[29:])
+
+            writer_domains.writerow({
+                'domain_id': did,
+                'id_wikipedia': domain.ids.wikipedia,
+                'id_wikidata': domain.ids.wikidata,
+                'display_name': domain.display_name,
+                'description': domain.description,
+                'display_name_alternatives': prepare_list(domain.display_name_alternatives, strip=True),
+                'works_count': domain.works_count,
+                'cited_by_count': domain.cited_by_count,
+                'created_date': domain.created_date,
+                'updated_date': domain.updated_date
+            })
+
+        f_sql_cpy.write(f"COPY {pg_schema}.domains ({fieldnames(writer_domains)}) "
+                        f"FROM PROGRAM 'gunzip -c {out_domains.absolute()}' csv header;\n\n")
+
+    executionTime = (time.time() - startTime)
+    mins = int(executionTime / 60)
+    secs = executionTime - (mins * 60)
+    logging.info(f'Flattened {n_domains:,} domains in '
                  f'{mins}:{secs:.2f} from {partition}')
 
 
@@ -832,7 +997,7 @@ def flatten_works_partition(partition: Path | str,
                     'work_b_id': strip_id(rel)
                 })
             for topic_rank, topic in enumerate(work.topics):
-                writer_related.writerow({
+                writer_topics.writerow({
                     'work_id': wid,
                     'topic_id': strip_id(topic.id),
                     'score': topic.score,
@@ -877,20 +1042,32 @@ def flatten_institutions_partition_kw(kwargs):
     return flatten_institutions_partition(**kwargs)
 
 
-def flatten_publisher_partition_kw(kwargs):
-    return flatten_publisher_partition(**kwargs)
+def flatten_publishers_partition_kw(kwargs):
+    return flatten_publishers_partition(**kwargs)
 
 
-def flatten_funder_partition_kw(kwargs):
-    return flatten_funder_partition(**kwargs)
+def flatten_funders_partition_kw(kwargs):
+    return flatten_funders_partition(**kwargs)
 
 
-def flatten_concept_partition_kw(kwargs):
-    return flatten_concept_partition(**kwargs)
+def flatten_concepts_partition_kw(kwargs):
+    return flatten_concepts_partition(**kwargs)
 
 
-def flatten_topic_partition_kw(kwargs):
-    return flatten_topic_partition(**kwargs)
+def flatten_topics_partition_kw(kwargs):
+    return flatten_topics_partition(**kwargs)
+
+
+def flatten_subfields_partition_kw(kwargs):
+    return flatten_subfields_partition(**kwargs)
+
+
+def flatten_fields_partition_kw(kwargs):
+    return flatten_fields_partition(**kwargs)
+
+
+def flatten_domains_partition_kw(kwargs):
+    return flatten_domains_partition(**kwargs)
 
 
 def flatten_sources_partition_kw(kwargs):

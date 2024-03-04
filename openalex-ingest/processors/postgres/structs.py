@@ -381,12 +381,57 @@ class SustainableDevelopmentGoal(Struct, kw_only=True, omit_defaults=True):
     score: float | None = None
 
 
-
-
-
 class TopicHierarchy(Struct, omit_defaults=True, kw_only=True):
     id: str | None = None
     display_name: str | None = None
+
+
+class DomainIds(Struct, kw_only=True, omit_defaults=True):
+    wikidata: str | None = None
+    wikipedia: str | None = None
+
+
+# Domains (4) <- Fields (26) <- Subfields (252) <- Topics (4516)
+class Domain(Struct, kw_only=True, omit_defaults=True):
+    id: str | None = None
+    display_name: str | None = None
+    description: str | None = None
+    display_name_alternatives: list[str] | None = None
+    ids: DomainIds | None = None
+    fields: list[TopicHierarchy] | None = None
+    works_count: int | None = None
+    cited_by_count: int | None = None
+    updated_date: str | None = None
+    created_date: str | None = None
+
+
+class Subfield(Struct, kw_only=True, omit_defaults=True):
+    id: str | None = None
+    display_name: str | None = None
+    description: str | None = None
+    display_name_alternatives: list[str] | None = None
+    ids: DomainIds | None = None
+    field: TopicHierarchy | None = None
+    domain: TopicHierarchy | None = None
+    topics: list[TopicHierarchy] | None = None
+    works_count: int | None = None
+    cited_by_count: int | None = None
+    updated_date: str | None = None
+    created_date: str | None = None
+
+
+class Field(Struct, kw_only=True, omit_defaults=True):
+    id: str | None = None
+    display_name: str | None = None
+    description: str | None = None
+    display_name_alternatives: list[str] | None = None
+    ids: DomainIds | None = None
+    works_count: int | None = None
+    cited_by_count: int | None = None
+    domain: TopicHierarchy | None = None
+    subfields: list[TopicHierarchy] | None = None
+    updated_date: str | None = None
+    created_date: str | None = None
 
 
 class TopicIds(Struct, omit_defaults=True, kw_only=True):
@@ -409,13 +454,18 @@ class Topic(Struct, omit_defaults=True, kw_only=True):
     created_date: str | None = None
 
 
+class TopicHierarchyDehy(Struct, omit_defaults=True, kw_only=True):
+    id: int | None = None
+    display_name: str | None = None
+
+
 class DehydratedTopic(Struct, omit_defaults=True, kw_only=True):
     id: str | None = None
     display_name: str | None = None
     score: float | None = None
-    subfield: TopicHierarchy | None = None
-    field: TopicHierarchy | None = None
-    domain: TopicHierarchy | None = None
+    subfield: TopicHierarchyDehy | None = None
+    field: TopicHierarchyDehy | None = None
+    domain: TopicHierarchyDehy | None = None
 
 
 class Work(Struct, kw_only=True, omit_defaults=True):

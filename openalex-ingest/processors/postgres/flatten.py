@@ -8,12 +8,15 @@ from processors.postgres.deletion import generate_deletions_from_merge_file
 from processors.postgres.flatten_partition import (
     flatten_authors_partition_kw,
     flatten_institutions_partition_kw,
-    flatten_funder_partition_kw,
-    flatten_concept_partition_kw,
+    flatten_funders_partition_kw,
+    flatten_concepts_partition_kw,
     flatten_works_partition_kw,
-    flatten_publisher_partition_kw,
+    flatten_publishers_partition_kw,
     flatten_sources_partition_kw,
-    flatten_topic_partition_kw
+    flatten_topics_partition_kw,
+    flatten_subfields_partition_kw,
+    flatten_fields_partition_kw,
+    flatten_domains_partition_kw
 )
 
 
@@ -116,7 +119,7 @@ def flatten_publishers(tmp_dir: Path, snapshot_dir: Path, last_update: str, pg_s
     partitions, merged = get_globs(snapshot_dir, last_update, 'publisher')
     logging.info(f'Looks like there are {len(partitions):,} publisher partitions '
                  f'and {len(merged):,} merged_ids partitions since last update ({last_update}).')
-    run(flatten_publisher_partition_kw, [
+    run(flatten_publishers_partition_kw, [
         {
             'partition': partition,
             'out_sql_cpy': tmp_dir / f'pg-publisher-{name_part(partition)}-cpy.sql',
@@ -142,7 +145,7 @@ def flatten_funders(tmp_dir: Path, snapshot_dir: Path, last_update: str, pg_sche
     partitions, merged = get_globs(snapshot_dir, last_update, 'funder')
     logging.info(f'Looks like there are {len(partitions):,} funder partitions '
                  f'and {len(merged):,} merged_ids partitions since last update ({last_update}).')
-    run(flatten_funder_partition_kw,
+    run(flatten_funders_partition_kw,
         [
             {
                 'partition': partition,
@@ -169,7 +172,7 @@ def flatten_concepts(tmp_dir: Path, snapshot_dir: Path, last_update: str, pg_sch
     partitions, merged = get_globs(snapshot_dir, last_update, 'concept')
     logging.info(f'Looks like there are {len(partitions):,} concepts partitions '
                  f'and {len(merged):,} merged_ids partitions since last update ({last_update}).')
-    run(flatten_concept_partition_kw,
+    run(flatten_concepts_partition_kw,
         [
             {
                 'partition': partition,
@@ -198,12 +201,11 @@ def flatten_topics(tmp_dir: Path, snapshot_dir: Path, last_update: str, pg_schem
     partitions, merged = get_globs(snapshot_dir, last_update, 'topic')
     logging.info(f'Looks like there are {len(partitions):,} topic partitions '
                  f'and {len(merged):,} merged_ids partitions since last update ({last_update}).')
-    run(flatten_topic_partition_kw,
+    run(flatten_topics_partition_kw,
         [
             {
                 'partition': partition,
                 'out_sql_cpy': tmp_dir / f'pg-concept-{name_part(partition)}-cpy.sql',
-                'out_sql_del': tmp_dir / f'pg-concept-{name_part(partition)}-del.sql',
                 'out_topics': tmp_dir / f'pg-topic-{name_part(partition)}_topics.csv.gz',
                 'preserve_ram': preserve_ram,
                 'pg_schema': pg_schema
@@ -211,12 +213,62 @@ def flatten_topics(tmp_dir: Path, snapshot_dir: Path, last_update: str, pg_schem
             for partition in partitions
         ], parallelism=parallelism, override=override)
 
-    if not skip_deletion:
-        generate_deletions_from_merge_file(merge_files=merged,
-                                           out_file=tmp_dir / f'pg-topic-{last_update}-merged_del.sql',
-                                           object_type='topic',
-                                           pg_schema=pg_schema,
-                                           batch_size=1000)
+
+def flatten_subfields(tmp_dir: Path, snapshot_dir: Path, last_update: str, pg_schema: str, parallelism: int = 8,
+                      skip_deletion: bool = False,
+                      override: bool = False, preserve_ram: bool = True):
+    partitions, merged = get_globs(snapshot_dir, last_update, 'subfield')
+    logging.info(f'Looks like there are {len(partitions):,} subfield partitions '
+                 f'and {len(merged):,} merged_ids partitions since last update ({last_update}).')
+    run(flatten_subfields_partition_kw,
+        [
+            {
+                'partition': partition,
+                'out_sql_cpy': tmp_dir / f'pg-concept-{name_part(partition)}-cpy.sql',
+                'out_subfields': tmp_dir / f'pg-subfield-{name_part(partition)}_subfields.csv.gz',
+                'preserve_ram': preserve_ram,
+                'pg_schema': pg_schema
+            }
+            for partition in partitions
+        ], parallelism=parallelism, override=override)
+
+
+def flatten_fields(tmp_dir: Path, snapshot_dir: Path, last_update: str, pg_schema: str, parallelism: int = 8,
+                   skip_deletion: bool = False,
+                   override: bool = False, preserve_ram: bool = True):
+    partitions, merged = get_globs(snapshot_dir, last_update, 'field')
+    logging.info(f'Looks like there are {len(partitions):,} field partitions '
+                 f'and {len(merged):,} merged_ids partitions since last update ({last_update}).')
+    run(flatten_fields_partition_kw,
+        [
+            {
+                'partition': partition,
+                'out_sql_cpy': tmp_dir / f'pg-concept-{name_part(partition)}-cpy.sql',
+                'out_fields': tmp_dir / f'pg-field-{name_part(partition)}_fields.csv.gz',
+                'preserve_ram': preserve_ram,
+                'pg_schema': pg_schema
+            }
+            for partition in partitions
+        ], parallelism=parallelism, override=override)
+
+
+def flatten_domains(tmp_dir: Path, snapshot_dir: Path, last_update: str, pg_schema: str, parallelism: int = 8,
+                    skip_deletion: bool = False,
+                    override: bool = False, preserve_ram: bool = True):
+    partitions, merged = get_globs(snapshot_dir, last_update, 'domain')
+    logging.info(f'Looks like there are {len(partitions):,} domain partitions '
+                 f'and {len(merged):,} merged_ids partitions since last update ({last_update}).')
+    run(flatten_domains_partition_kw,
+        [
+            {
+                'partition': partition,
+                'out_sql_cpy': tmp_dir / f'pg-concept-{name_part(partition)}-cpy.sql',
+                'out_domains': tmp_dir / f'pg-domain-{name_part(partition)}_domains.csv.gz',
+                'preserve_ram': preserve_ram,
+                'pg_schema': pg_schema
+            }
+            for partition in partitions
+        ], parallelism=parallelism, override=override)
 
 
 def flatten_sources(tmp_dir: Path, snapshot_dir: Path, last_update: str, pg_schema: str, parallelism: int = 8,
@@ -266,6 +318,7 @@ def flatten_works(tmp_dir: Path, snapshot_dir: Path, last_update: str, pg_schema
                 'out_m2m_references': tmp_dir / f'pg-work-{name_part(partition)}_works_references.csv.gz',
                 'out_m2m_related': tmp_dir / f'pg-work-{name_part(partition)}_works_related.csv.gz',
                 'out_m2m_sdgs': tmp_dir / f'pg-work-{name_part(partition)}_works_sdgs.csv.gz',
+                'out_m2m_topics': tmp_dir / f'pg-work-{name_part(partition)}_works_topics.csv.gz',
                 'preserve_ram': preserve_ram,
                 'pg_schema': pg_schema
             }
