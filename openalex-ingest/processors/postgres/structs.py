@@ -381,6 +381,9 @@ class SustainableDevelopmentGoal(Struct, kw_only=True, omit_defaults=True):
     score: float | None = None
 
 
+
+
+
 class TopicHierarchy(Struct, omit_defaults=True, kw_only=True):
     id: str | None = None
     display_name: str | None = None

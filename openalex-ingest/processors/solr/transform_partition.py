@@ -93,6 +93,12 @@ def transform_partition(in_file: str | Path, out_file: str | Path) -> tuple[int,
                 pmid = work.ids.pmid
                 pmcid = work.ids.pmcid
 
+            is_published = None
+            is_accepted = None
+            if work.primary_location:
+                is_published = work.primary_location.is_published
+                is_accepted = work.primary_location.is_accepted
+
             wo = structs.WorkOut(id=wid,
                                  display_name=work.display_name,
                                  title=work.title,
@@ -110,8 +116,8 @@ def transform_partition(in_file: str | Path, out_file: str | Path) -> tuple[int,
                                  is_oa=work.is_oa,
                                  is_paratext=work.is_paratext,
                                  is_retracted=work.is_retracted,
-                                 is_published=work.primary_location.is_published,
-                                 is_accepted=work.primary_location.is_accepted,
+                                 is_published=is_published,
+                                 is_accepted=is_accepted,
                                  language=work.language,
                                  locations=locations,
                                  publication_date=work.publication_date,
