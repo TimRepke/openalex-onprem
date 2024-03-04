@@ -2,6 +2,8 @@
 
 # Set this to exit the script when an error occurs
 set -e
+# Set this to print commands before executing
+set -o xtrace
 
 # Remember where we are right now, later we might change to other places and want to find our way back
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
