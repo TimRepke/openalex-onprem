@@ -449,31 +449,38 @@
   </fieldType>
   <field name="_text_" type="text_general" multiValued="true" indexed="true" stored="false"/>
   <field name="_version_" type="plong" indexed="false" stored="false"/>
-  <field name="abstract" type="text_general" docValues="false" multiValued="false" indexed="true" required="false" stored="true"/>
-  <field name="authorships" type="string" uninvertible="false" docValues="false" large="true" indexed="false" required="false"/>
-  <field name="biblio" type="string" uninvertible="false" docValues="false" large="true" indexed="false" required="false"/>
-  <field name="cited_by_count" type="pint" uninvertible="false" indexed="false" required="false" stored="false" useDocValuesAsStored="true"/>
-  <field name="created_date" type="pdate" docValues="true" indexed="true" stored="false" useDocValuesAsStored="true"/>
-  <field name="display_name" type="text_general" multiValued="false" required="false"/>
-  <field name="doi" type="string" docValues="true" indexed="true" stored="false" useDocValuesAsStored="true"/>
+
   <field name="id" type="string" multiValued="false" indexed="true" required="true" stored="true"/>
+  <field name="doi" type="string" docValues="true" indexed="true" stored="false" useDocValuesAsStored="true"/>
+  <field name="mag" type="string" docValues="true" indexed="true" stored="false" useDocValuesAsStored="true"/>
+  <field name="pmcid" type="string" docValues="true" indexed="true" stored="false" useDocValuesAsStored="true"/>
+  <field name="pmid" type="string" docValues="true" indexed="true" stored="false" useDocValuesAsStored="true"/>
+
+  <field name="display_name" type="text_general" multiValued="false" required="false"/>
+  <field name="title" type="text_general" docValues="false" multiValued="false" indexed="true" stored="true"/>
+  <field name="title_abstract" type="text_general" docValues="false" multiValued="false" indexed="true" stored="true"/>
+  <field name="abstract" type="text_general" docValues="false" multiValued="false" indexed="true" required="false" stored="true"/>
+
+  <field name="type" type="string" docValues="true" indexed="true" stored="false" useDocValuesAsStored="true"/>
+  <field name="language" type="string" docValues="true" indexed="true" stored="false" useDocValuesAsStored="true"/>
+  <field name="publication_date" type="pdate" docValues="true" indexed="true" stored="false" useDocValuesAsStored="true"/>
+  <field name="publication_year" type="pint" docValues="true" indexed="true" stored="false" useDocValuesAsStored="true"/>
+
   <field name="is_oa" type="boolean" docValues="true" indexed="true" stored="false" useDocValuesAsStored="true"/>
   <field name="is_published" type="boolean" docValues="true" indexed="true" stored="false" useDocValuesAsStored="true"/>
   <field name="is_accepted" type="boolean" docValues="true" indexed="true" stored="false" useDocValuesAsStored="true"/>
   <field name="is_paratext" type="boolean" docValues="true" indexed="true" stored="false" useDocValuesAsStored="true"/>
   <field name="is_retracted" type="boolean" docValues="true" indexed="true" stored="false" useDocValuesAsStored="true"/>
-  <field name="language" type="string" docValues="true" indexed="true" stored="false" useDocValuesAsStored="true"/>
+  <field name="cited_by_count" type="pint" uninvertible="false" indexed="false" required="false" stored="false" useDocValuesAsStored="true"/>
+
+  <field name="authorships" type="string" uninvertible="false" docValues="false" large="true" indexed="false" required="false"/>
+  <field name="topics" type="string" uninvertible="false" docValues="false" large="true" indexed="false" required="false"/>
+  <field name="biblio" type="string" uninvertible="false" docValues="false" large="true" indexed="false" required="false"/>
   <field name="locations" type="string" uninvertible="false" docValues="false" large="true" indexed="false" required="false"/>
-  <field name="mag" type="string" docValues="true" indexed="true" stored="false" useDocValuesAsStored="true"/>
-  <field name="pmcid" type="string" docValues="true" indexed="true" stored="false" useDocValuesAsStored="true"/>
-  <field name="pmid" type="string" docValues="true" indexed="true" stored="false" useDocValuesAsStored="true"/>
-  <field name="publication_date" type="pdate" docValues="true" indexed="true" stored="false" useDocValuesAsStored="true"/>
-  <field name="publication_year" type="pint" docValues="true" indexed="true" stored="false" useDocValuesAsStored="true"/>
-  <field name="title" type="text_general" docValues="false" multiValued="false" indexed="true" stored="true"/>
-  <field name="title_abstract" type="text_general" docValues="false" multiValued="false" indexed="true" stored="true"/>
-  <field name="type" type="string" docValues="true" indexed="true" stored="false" useDocValuesAsStored="true"/>
-  <field name="topics" type="string" docValues="true" indexed="true" stored="false" useDocValuesAsStored="true"/>
+
+  <field name="created_date" type="pdate" docValues="true" indexed="true" stored="false" useDocValuesAsStored="true"/>
   <field name="updated_date" type="pdate" docValues="true" indexed="true" stored="false" useDocValuesAsStored="true"/>
+
   <dynamicField name="*_txt_en_split_tight" type="text_en_splitting_tight" indexed="true" stored="true"/>
   <dynamicField name="*_descendent_path" type="descendent_path" indexed="true" stored="true"/>
   <dynamicField name="*_ancestor_path" type="ancestor_path" indexed="true" stored="true"/>

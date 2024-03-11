@@ -120,7 +120,7 @@ Solr-switch:
     - echo "$OA_SCRIPT_DIR"
     - echo "$OA_ENV_FILE"
     - cd "$OA_SCRIPT_DIR/openalex-ingest" || exit
-    - ./update.sh --config "$OA_ENV_FILE" --solr --solr-swp
+    - ./update.sh --config "$OA_ENV_FILE" --solr --solr-swp --with-sudo
 
 Postgres-flat:
   stage: postgres
