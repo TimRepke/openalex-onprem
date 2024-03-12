@@ -34,7 +34,7 @@ stages:
   - solr
   - postgres
 
-Setup-environment:
+Setup-environment|1:
   stage: build
   tags:
     - rechner
@@ -74,10 +74,62 @@ Setup-environment:
   when: manual
   allow_failure: false
 
-Fetch-S3-bucket:
+
+Setup-environment|2:
+  stage: build
+  tags:
+    - rechner
+  script:
+    - echo "Current working directory and user"
+    - pwd
+    - whoami
+    - groups
+    - echo $HOME
+    - echo "Reset git config"
+    - rm -f /home/gitlab-runner/.gitconfig
+    - git config --global url."https://gitlab.pik-potsdam.de/".insteadOf "ssh://git@gitlab.pik-potsdam.de/"
+    - git config --global user.name gitlab-runner
+    - git config --global user.email gitlab-runner@gitlab.pik-potsdam.de
+    - git config --global -l --show-origin
+    - git config --global --add safe.directory "$OA_SCRIPT_DIR"
+    #
+    - echo "$OA_SCRIPT_DIR"
+    - echo "$OA_TMP_DIR"
+    - echo "$OA_ENV_FILE"
+    #
+    - cd "$OA_SCRIPT_DIR" || exit
+    #
+    - echo "Dropping virtual environment"
+    - pwd
+    - rm -rf venv
+    - echo "Fetching updated source"
+    - git stash  # "reset" softly by stashing (in case files changed)
+    - git pull origin main  # pull from origin
+    - echo "Creating new virtual environment"
+    - python3.11 -m venv venv
+    - source venv/bin/activate
+    - which python
+    - python -V
+    - echo "Installing requirements"
+    - pip install -r requirements.txt
+  when: manual
+  allow_failure: false
+
+Fetch-S3-bucket|1:
   stage: sync
-  needs: ["Setup-environment" ]
-  dependencies: ["Setup-environment"]
+  needs: ["Setup-environment|1"]
+  when: on_success
+  tags:
+    - rechner
+  script:
+    - echo "$OA_SCRIPT_DIR"
+    - echo "$OA_TMP_DIR"
+    - echo "$OA_ENV_FILE"
+    - cd "$OA_SCRIPT_DIR/openalex-ingest" || exit
+    - ./update.sh --config "$OA_ENV_FILE" --sync --no-progress --with-sudo
+Fetch-S3-bucket|2:
+  stage: sync
+  needs: ["Setup-environment|2"]
   when: on_success
   tags:
     - rechner
@@ -88,9 +140,10 @@ Fetch-S3-bucket:
     - cd "$OA_SCRIPT_DIR/openalex-ingest" || exit
     - ./update.sh --config "$OA_ENV_FILE" --sync --no-progress --with-sudo
 
+
 Solr-second:
   stage: solr
-  needs: ["Fetch-S3-bucket"]
+  needs: ["Fetch-S3-bucket|1"]
   when: on_success
   tags:
     - rechner
@@ -124,7 +177,7 @@ Solr-switch:
 
 Postgres-flat:
   stage: postgres
-  needs: ["Solr-switch"]
+  needs: ["Fetch-S3-bucket|2"]
   when: on_success
   tags:
     - rechner
@@ -186,7 +239,6 @@ Postgres-indices:
     - echo "$ENV_FILE"
     - cd "$OA_SCRIPT_DIR/openalex-ingest" || exit
     - ./update.sh --config "$OA_ENV_FILE" --pg --pg-ind
-
 
 Postgres-clean:
   stage: postgres
