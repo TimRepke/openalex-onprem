@@ -23,12 +23,13 @@ def prepare_list(lst: list[str] | None, strip: bool = False) -> str | None:
         return string.replace(',', '').replace('"', '').replace("'", '')
 
     if lst is not None and len(lst) > 0:
-        prepped = ([strip_id(clean(li))
-                    for li in lst
-                    if li is not None and len(li) > 0] if strip else
-                   [clean(li)
-                    for li in lst
-                    if li is not None and len(li) > 0])
+        if strip:
+            prepped = [strip_id(clean(li))
+                       for li in lst]
+        else:
+            prepped = [clean(li)
+                       for li in lst]
+        prepped = [li for li in prepped if li is not None and len(li) > 0]
         if len(prepped) > 0:
             return '{' + ','.join(prepped) + '}'
 
@@ -596,7 +597,7 @@ def flatten_topics_partition(partition: Path | str,
                 'id_wikipedia': topic.ids.wikipedia,
                 'display_name': topic.display_name,
                 'description': topic.description,
-                'keywords': prepare_list(topic.keywords, strip=True),
+                'keywords': prepare_list(topic.keywords, strip=False),
                 'subfield_id': parse_id(topic.subfield.id, 'https://openalex.org/subfields/'),
                 'subfield': topic.subfield.display_name,
                 'field_id': parse_id(topic.field.id, 'https://openalex.org/fields/'),
