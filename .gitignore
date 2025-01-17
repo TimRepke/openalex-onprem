@@ -27,3 +27,4 @@ solr/
 pg_users_secret.sql
 !openalex-ingest/processors/solr
 !openalex-ingest/setup/configset
+openalex-guts

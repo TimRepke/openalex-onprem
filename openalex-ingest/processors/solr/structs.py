@@ -1,3 +1,5 @@
+from typing import Literal
+
 from msgspec import Struct
 
 
@@ -97,6 +99,16 @@ class Topic(Struct, omit_defaults=True, kw_only=True):
     domain: TopicHierarchy | None = None
 
 
+OAStatus = Literal['diamond', 'gold', 'green', 'hybrid', 'bronze', 'closed']
+
+
+class OpenAccess(Struct, omit_defaults=True, kw_only=True):
+    any_repository_has_fulltext: bool | None = None
+    is_oa: bool | None = None
+    oa_status: str | None = None  # OAStatus
+    oa_url: str | None = None
+
+
 class Work(Struct, kw_only=True, omit_defaults=True):
     abstract_inverted_index: dict[str, list[int]] | None = None
     authorships: list[Authorship] | None = None
@@ -123,7 +135,7 @@ class Work(Struct, kw_only=True, omit_defaults=True):
     indexed_in: list[str] | None = None
     institutions_distinct_count: int | None = None
     is_authors_truncated: bool | None = None
-    is_oa: bool | None = None
+    # is_oa: bool | None = None
     is_paratext: bool | None = None
     is_retracted: bool | None = None
     language: str | None = None
@@ -132,7 +144,7 @@ class Work(Struct, kw_only=True, omit_defaults=True):
     # locations_count
     # mesh
     # ngrams_url
-    # open_access
+    open_access: OpenAccess | None = None
     primary_location: Location | None = None
     # primary_topic
     publication_date: str | None = None
@@ -149,7 +161,7 @@ class Work(Struct, kw_only=True, omit_defaults=True):
 
 class WorkOut(Struct, kw_only=True, omit_defaults=True):
     id: str
-    display_name: str | None = None
+    #display_name: str | None = None
     title: str | None = None
     abstract: str | None = None
     title_abstract: str | None = None

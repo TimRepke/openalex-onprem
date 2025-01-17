@@ -99,21 +99,24 @@ def transform_partition(in_file: str | Path, out_file: str | Path) -> tuple[int,
                 is_published = work.primary_location.is_published
                 is_accepted = work.primary_location.is_accepted
 
+            is_oa = None
+            if work.open_access:
+                is_oa = work.open_access.is_oa
+
             wo = structs.WorkOut(id=wid,
-                                 display_name=work.display_name,
+                                 # display_name=work.display_name,
                                  title=work.title,
                                  abstract=abstract,
                                  title_abstract=ta,
                                  authorships=authorships,
                                  biblio=biblio,
                                  cited_by_count=work.cited_by_count,
-                                 created_date=work.created_date,
                                  doi=work.doi,
                                  mag=mag,
                                  pmid=pmid,
                                  pmcid=pmcid,
                                  indexed_in=indexed_in,
-                                 is_oa=work.is_oa,
+                                 is_oa=is_oa,
                                  is_paratext=work.is_paratext,
                                  is_retracted=work.is_retracted,
                                  is_published=is_published,
@@ -124,6 +127,7 @@ def transform_partition(in_file: str | Path, out_file: str | Path) -> tuple[int,
                                  publication_year=work.publication_year,
                                  topics=topics,
                                  type=work.type,
+                                 created_date=work.created_date,
                                  updated_date=work.updated_date)
 
             encoder.encode_into(wo, buffer)
