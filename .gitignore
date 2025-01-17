@@ -31,8 +31,8 @@ pg_users_secret.sql
 
 openalex-guts
 
-!meta-cache/data/
-meta-cache/config/
-!meta-cache/config/logging.toml
-!meta-cache/config/default.env
-!meta-cache/config/hypercorn.toml
+meta_cache/config/
+!meta_cache/data/
+!meta_cache/config/logging.toml
+!meta_cache/config/default.env
+!meta_cache/config/hypercorn.toml
