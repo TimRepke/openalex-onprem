@@ -70,7 +70,7 @@ Setup-environment|1:
     - which python
     - python -V
     - echo "Installing requirements"
-    - pip install -r requirements.txt
+    - pip install -r openalex-ingest/requirements.txt
   when: manual
   allow_failure: false
 
@@ -111,7 +111,7 @@ Setup-environment|2:
     - which python
     - python -V
     - echo "Installing requirements"
-    - pip install -r requirements.txt
+    - pip install -r openalex-ingest/requirements.txt
   when: manual
   allow_failure: false
 

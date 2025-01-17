@@ -1,6 +1,2 @@
-msgspec==0.19.0
-Cython==3.1.0a1
-typer==0.15.1
-pydantic==2.10.5
-httpx==0.28.1
-pydantic-settings==2.7.1
+-r openalex-ingest/requirements.txt
+-r meta-cache/requirements.txt

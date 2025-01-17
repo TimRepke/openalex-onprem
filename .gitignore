@@ -25,6 +25,14 @@ build/
 configset/
 solr/
 pg_users_secret.sql
+
 !openalex-ingest/processors/solr
 !openalex-ingest/setup/configset
+
 openalex-guts
+
+!meta-cache/data/
+meta-cache/config/
+!meta-cache/config/logging.toml
+!meta-cache/config/default.env
+!meta-cache/config/hypercorn.toml
