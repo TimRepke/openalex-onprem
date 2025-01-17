@@ -73,6 +73,12 @@ def transform_partition(in_file: str | Path, out_file: str | Path) -> tuple[int,
                     )
                     for loc in work.locations]).decode()
 
+            publisher = None
+            publisher_id = None
+            if work.primary_location is not None and work.primary_location.source is not None:
+                publisher_id = work.primary_location.source.host_organization
+                publisher = work.primary_location.source.host_organization_name
+
             topics = None
             if work.topics is not None and len(work.topics) > 0:
                 topics = encoder.encode(work.topics).decode()
@@ -125,6 +131,8 @@ def transform_partition(in_file: str | Path, out_file: str | Path) -> tuple[int,
                                  locations=locations,
                                  publication_date=work.publication_date,
                                  publication_year=work.publication_year,
+                                 publisher=publisher,
+                                 publisher_id=publisher_id,
                                  topics=topics,
                                  type=work.type,
                                  created_date=work.created_date,
