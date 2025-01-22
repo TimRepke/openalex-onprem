@@ -1,2 +1,2 @@
 -r openalex-ingest/requirements.txt
--r meta-cache/requirements.txt
+-r meta_cache/requirements.txt

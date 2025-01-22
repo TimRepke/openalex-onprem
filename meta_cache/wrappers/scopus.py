@@ -8,15 +8,20 @@ from sqlmodel import Session
 
 from meta_cache.data import DatabaseEngine
 from meta_cache.data.crud import Query
-
-from meta_cache.data.schema import ApiKey, Record
-from meta_cache.wrappers.base import AbstractWrapper, Request, get
+from meta_cache.data.schema import ApiKey, Record, AuthApiKeyLink
+from meta_cache.data.util import get
+from .base import AbstractWrapper
 
 logger = logging.getLogger('wrapper-scopus')
 PAGE_SIZE = 25
 
 
 class ScopusWrapper(AbstractWrapper):
+    name = 'scopus'
+    db_field_id = 'scopus_id'
+    db_field_raw = 'raw_scopus'
+    db_field_time = 'time_scopus'
+    db_field_requested = 'requested_scopus'
 
     @staticmethod
     def get_title(obj: dict[str, Any]) -> str | None:
@@ -31,30 +36,20 @@ class ScopusWrapper(AbstractWrapper):
         return obj.get('prism:doi')
 
     @staticmethod
-    def get_api_key(session: Session) -> ApiKey:
-        stmt = (
-            select(ApiKey)
-            .where(ApiKey.active)
-            .order_by(desc(ApiKey.requests_remaining))
-            .limit(1)
-        )
-        key = session.exec(stmt).one_or_none()
-        if key is None:
-            raise PermissionError('No valid Scopus API key left!')
-        return key
+    def get_id(obj: dict[str, Any]) -> str | None:
+        return obj.get('eid')
+
+    @staticmethod
+    def _api_key_query_extra() -> str:
+        return 'AND (api_key.scopus_requests_remaining IS NULL OR api_key.scopus_requests_remaining > 0)'
 
     @classmethod
-    def fetch(cls, db_engine: DatabaseEngine, query: Query) -> Generator[Record, None, None]:
+    def fetch(cls, db_engine: DatabaseEngine, query: Query, auth_key: str) -> Generator[Record, None, None]:
         parts = []
-        scopus_ids = set()
         if query.scopus_id:
-            parts += [f'EID({sid})' for sid in query.scopus_id]
-            scopus_ids = set(query.scopus_id)
-
-        dois = set()
+            parts += [f'EID({sid})' for sid in set(query.scopus_id)]
         if query.doi:
-            parts += [f'DOI({doi})' for doi in query.doi]
-            dois = set(query.doi)
+            parts += [f'DOI({doi})' for doi in set(query.doi)]
 
         if len(parts) == 0:
             raise ValueError('Found no scopus ids or DOIs to query scopus')
@@ -64,71 +59,47 @@ class ScopusWrapper(AbstractWrapper):
         next_cursor = '*'
         n_pages = 0
         n_records = 0
-        with db_engine.session() as session:
-            while True:
-                logger.info(f'Fetching page {n_pages}...')
-                key = cls.get_api_key(session=session)
-                page = httpx.get(
-                    'https://api.elsevier.com/content/search/scopus',
-                    params={
-                        'query': advanced_query,
-                        'cursor': next_cursor,
-                        'view': 'COMPLETE',
-                    },
-                    headers={
-                        'Accept': 'application/json',
-                        "X-ELS-APIKey": key.api_key,
-                    },
-                )
+        while True:
+            logger.info(f'Fetching page {n_pages}...')
+            key = cls.get_api_keys(db_engine=db_engine, auth_key=auth_key)[0]
 
-                key.requests_limit = page.headers.get('x-ratelimit-limit')
-                key.requests_remaining = page.headers.get('x-ratelimit-remaining')
-                key.requests_reset = page.headers.get('x-ratelimit-reset')
-                session.commit()
+            page = httpx.get(
+                'https://api.elsevier.com/content/search/scopus',
+                params={
+                    'query': advanced_query,
+                    'cursor': next_cursor,
+                    'view': 'COMPLETE',
+                },
+                headers={
+                    'Accept': 'application/json',
+                    "X-ELS-APIKey": key.api_key,
+                },
+                proxy=key.proxy,
+            )
 
-                n_pages += 1
-                data = page.json()
+            key.scopus_requests_limit = page.headers.get('x-ratelimit-limit')
+            key.scopus_requests_remaining = page.headers.get('x-ratelimit-remaining')
+            key.scopus_requests_reset = page.headers.get('x-ratelimit-reset')
+            cls.log_api_key_use(db_engine=db_engine, key=key)
 
-                next_cursor = get(data, 'search-results', 'cursor', '@next', default=None)
-                entries = get(data, 'search-results', 'entry', default=[])
+            n_pages += 1
+            data = page.json()
 
-                if len(entries) == 0:
-                    break
+            next_cursor = get(data, 'search-results', 'cursor', '@next', default=None)
+            entries = get(data, 'search-results', 'entry', default=[])
 
-                for entry in entries:
+            if len(entries) == 0:
+                break
 
-                    doi = cls.get_doi(entry)
-                    if doi is not None:
-                        dois.remove(doi)
-
-                    scopus_id = entry.get('eid')
-                    if scopus_id is not None:
-                        scopus_ids.remove(scopus_id)
-
-                    n_records += 1
-                    yield Record(
-                        title=cls.get_title(entry),
-                        abstract=cls.get_abstract(entry),
-                        doi=doi,
-                        scopus_id=scopus_id,
-                        raw_scopus=entry,
-                        time_scopus=datetime.now(),
-                        requested_scopus=True,
-                    )
-                logger.debug(f'Found {n_records:,} records after processing page {n_pages}')
-
-            logger.info(f'Number of missing DOIs: {len(dois)} | Number of missing scopus IDs: {len(scopus_ids)}')
-
-            for doi in dois:
+            for entry in entries:
+                n_records += 1
                 yield Record(
-                    doi=doi,
+                    title=cls.get_title(entry),
+                    abstract=cls.get_abstract(entry),
+                    doi=cls.get_doi(entry),
+                    scopus_id=cls.get_id(entry),
+                    raw_scopus=entry,
                     time_scopus=datetime.now(),
-                    requested_scopus=False,
+                    requested_scopus=True,
                 )
-
-            for scopus_id in scopus_ids:
-                yield Record(
-                    scopus_id=scopus_id,
-                    time_scopus=datetime.now(),
-                    requested_scopus=False,
-                )
+            logger.debug(f'Found {n_records:,} records after processing page {n_pages}')

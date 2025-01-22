@@ -1,28 +1,27 @@
-from abc import ABC, abstractmethod
 from enum import Enum
-from typing import Any
+from typing import Type
 
-from pydantic import BaseModel
-from sqlalchemy import select
+from .base import AbstractWrapper
+from .dimensions import DimensionsWrapper
+from .scopus import ScopusWrapper
 
-from meta_cache.data import Record, DatabaseEngine, ApiKey
-from meta_cache.data.crud import Query
+AnyWrapper = ScopusWrapper | DimensionsWrapper
 
 
-class Wrapper(Enum, str):
+class Wrapper(str, Enum):
     SCOPUS = 'scopus'
+    DIMENSIONS = 'dimensions'
     WOS = 'wos'
     S2 = 's2'
-    DIMENSIONS = 'dimensions'
+    PUBMED = 'pubmed'
 
+    @classmethod
+    def list(cls) -> list[str]:
+        return list(map(lambda c: c.value, cls))
 
-class Request(Query):
-    lookup_only: bool = True
-    source: Wrapper = Wrapper.SCOPUS
-
-
-def request() -> list[Record]:
-    if preferred_wrapper == Wrapper.SCOPUS or scopus_id is not None:
-        pass
-
-    pass
+    @classmethod
+    def get(cls, key: 'Wrapper') -> Type[AnyWrapper]:
+        if key == Wrapper.SCOPUS:
+            return ScopusWrapper
+        if key == Wrapper.DIMENSIONS:
+            return DimensionsWrapper
