@@ -139,8 +139,6 @@ class Work(Struct, kw_only=True, omit_defaults=True):
     is_paratext: bool | None = None
     is_retracted: bool | None = None
     language: str | None = None
-    publisher: str | None = None
-    publisher_id: str | None = None
     # license
     locations: list[Location] | None = None
     # locations_count
@@ -184,6 +182,9 @@ class WorkOut(Struct, kw_only=True, omit_defaults=True):
     is_published: bool | None = None
     is_accepted: bool | None = None
     language: str | None = None
+
+    publisher: str | None = None
+    publisher_id: str | None = None
 
     locations: str | None = None  # list[Location]
     topics: str | None = None  # list[Topic]
