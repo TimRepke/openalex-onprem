@@ -1,11 +1,12 @@
 import logging
-from fastapi import APIRouter, Header, Depends
+from fastapi import APIRouter, Header, Depends, Body
+from sqlmodel import select, or_
 
-from meta_cache.handlers.models import CacheRequest, CacheResponse
+from meta_cache.handlers.models import CacheRequest, CacheResponse, DehydratedRecord
 from meta_cache.handlers.crud import CacheResponseHandler
 from meta_cache.handlers.wrappers import get_wrapper
-from meta_cache.handlers.schema import AuthKey
-from meta_cache.handlers.wrapper import WrapperEnum
+from meta_cache.handlers.schema import AuthKey, Record
+from meta_cache.handlers.util import get_ors
 
 from .db import db_engine
 from .queue import queues, run
@@ -38,3 +39,32 @@ async def lookup(request: CacheRequest, auth_key: AuthKey = Depends(is_valid_key
     logger.debug(f'Job {job.id} @ {job.origin}')
 
     return handler.response
+
+
+@router.post('/write')
+async def write(reference: Record, auth_key: AuthKey = Depends(is_valid_key)) -> bool:
+    ret = False
+    if auth_key.write:
+        logger.debug('Received new record')
+        with db_engine.session() as session:
+            for record in session.exec(select(Record).where(or_(*get_ors(reference)))):
+                logger.debug(f'Found received record as {record.record_id}')
+                ret = True
+                record.sqlmodel_update(reference.model_dump(exclude_unset=True))
+                session.add(record)
+            if not ret:
+                session.add(reference)
+                ret = True
+            session.commit()
+    return ret
+
+
+@router.post('/read', response_model=CacheResponse)
+async def read(openalex_ids: list[str] = Body(), auth_key: AuthKey = Depends(is_valid_key)) -> DehydratedRecord:
+    if auth_key.write:
+        if len(openalex_ids) > 200:
+            raise PermissionError('Requested too many openalex ids at once!')
+
+        logger.debug(f'Requested {len(openalex_ids)} records')
+        with db_engine.session() as session:
+            return session.exec(select(Record).where(Record.openalex_id.in_(openalex_ids))).all()

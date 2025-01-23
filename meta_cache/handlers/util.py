@@ -1,5 +1,6 @@
 from typing import Any
 import pandas as pd
+from sqlalchemy.sql._typing import _ColumnExpressionArgument
 
 from .models import Reference
 from .schema import Record
@@ -47,3 +48,10 @@ def mark_status(df: pd.DataFrame, record: Record, status: str = 'hit'):
             df.loc[mask, 'title'] = record.title
         if record.abstract:
             df.loc[mask, 'abstract'] = record.abstract
+
+
+def get_ors(reference: Reference | Record) -> list[_ColumnExpressionArgument[bool]]:
+    return [
+        getattr(Record, field) == value
+        for field, value in Reference.ids(reference)
+    ]

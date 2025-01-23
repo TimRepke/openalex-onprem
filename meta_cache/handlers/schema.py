@@ -93,4 +93,7 @@ class AuthKey(SQLModel, table=True):
     note: str
     active: bool = True
 
+    read: bool = False
+    write: bool = False
+
     api_keys: list['ApiKey'] = Relationship(back_populates='auth_keys', link_model=AuthApiKeyLink)
