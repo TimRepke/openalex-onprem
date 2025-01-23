@@ -473,6 +473,9 @@
   <field name="is_retracted" type="boolean" docValues="true" indexed="true" stored="false" useDocValuesAsStored="true"/>
   <field name="cited_by_count" type="pint" uninvertible="false" indexed="false" required="false" stored="false" useDocValuesAsStored="true"/>
 
+  <field name="publisher" type="string" docValues="true" indexed="true" stored="false" useDocValuesAsStored="true"/>
+  <field name="publisher_id" type="string" docValues="true" indexed="true" stored="false" useDocValuesAsStored="true"/>
+
   <field name="authorships" type="string" uninvertible="false" docValues="false" large="true" indexed="false" required="false"/>
   <field name="topics" type="string" uninvertible="false" docValues="false" large="true" indexed="false" required="false"/>
   <field name="biblio" type="string" uninvertible="false" docValues="false" large="true" indexed="false" required="false"/>
