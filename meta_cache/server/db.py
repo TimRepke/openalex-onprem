@@ -1,4 +1,4 @@
-from meta_cache.data import DatabaseEngine
+from meta_cache.handlers.db import DatabaseEngine
 from meta_cache.config import settings
 
 db_engine = DatabaseEngine(host=settings.DB_HOST,

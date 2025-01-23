@@ -23,6 +23,7 @@ class Record(SQLModel, table=True):
     title: str | None = None
     abstract: str | None = None
 
+    # NULL if never requested from API, True if requested and found record, False if requested and not found
     requested_dimensions: bool | None = Field(default=None, nullable=True, unique=False, index=True)
     requested_openalex: bool | None = Field(default=None, nullable=True, unique=False, index=True)
     requested_pubmed: bool | None = Field(default=None, nullable=True, unique=False, index=True)
@@ -81,6 +82,8 @@ class ApiKey(SQLModel, table=True):
 
     active: bool = True
 
+    auth_keys: list['AuthKey'] = Relationship(back_populates='api_keys', link_model=AuthApiKeyLink)
+
 
 class AuthKey(SQLModel, table=True):
     __tablename__ = 'auth_key'
@@ -90,4 +93,4 @@ class AuthKey(SQLModel, table=True):
     note: str
     active: bool = True
 
-    api_keys: list['ApiKey'] = Relationship(back_populates='auth_key', link_model=AuthApiKeyLink)
+    api_keys: list['ApiKey'] = Relationship(back_populates='auth_keys', link_model=AuthApiKeyLink)

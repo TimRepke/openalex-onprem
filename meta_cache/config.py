@@ -1,3 +1,4 @@
+import logging
 from typing import Any
 import json
 import toml
@@ -84,6 +85,7 @@ class Settings(BaseSettings):
             with open(filename, 'r') as f:
                 ret = toml.loads(f.read())
                 if type(ret) is dict:
+                    logging.config.dictConfig(ret)
                     return ret
         raise ValueError('Logging config invalid!')
 

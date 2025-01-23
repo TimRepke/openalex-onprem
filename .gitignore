@@ -26,6 +26,9 @@ configset/
 solr/
 pg_users_secret.sql
 
+hypercorn.access
+hypercorn.error
+
 !openalex-ingest/processors/solr
 !openalex-ingest/setup/configset
 

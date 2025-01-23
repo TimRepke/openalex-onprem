@@ -3,14 +3,12 @@ from datetime import datetime
 from typing import Any, Generator
 
 import httpx
-from sqlalchemy import select, desc
-from sqlmodel import Session
 
-from meta_cache.data import DatabaseEngine
-from meta_cache.data.crud import Query
-from meta_cache.data.schema import ApiKey, Record, AuthApiKeyLink
-from meta_cache.data.util import get
+from meta_cache.handlers.db import DatabaseEngine
+from meta_cache.handlers.models import Reference, Record
+from meta_cache.handlers.util import get
 from .base import AbstractWrapper
+from ..schema import ApiKey
 
 logger = logging.getLogger('wrapper-scopus')
 PAGE_SIZE = 25
@@ -44,12 +42,30 @@ class ScopusWrapper(AbstractWrapper):
         return 'AND (api_key.scopus_requests_remaining IS NULL OR api_key.scopus_requests_remaining > 0)'
 
     @classmethod
-    def fetch(cls, db_engine: DatabaseEngine, query: Query, auth_key: str) -> Generator[Record, None, None]:
+    def log_api_key_use(cls, db_engine: DatabaseEngine, key: ApiKey) -> None:
+        with db_engine.session() as session:
+            orm_key = session.get(ApiKey, key.api_key_id)
+            if not orm_key:
+                logger.warning(f'Failed to log API key use: {key}')
+            orm_key.sqlmodel_update({
+                'scopus_requests_limit': key.scopus_requests_limit,
+                'scopus_requests_remaining': key.scopus_requests_remaining,
+                'scopus_requests_reset': key.scopus_requests_reset
+            })
+            session.add(orm_key)
+            session.commit()
+
+    @classmethod
+    def fetch(cls,
+              db_engine: DatabaseEngine,
+              references: list[Reference],
+              auth_key: str) -> Generator[Record, None, None]:
         parts = []
-        if query.scopus_id:
-            parts += [f'EID({sid})' for sid in set(query.scopus_id)]
-        if query.doi:
-            parts += [f'DOI({doi})' for doi in set(query.doi)]
+        for reference in references:
+            if reference.scopus_id:
+                parts.append(f'EID({reference.scopus_id})')
+            if reference.doi:
+                parts.append(f'DOI({reference.doi})')
 
         if len(parts) == 0:
             raise ValueError('Found no scopus ids or DOIs to query scopus')
@@ -87,8 +103,8 @@ class ScopusWrapper(AbstractWrapper):
 
             next_cursor = get(data, 'search-results', 'cursor', '@next', default=None)
             entries = get(data, 'search-results', 'entry', default=[])
-
-            if len(entries) == 0:
+            n_results = get(data, 'search-results', 'opensearch:totalResults', default=0)
+            if len(entries) == 0 or n_results == 0:
                 break
 
             for entry in entries:

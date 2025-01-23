@@ -1,4 +1,4 @@
-from meta_cache.wrappers import AbstractWrapper
+from .base import AbstractWrapper
 
 
 class DimensionsWrapper(AbstractWrapper):

@@ -9,10 +9,11 @@ from rq_dashboard_fast import RedisQueueDashboard
 
 from meta_cache.config import settings
 
-from .db import db_engine
-from .logger import get_logger
 from .middleware import TimingMiddleware, ErrorHandlingMiddleware
 from .api import router as api_router
+from .logger import get_logger
+from .db import db_engine
+from .queue import queues
 
 mimetypes.init()
 
@@ -22,7 +23,9 @@ logger = get_logger('meta-cache.server')
 @asynccontextmanager
 async def lifespan(api_app: FastAPI):
     # Following code executed on startup
+    logger.info('Setting up DB engine')
     db_engine.startup()
+    logger.info(f'Created queues: {queues.keys()}')
 
     yield  # running server
 
