@@ -13,7 +13,7 @@ from sqlmodel import create_engine, Session, SQLModel
 
 # unused import required so the engine sees the models!
 from . import schema  # noqa F401
-from .. import config
+from .. import setup as config
 
 logger = logging.getLogger('nacsos_data.engine')
 
@@ -60,14 +60,12 @@ class DatabaseEngine:
 
         self.engine = create_engine(self._connection_str, echo=debug, future=True,
                                     json_serializer=DictLikeEncoder().encode)
-        SQLModel.metadata.create_all(self.engine)
 
     def startup(self) -> None:
         """
         Call this function to initialise the database engine.
         """
-        # SQLModel.metadata.create_all(self.engine)
-        pass
+        SQLModel.metadata.create_all(self.engine)
 
     def __call__(self, *args: tuple[Any, ...], **kwargs: dict[str, Any]) -> Session:
         return Session(self.engine)

@@ -39,3 +39,4 @@ meta_cache/config/
 !meta_cache/config/logging.toml
 !meta_cache/config/default.env
 !meta_cache/config/hypercorn.toml
+!meta_cache/scripts/
