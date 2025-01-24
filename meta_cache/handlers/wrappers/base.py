@@ -106,7 +106,7 @@ class AbstractWrapper(ABC):
             for fld, val in Reference.ids(rec):
                 for _, ref in df[df[fld] == val].iterrows():
                     for ref_field in Reference.keys():
-                        if ref[ref_field] is not None and getattr(rec, ref_field) is not None:
+                        if ref[ref_field] is not None and getattr(rec, ref_field) is None:
                             setattr(rec, ref_field, ref[ref_field])
             return rec
 
