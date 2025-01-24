@@ -23,6 +23,7 @@ Type=simple
 User=openalex
 Group=openalex
 Environment="OACACHE_CONFIG=/var/www/openalex-cache/nacsos-academic-search/meta_cache/config/server.env"
+Environment="PYTHONPATH=$PYTHONPATH:/var/www/openalex-cache/nacsos-academic-search:/var/www/openalex-cache/nacsos-academic-search/meta_cache"
 Environment="PYTHONUNBUFFERED=1"
 WorkingDirectory=/var/www/openalex-cache/nacsos-academic-search/meta_cache
 LimitNOFILE=4096
@@ -45,6 +46,7 @@ Type=simple
 User=openalex
 Group=openalex
 Environment="OACACHE_CONFIG=/var/www/openalex-cache/nacsos-academic-search/meta_cache/config/server.env"
+Environment="PYTHONPATH=$PYTHONPATH:/var/www/openalex-cache/nacsos-academic-search:/var/www/openalex-cache/nacsos-academic-search/meta_cache"
 Environment="PYTHONUNBUFFERED=1"
 WorkingDirectory=/var/www/openalex-cache/nacsos-academic-search/meta_cache
 LimitNOFILE=4096
