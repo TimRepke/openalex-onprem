@@ -33,7 +33,6 @@ stages:
   - sync
   - solr
   - postgres
-  - deploy
 
 Setup-environment|1:
   stage: build
@@ -257,7 +256,7 @@ Postgres-clean:
 
 
 Deploy-cache:
-  stage: deploy
+  stage: build
   when: manual
   allow_failure: false
   tags:
