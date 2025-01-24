@@ -284,7 +284,7 @@ Deploy-cache:
     - rm -rf venv
     - echo "Fetching updated source"
     - git stash  # "reset" softly by stashing (in case files changed)
-    - git pull origin production  # pull from origin (production branch)
+    - git pull origin main  # pull from origin (production branch)
     - cd ..
     - echo "Creating new virtual environment"
     - python3.13 -m venv venv
