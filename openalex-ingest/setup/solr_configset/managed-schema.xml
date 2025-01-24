@@ -456,7 +456,6 @@
   <field name="pmcid" type="string" docValues="true" indexed="true" stored="false" useDocValuesAsStored="true"/>
   <field name="pmid" type="string" docValues="true" indexed="true" stored="false" useDocValuesAsStored="true"/>
 
-  <field name="display_name" type="text_general" multiValued="false" required="false"/>
   <field name="title" type="text_general" docValues="false" multiValued="false" indexed="true" stored="true"/>
   <field name="title_abstract" type="text_general" docValues="false" multiValued="false" indexed="true" stored="true"/>
   <field name="abstract" type="text_general" docValues="false" multiValued="false" indexed="true" required="false" stored="true"/>

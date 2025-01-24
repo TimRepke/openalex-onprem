@@ -3,6 +3,7 @@
 * `meta-cache` hosts a small service to cache external data for internal use that had to be removed from the public openalex snapshot
 
 
+
 ## OpenAlex meta-cache
 
 ### Proxies
@@ -76,3 +77,9 @@ gitlab-runner ALL= NOPASSWD: /usr/bin/systemctl stop openalex-cache.service
 gitlab-runner ALL= NOPASSWD: /usr/bin/systemctl start openalex-cache.service
 gitlab-runner ALL= NOPASSWD: /usr/bin/systemctl status openalex-cache.service
 ```
+
+## Notes
+Checking of works with missing abstract:   
+http://localhost:8983/solr/#/openalex/query?q=-abstract:%5B%22%22%20TO%20*%5D&q.op=AND&defType=lucene&indent=true&useParams=    
+http://localhost:8983/solr/#/openalex/query?q=-abstract:*&q.op=AND&defType=lucene&indent=true&useParams=
+on 2025-01-24 this gives 116,289,712 and 116,225,229

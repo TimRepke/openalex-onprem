@@ -25,7 +25,8 @@ class Settings(BaseSettings):
     NACSOS_PASSWORD: str = "secret"
     NACSOS_DATABASE: str = "db"
 
-    OA_SOLR: AnyHttpUrl = 'http://localhost:8983/solr/openalex'
+    OA_SOLR_HOST: str = 'http://localhost:8983'
+    OA_SOLR_COLLECTION: str = 'openalex'
 
     @property
     def cache_db(self):
