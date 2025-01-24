@@ -78,6 +78,17 @@ gitlab-runner ALL= NOPASSWD: /usr/bin/systemctl start openalex-cache.service
 gitlab-runner ALL= NOPASSWD: /usr/bin/systemctl status openalex-cache.service
 ```
 
+### Scripts
+Bulk-importing from a nacsos project:
+```
+export PYTHONPATH=$PYTHONPATH:/var/www/openalex-cache/nacsos-academic-search:/var/www/openalex-cache/nacsos-academic-search/meta_cache && export OACACHE_CONFIG=/var/www/openalex-cache/nacsos-academic-search/meta_cache/config/scripts.env && python scripts/nacsos.py [project-id]
+```
+
+Writing full cache to solr
+```
+export PYTHONPATH=$PYTHONPATH:/var/www/openalex-cache/nacsos-academic-search:/var/www/openalex-cache/nacsos-academic-search/meta_cache && export OACACHE_CONFIG=/var/www/openalex-cache/nacsos-academic-search/meta_cache/config/scripts.env && python scripts/fill_solr.py
+```
+
 ## Notes
 Checking of works with missing abstract:   
 http://localhost:8983/solr/#/openalex/query?q=-abstract:%5B%22%22%20TO%20*%5D&q.op=AND&defType=lucene&indent=true&useParams=    
