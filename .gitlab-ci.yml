@@ -33,6 +33,7 @@ stages:
   - sync
   - solr
   - postgres
+  - deploy
 
 Setup-environment|1:
   stage: build
@@ -252,3 +253,48 @@ Postgres-clean:
     - echo "$ENV_FILE"
     - cd "$OA_SCRIPT_DIR/openalex-ingest" || exit
     - ./update.sh --config "$OA_ENV_FILE" --pg --pg-clr --with-sudo
+
+
+
+Deploy-cache:
+  stage: deploy
+  when: manual
+  allow_failure: false
+  tags:
+    - rechner
+  script:
+    - echo "Current working directory and user"
+    - pwd
+    - whoami
+    - groups
+    - echo $HOME
+    - echo "Reset git config"
+    - rm -f /home/gitlab-runner/.gitconfig
+    - git config --global url."https://gitlab.pik-potsdam.de/".insteadOf "ssh://git@gitlab.pik-potsdam.de/"
+    - git config --global user.name gitlab-runner
+    - git config --global user.email gitlab-runner@gitlab.pik-potsdam.de
+    - git config --global -l --show-origin
+    - echo "Go to deployment location"
+    - cd /var/www/openalex-cache
+    - ls -lisah
+    - sudo /usr/bin/chown -R gitlab-runner:gitlab-runner /var/www/openalex-cache
+    - ls -lisah
+    - sudo /usr/bin/systemctl stop openalex-cache.service
+    - sudo /usr/bin/systemctl stop openalex-cache-queue.service
+    - echo "Dropping virtual environment"
+    - rm -rf venv
+    - echo "Fetching updated source"
+    - git stash  # "reset" softly by stashing (in case files changed)
+    - git pull origin production  # pull from origin (production branch)
+    - echo "Creating new virtual environment"
+    - python3.13 -m venv venv
+    - source venv/bin/activate
+    - which python
+    - python -V
+    - echo "Installing requirements"
+    - pip install -r nacsos-academic-search/meta_cache/requirements.txt
+    - pip install systemd-python
+    - sudo /usr/bin/chown -R openalex:openalex /var/www/openalex-cache
+    - echo "Starting caching service"
+    - sudo /usr/bin/systemctl start openalex-cache.service
+    - sudo /usr/bin/systemctl start openalex-cache-queue.service
