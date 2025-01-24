@@ -293,7 +293,7 @@ Deploy-cache:
     - python -V
     - echo "Installing requirements"
     - pip install -r nacsos-academic-search/meta_cache/requirements.txt
-    - # pip install systemd-python
+    - ls # pip install systemd-python
     - sudo /usr/bin/chown -R openalex:openalex /var/www/openalex-cache
     - echo "Starting caching service"
     - sudo /usr/bin/systemctl start openalex-cache.service
