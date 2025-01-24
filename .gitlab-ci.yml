@@ -274,7 +274,7 @@ Deploy-cache:
     - git config --global user.email gitlab-runner@gitlab.pik-potsdam.de
     - git config --global -l --show-origin
     - echo "Go to deployment location"
-    - cd /var/www/openalex-cache
+    - cd /var/www/openalex-cache/nacsos-academic-search
     - ls -lisah
     - sudo /usr/bin/chown -R gitlab-runner:gitlab-runner /var/www/openalex-cache
     - ls -lisah
@@ -285,6 +285,7 @@ Deploy-cache:
     - echo "Fetching updated source"
     - git stash  # "reset" softly by stashing (in case files changed)
     - git pull origin production  # pull from origin (production branch)
+    - cd ..
     - echo "Creating new virtual environment"
     - python3.13 -m venv venv
     - source venv/bin/activate
