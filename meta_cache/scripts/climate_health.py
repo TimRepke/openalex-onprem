@@ -133,12 +133,15 @@ print(json.dumps(dict(res.headers), indent=2))
 print(res.text)
 print(json.dumps(res.json(), indent=2))
 
-# 1,065,881 query only -> should be at least 1.3M?
+# On NACSOS: 1,290,164 (in Oct 2024)
+#
+# Trivial query adaptation
+# 1,065,881 query only
 #   559,515 not oa
 #    90,043 springer|elsevier
 #    11,371 not oa & springer|elsevier
-
-# after update
+#
+# after replacing wildcards and simplifying
 # 1,334,707 query only
 #   709,750 not oa
 #   112,715 springer|elsevier
