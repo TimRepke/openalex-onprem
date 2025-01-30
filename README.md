@@ -91,6 +91,5 @@ export PYTHONPATH=$PYTHONPATH:/var/www/openalex-cache/nacsos-academic-search:/va
 
 ## Notes
 Checking of works with missing abstract:   
-http://localhost:8983/solr/#/openalex/query?q=-abstract:%5B%22%22%20TO%20*%5D&q.op=AND&defType=lucene&indent=true&useParams=    
-http://localhost:8983/solr/#/openalex/query?q=-abstract:*&q.op=AND&defType=lucene&indent=true&useParams=
-on 2025-01-24 this gives 116,289,712 and 116,225,229
+* on 2025-01-24 this gives 116,289,712 http://localhost:8983/solr/#/openalex/query?q=-abstract:%5B%22%22%20TO%20*%5D&q.op=AND&defType=lucene&indent=true&useParams=    
+* on 2025-01-24 this gives 116,225,229 http://localhost:8983/solr/#/openalex/query?q=-abstract:*&q.op=AND&defType=lucene&indent=true&useParams=

@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 from typing import Generator
 
 import typer
@@ -36,7 +37,11 @@ def nacsos_items(project_id: str, batch_size: int = 100) -> Generator[Record, No
         with connection.execution_options(yield_per=batch_size).execute(stmt, {'pid': project_id}) as result:
             for pi, partition in enumerate(result.partitions(batch_size)):
                 logger.debug(f'Received partition {pi} ({len(partition)}) from nacsos.')
-                yield from [Record.model_validate(row) for row in partition]
+                yield from [Record(
+                    **dict(row),
+                    requested_other=True,
+                    time_other=datetime.now(),
+                ) for row in partition]
 
 
 def main(project_id: str, batch_size: int = 100):

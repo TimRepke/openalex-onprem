@@ -12,13 +12,13 @@ class Record(SQLModel, table=True):
     __tablename__ = 'record'
     record_id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True, index=True, unique=True, nullable=False)
 
-    dimensions_id: str | None = Field(default=None, nullable=True, unique=True, index=True)
+    dimensions_id: str | None = Field(default=None, nullable=True, unique=False, index=True)
     doi: str | None = Field(default=None, nullable=True, unique=False, index=True)
-    openalex_id: str | None = Field(default=None, nullable=True, unique=True, index=True)
-    pubmed_id: str | None = Field(default=None, nullable=True, unique=True, index=True)
-    s2_id: str | None = Field(default=None, nullable=True, unique=True, index=True)
-    scopus_id: str | None = Field(default=None, nullable=True, unique=True, index=True)
-    wos_id: str | None = Field(default=None, nullable=True, unique=True, index=True)
+    openalex_id: str | None = Field(default=None, nullable=True, unique=False, index=True)
+    pubmed_id: str | None = Field(default=None, nullable=True, unique=False, index=True)
+    s2_id: str | None = Field(default=None, nullable=True, unique=False, index=True)
+    scopus_id: str | None = Field(default=None, nullable=True, unique=False, index=True)
+    wos_id: str | None = Field(default=None, nullable=True, unique=False, index=True)
 
     title: str | None = None
     abstract: str | None = None

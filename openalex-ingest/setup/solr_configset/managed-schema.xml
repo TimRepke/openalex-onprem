@@ -465,6 +465,7 @@
   <field name="publication_date" type="pdate" docValues="true" indexed="true" stored="false" useDocValuesAsStored="true"/>
   <field name="publication_year" type="pint" docValues="true" indexed="true" stored="false" useDocValuesAsStored="true"/>
 
+  <field name="external_abstract" type="boolean" docValues="true" indexed="true" stored="false" useDocValuesAsStored="true"/>
   <field name="is_oa" type="boolean" docValues="true" indexed="true" stored="false" useDocValuesAsStored="true"/>
   <field name="is_published" type="boolean" docValues="true" indexed="true" stored="false" useDocValuesAsStored="true"/>
   <field name="is_accepted" type="boolean" docValues="true" indexed="true" stored="false" useDocValuesAsStored="true"/>

@@ -176,6 +176,7 @@ class WorkOut(Struct, kw_only=True, omit_defaults=True):
     pmcid: str | None = None
 
     indexed_in: str | None = None
+    # external_abstract: bool| None = None
     is_oa: bool | None = None
     is_paratext: bool | None = None
     is_retracted: bool | None = None
