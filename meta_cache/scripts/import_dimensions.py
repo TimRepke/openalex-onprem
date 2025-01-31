@@ -40,7 +40,7 @@ def main(directory: Path = Path('data/')):
         for reference in tqdm(read_dimensions(directory=directory)):
             existed = False
             for record in session.exec(select(Record).where(or_(*get_ors(reference)))):
-                record.sqlmodel_update(reference.model_dump(exclude_unset=True))
+                record.sqlmodel_update(reference.model_dump(exclude_unset=True, exclude_none=True))
                 session.add(record)
                 existed = True
             if not existed:

@@ -40,7 +40,7 @@ def main(batch_size: int = 100):
                             f'has {len(needs_update):,} missing abstracts in solr')
 
                 if len(needs_update) <= 0:
-                    logging.info(f'Partition skipped, seems complete')
+                    logger.info(f'Partition skipped, seems complete')
                     continue
 
                 buffer = ''
@@ -64,7 +64,7 @@ def main(batch_size: int = 100):
                                  headers={'Content-Type': 'application/json'},
                                  data=buffer)
 
-                logging.info(f'Partition posted to solr via {res}')
+                logger.info(f'Partition posted to solr via {res}')
 
 
 if __name__ == "__main__":

@@ -49,7 +49,7 @@ def main(project_id: str, batch_size: int = 100):
         for reference in nacsos_items(project_id, batch_size):
             existed = False
             for record in session.exec(select(Record).where(or_(*get_ors(reference)))):
-                record.sqlmodel_update(reference.model_dump(exclude_unset=True))
+                record.sqlmodel_update(reference.model_dump(exclude_unset=True, exclude_none=True))
                 session.add(record)
                 existed = True
             if not existed:

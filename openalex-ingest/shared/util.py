@@ -1,9 +1,12 @@
 import gzip
+import logging
 from pathlib import Path
+from time import perf_counter, sleep
+from contextlib import ContextDecorator
 from typing import Literal, Generator, Iterable
 
 ObjectType = Literal['work', 'author', 'funder', 'publisher', 'source',
-                     'institution', 'concept', 'topic', 'subfield', 'field', 'domain']
+'institution', 'concept', 'topic', 'subfield', 'field', 'domain']
 
 
 def get_globs(snapshot: Path,  # /path/to/openalex-snapshot
@@ -55,3 +58,19 @@ def batched(it: Iterable[str], bs: int) -> Generator[list[str], None, None]:
             batch = []
             cnt = 0
     yield batch
+
+
+class rate_limit(ContextDecorator):
+    def __init__(self, min_time_ms: int = 100):
+        self.min_time = min_time_ms / 1000
+
+    def __enter__(self):
+        self.start = perf_counter()
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.time = perf_counter() - self.start
+        self.readout = f'Time: {self.time:.3f} seconds'
+        if self.time < self.min_time:
+            logging.debug(f'Sleeping to keep rate limit: {self.min_time - self.time:.4f} seconds')
+            sleep(self.min_time - self.time)
