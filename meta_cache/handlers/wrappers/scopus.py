@@ -75,6 +75,7 @@ class ScopusWrapper(AbstractWrapper):
         next_cursor = '*'
         n_pages = 0
         n_records = 0
+        n_results = 0
         while True:
             logger.info(f'Fetching page {n_pages}...')
             key = cls.get_api_keys(db_engine=db_engine, auth_key=auth_key)[0]
@@ -106,6 +107,8 @@ class ScopusWrapper(AbstractWrapper):
             n_results = get(data, 'search-results', 'opensearch:totalResults', default=0)
             if len(entries) == 0 or n_results == 0:
                 break
+            if len(entries) == 1 and entries[0].get('error') is not None:
+                break
 
             for entry in entries:
                 n_records += 1
@@ -119,3 +122,9 @@ class ScopusWrapper(AbstractWrapper):
                     requested_scopus=True,
                 )
             logger.debug(f'Found {n_records:,} records after processing page {n_pages}')
+
+        # return {
+        #     'n_records': n_records,
+        #     'n_pages': n_pages,
+        #     'n_results': n_results,
+        # }

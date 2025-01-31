@@ -50,7 +50,7 @@ class CacheResponseHandler:
 
     @property
     def n_ids(self) -> int:
-        return self.df.notna().to_numpy().sum()
+        return self.df[Reference.keys()].notna().to_numpy().sum()
 
     @property
     def ors(self) -> Generator[_ColumnExpressionArgument[bool], None, None]:

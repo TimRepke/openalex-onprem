@@ -50,7 +50,7 @@ async def write(reference: Record, auth_key: AuthKey = Depends(is_valid_key)) ->
             for record in session.exec(select(Record).where(or_(*get_ors(reference)))):
                 logger.debug(f'Found received record as {record.record_id}')
                 ret = True
-                record.sqlmodel_update(reference.model_dump(exclude_unset=True))
+                record.sqlmodel_update(reference.model_dump(exclude_unset=True, exclude_none=True))
                 session.add(record)
             if not ret:
                 session.add(reference)

@@ -35,6 +35,8 @@ stages:
   - postgres
 
 Setup-environment|1:
+  except:
+    - schedules
   stage: build
   tags:
     - rechner
@@ -76,6 +78,8 @@ Setup-environment|1:
 
 
 Setup-environment|2:
+  except:
+    - schedules
   stage: build
   tags:
     - rechner
@@ -116,6 +120,8 @@ Setup-environment|2:
   allow_failure: false
 
 Fetch-S3-bucket|1:
+  except:
+    - schedules
   stage: sync
   needs: ["Setup-environment|1"]
   when: on_success
@@ -128,6 +134,8 @@ Fetch-S3-bucket|1:
     - cd "$OA_SCRIPT_DIR/openalex-ingest" || exit
     - ./update.sh --config "$OA_ENV_FILE" --sync --no-progress --with-sudo
 Fetch-S3-bucket|2:
+  except:
+    - schedules
   stage: sync
   needs: ["Setup-environment|2"]
   when: on_success
@@ -142,6 +150,8 @@ Fetch-S3-bucket|2:
 
 
 Solr-second:
+  except:
+    - schedules
   stage: solr
   needs: ["Fetch-S3-bucket|1"]
   when: on_success
@@ -153,6 +163,8 @@ Solr-second:
     - cd "$OA_SCRIPT_DIR/openalex-ingest" || exit
     - ./update.sh --config "$OA_ENV_FILE" --solr --solr-tmp --with-tmp
 Solr-import:
+  except:
+    - schedules
   stage: solr
   needs: ["Solr-second"]
   when: on_success
@@ -164,6 +176,8 @@ Solr-import:
     - cd "$OA_SCRIPT_DIR/openalex-ingest" || exit
     - ./update.sh --config "$OA_ENV_FILE" --solr --solr-import-full --solr-clr --with-tmp
 Solr-switch:
+  except:
+    - schedules
   stage: solr
   needs: ["Solr-import"]
   when: on_success
@@ -176,6 +190,8 @@ Solr-switch:
     - ./update.sh --config "$OA_ENV_FILE" --solr --solr-swp --with-sudo
 
 Postgres-flat:
+  except:
+    - schedules
   stage: postgres
   needs: ["Fetch-S3-bucket|2"]
   when: on_success
@@ -189,6 +205,8 @@ Postgres-flat:
     - ./update.sh --config "$OA_ENV_FILE" --pg --pg-flat --override --pg-import-full --jobs $OA_N_JOBS
 
 Postgres-prep:
+  except:
+    - schedules
   stage: postgres
   needs: ["Postgres-flat"]
   when: on_success
@@ -202,6 +220,8 @@ Postgres-prep:
     - ./update.sh --config "$OA_ENV_FILE" --pg --pg-tmp --with-sudo
 
 Postgres-import:
+  except:
+    - schedules
   stage: postgres
   needs: ["Postgres-prep"]
   when: on_success
@@ -215,6 +235,8 @@ Postgres-import:
     - ./update.sh --config "$OA_ENV_FILE" --pg --pg-import --with-tmp
 
 Postgres-swap:
+  except:
+    - schedules
   stage: postgres
   needs: ["Postgres-import"]
   when: on_success
@@ -228,6 +250,8 @@ Postgres-swap:
     - ./update.sh --config "$OA_ENV_FILE" --pg --pg-swp --with-tmp
 
 Postgres-indices:
+  except:
+    - schedules
   stage: postgres
   needs: ["Postgres-swap"]
   when: on_success
@@ -241,6 +265,8 @@ Postgres-indices:
     - ./update.sh --config "$OA_ENV_FILE" --pg --pg-ind
 
 Postgres-clean:
+  except:
+    - schedules
   stage: postgres
   needs: ["Postgres-indices"]
   when: on_success
@@ -256,6 +282,8 @@ Postgres-clean:
 
 
 Deploy-cache:
+  except:
+    - schedules
   stage: build
   when: manual
   allow_failure: false
@@ -298,3 +326,37 @@ Deploy-cache:
     - echo "Starting caching service"
     - sudo /usr/bin/systemctl start openalex-cache.service
     - sudo /usr/bin/systemctl start openalex-cache-queue.service
+
+
+FetchOpenAlexAPI:
+  only:
+    - schedules
+  tags:
+    - rechner
+  script:
+    - export FROM_DATE="$(date -d "1 day ago" "+%Y-%m-%d")"
+    - echo "Current working directory and user"
+    - pwd
+    - whoami
+    - groups
+    - echo $HOME
+    - echo "Reset git config"
+    - rm -f /home/gitlab-runner/.gitconfig
+    - git config --global url."https://gitlab.pik-potsdam.de/".insteadOf "ssh://git@gitlab.pik-potsdam.de/"
+    - git config --global user.name gitlab-runner
+    - git config --global user.email gitlab-runner@gitlab.pik-potsdam.de
+    - git config --global -l --show-origin
+    - echo "Go to deployment location"
+    - cd /var/www/openalex-cache/nacsos-academic-search
+    - ls -lisah
+    - sudo /usr/bin/chown -R gitlab-runner:gitlab-runner /var/www/openalex-cache
+    - git stash  # "reset" softly by stashing (in case files changed)
+    - git pull origin main  # pull from origin (production branch)
+    - cd ..
+    - echo "Update virtual environment"
+    - source venv/bin/activate
+    - which python
+    - python -V
+    - pip install -r nacsos-academic-search/openalex-ingest/requirements.txt
+    - ls # pip install systemd-python
+    - sudo /usr/bin/chown -R openalex:openalex /var/www/openalex-cache
