@@ -329,6 +329,7 @@ Deploy-cache:
 
 
 FetchOpenAlexAPI:
+  stage: solr
   only:
     - schedules
   tags:
