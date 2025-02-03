@@ -16,7 +16,7 @@ def date_check(value: str) -> str:
     return value
 
 
-def request_meta_cache(url: str, meta_key: str, buffer: list[WorkOut]):
+def request_meta_cache(url: str, meta_key: str, buffer: list[WorkOut], wrapper: str='scopus'):
     logging.info(f'Submitting {len(buffer)} works with missing abstract to meta-cache')
     try:
         res = httpx.post(url,
@@ -30,7 +30,7 @@ def request_meta_cache(url: str, meta_key: str, buffer: list[WorkOut]):
                                  for work in buffer
                              ],
                              'limit': len(buffer) * 4,
-                             'wrapper': 'scopus',
+                             'wrapper': wrapper,
                              'fetch_on_missing_abstract': True,
                              'fetch_on_missing_entry': True,
                              'update_links': True,
@@ -65,6 +65,7 @@ def update_solr(api_key: Annotated[str, typer.Option(help='OpenAlex premium API 
                 oa_page_size: int = 200,
                 solr_buffer_size: int = 200,
                 meta_buffer_size: int = 25,
+                wrapper:str='scopus',
                 loglevel: str = 'INFO'):
     logging.basicConfig(format='%(asctime)s [%(levelname)s] %(name)s (%(process)d): %(message)s', level=loglevel)
 
@@ -117,7 +118,7 @@ def update_solr(api_key: Annotated[str, typer.Option(help='OpenAlex premium API 
 
                 if len(meta_cache_buffer) >= meta_buffer_size:
                     n_cache_works += len(meta_cache_buffer)
-                    request_meta_cache(url=meta_url, meta_key=meta_key, buffer=meta_cache_buffer)
+                    request_meta_cache(url=meta_url, meta_key=meta_key, buffer=meta_cache_buffer, wrapper=wrapper)
                     meta_cache_buffer = []
 
     if len(solr_buffer) > 0:
@@ -125,7 +126,7 @@ def update_solr(api_key: Annotated[str, typer.Option(help='OpenAlex premium API 
         commit_solr(url=solr_url, buffer=solr_buffer)
 
     if len(meta_cache_buffer) > 0:
-        request_meta_cache(url=meta_url, meta_key=meta_key, buffer=meta_cache_buffer)
+        request_meta_cache(url=meta_url, meta_key=meta_key, buffer=meta_cache_buffer, wrapper=wrapper)
 
     logging.info('Solr collection is up to date.')
 
