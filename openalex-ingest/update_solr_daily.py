@@ -16,7 +16,7 @@ def date_check(value: str) -> str:
     return value
 
 
-def request_meta_cache(url: str, meta_key: str, buffer: list[WorkOut], wrapper: str='scopus'):
+def request_meta_cache(url: str, meta_key: str, buffer: list[WorkOut], wrapper: str = 'scopus'):
     logging.info(f'Submitting {len(buffer)} works with missing abstract to meta-cache')
     try:
         res = httpx.post(url,
@@ -65,7 +65,7 @@ def update_solr(api_key: Annotated[str, typer.Option(help='OpenAlex premium API 
                 oa_page_size: int = 200,
                 solr_buffer_size: int = 200,
                 meta_buffer_size: int = 25,
-                wrapper:str='scopus',
+                wrapper: str = 'scopus',
                 loglevel: str = 'INFO'):
     logging.basicConfig(format='%(asctime)s [%(levelname)s] %(name)s (%(process)d): %(message)s', level=loglevel)
 

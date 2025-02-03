@@ -355,29 +355,28 @@ FetchOpenAlexAPI:
     - whoami
     - groups
     - echo $HOME
-#    - echo "Reset git config"
-#    - rm -f /home/gitlab-runner/.gitconfig
-#    - git config --global url."https://gitlab.pik-potsdam.de/".insteadOf "ssh://git@gitlab.pik-potsdam.de/"
-#    - git config --global user.name gitlab-runner
-#    - git config --global user.email gitlab-runner@gitlab.pik-potsdam.de
-#    - git config --global -l --show-origin
+    - echo "Reset git config"
+    - rm -f /home/gitlab-runner/.gitconfig
+    - git config --global url."https://gitlab.pik-potsdam.de/".insteadOf "ssh://git@gitlab.pik-potsdam.de/"
+    - git config --global user.name gitlab-runner
+    - git config --global user.email gitlab-runner@gitlab.pik-potsdam.de
+    - git config --global -l --show-origin
     - echo "Go to deployment location"
     - cd /var/www/openalex-cache/
     - ls -lisah
-#    - sudo /usr/bin/chown -R gitlab-runner:gitlab-runner /var/www/openalex-cache
-#    - git stash  # "reset" softly by stashing (in case files changed)
-#    - git pull origin main  # pull from origin (production branch)
-#    - cd ..
-#    - echo "Update virtual environment"
-#    - source venv/bin/activate
-#    - which python
-#    - python -V
-#    - pip install -r nacsos-academic-search/openalex-ingest/requirements.txt
+    - sudo /usr/bin/chown -R gitlab-runner:gitlab-runner /var/www/openalex-cache
+    - cd nacsos-academic-search
+    - ls -lisah
+    - git stash  # "reset" softly by stashing (in case files changed)
+    - git pull origin main  # pull from origin (production branch)
+    - ls -lisah
+    - cd ..
+    - echo "Update virtual environment"
     - source venv/bin/activate
     - which python
     - python -V
     - cd nacsos-academic-search/openalex-ingest/
-    - ls -lisah
+    - pip install -r requirements.txt
     - python update_solr_daily.py --api-key="$OA_KEY_OPENALEX"
                                   --meta-key="$OA_KEY_CACHE"
                                   --meta-host="$OA_CACHE_API"
@@ -389,4 +388,4 @@ FetchOpenAlexAPI:
                                   --wrapper=scopus
                                   --created-since="$FROM_DATE"
                                   --loglevel=INFO
-#    - sudo /usr/bin/chown -R openalex:openalex /var/www/openalex-cache
+    - sudo /usr/bin/chown -R openalex:openalex /var/www/openalex-cache
