@@ -362,7 +362,7 @@ FetchOpenAlexAPI:
 #    - git config --global user.email gitlab-runner@gitlab.pik-potsdam.de
 #    - git config --global -l --show-origin
     - echo "Go to deployment location"
-    - cd /var/www/openalex-cache/nacsos-academic-search
+    - cd /var/www/openalex-cache/
     - ls -lisah
 #    - sudo /usr/bin/chown -R gitlab-runner:gitlab-runner /var/www/openalex-cache
 #    - git stash  # "reset" softly by stashing (in case files changed)
@@ -373,9 +373,11 @@ FetchOpenAlexAPI:
 #    - which python
 #    - python -V
 #    - pip install -r nacsos-academic-search/openalex-ingest/requirements.txt
-    - source ../venv/bin/activate
+    - source venv/bin/activate
     - which python
     - python -V
+    - cd nacsos-academic-search/openalex-ingest/
+    - ls -lisah
     - python update_solr_daily.py --api-key="$OA_KEY_OPENALEX"
                                   --meta-key="$OA_KEY_CACHE"
                                   --meta-host="$OA_CACHE_API"
