@@ -340,8 +340,8 @@ Deploy-cache:
 
 FetchOpenAlexAPI:
   stage: solr
-  only:
-    - schedules
+#  only:
+#    - schedules
   tags:
     - rechner
   rules:
