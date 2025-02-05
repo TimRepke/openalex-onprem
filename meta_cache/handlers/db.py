@@ -87,7 +87,8 @@ class DatabaseEngine:
 def _get_settings(conf_file: str | None = None) -> config.Settings:
     if conf_file is None:
         conf_file = os.environ.get('OACACHE_CONFIG', 'config/default.env')
-
+    if not Path(conf_file).is_file():
+        raise FileNotFoundError(f'Configuration file not found: {conf_file}')
     return config.Settings(_env_file=conf_file, _env_file_encoding='utf-8')  # type: ignore[call-arg]
 
 

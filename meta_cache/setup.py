@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 from typing import Any
 import json
 import toml
@@ -81,12 +82,16 @@ class Settings(BaseSettings):
         filename: str = info.data.get('LOG_CONF_FILE', None)
 
         if filename is not None:
+            if not Path(filename).exists():
+                return {}
+
             with open(filename, 'r') as f:
                 ret = toml.loads(f.read())
                 if type(ret) is dict:
+                    import logging.config
                     logging.config.dictConfig(ret)
                     return ret
         raise ValueError('Logging config invalid!')
 
-    model_config = SettingsConfigDict(case_sensitive=True, env_prefix='OACACHE_')
+    model_config = SettingsConfigDict(case_sensitive=True, env_prefix='OACACHE_', extra='allow')
 

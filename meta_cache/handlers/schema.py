@@ -34,7 +34,7 @@ class Record(SQLModel, table=True):
 
     time_created: datetime = Field(sa_column=Column(DateTime(timezone=True), server_default=func.now(), index=True),
                                    default_factory=datetime.now)
-    time_updated: datetime | None = Field(sa_column=Column(DateTime(timezone=True), onupdate=func.now()), default=None)
+    time_updated: datetime | None = Field(sa_column=Column(DateTime(timezone=True), server_onupdate=func.now()), default=None)
     time_dimensions: datetime | None = Field(sa_column=Column(DateTime(timezone=True)), default=None)
     time_pubmed: datetime | None = Field(sa_column=Column(DateTime(timezone=True)), default=None)
     time_openalex: datetime | None = Field(sa_column=Column(DateTime(timezone=True)), default=None)

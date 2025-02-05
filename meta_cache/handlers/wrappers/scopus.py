@@ -105,6 +105,7 @@ class ScopusWrapper(AbstractWrapper):
             next_cursor = get(data, 'search-results', 'cursor', '@next', default=None)
             entries = get(data, 'search-results', 'entry', default=[])
             n_results = get(data, 'search-results', 'opensearch:totalResults', default=0)
+
             if len(entries) == 0 or n_results == 0:
                 break
             if len(entries) == 1 and entries[0].get('error') is not None:

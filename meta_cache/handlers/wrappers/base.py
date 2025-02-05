@@ -140,8 +140,9 @@ class AbstractWrapper(ABC):
                     # fill all empty fields in existing records that we now have data for
                     for ex_record in existing:
                         for field in Record.model_fields.keys():
-                            if getattr(record, field) is not None and getattr(ex_record, field) is None:
+                            if getattr(record, field) is not None:  # and getattr(ex_record, field) is None
                                 setattr(ex_record, field, getattr(record, field))
+                        ex_record.time_updated = datetime.now()
                         found.append(ex_record)
                         session.add(ex_record)
                     mark_status(df, record, status='updated')
@@ -150,7 +151,7 @@ class AbstractWrapper(ABC):
             # Persist that we requested this (missing)
             for _, missed in df[df['missed'] == True].iterrows():
                 missed_record = Record(**dict(Reference.ids(missed)))
-                setattr(missed_record, cls.db_field_requested, False)
+                setattr(missed_record, cls.db_field_requested, True)
                 setattr(missed_record, cls.db_field_time, datetime.now())
                 session.add(missed_record)
             session.commit()

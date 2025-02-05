@@ -377,7 +377,8 @@ FetchOpenAlexAPI:
     - python -V
     - cd nacsos-academic-search/openalex-ingest/
     - pip install -r requirements.txt
-    - python update_solr_daily.py --api-key="$OA_KEY_OPENALEX"
+    - python update_solr_daily.py update-solr
+    -                             --api-key="$OA_KEY_OPENALEX"
                                   --meta-key="$OA_KEY_CACHE"
                                   --meta-host="$OA_CACHE_API"
                                   --solr-host="$OA_SOLR_API"

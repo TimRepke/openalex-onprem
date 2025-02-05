@@ -12,6 +12,25 @@ This service assumes that you have set up proxies (e.g. SOCKS5 via `ssh -D 1080 
 
 ### systemd
 
+#### Permanent SSH tunnel
+sudo cat /etc/systemd/system/pik-ssh.service
+```
+[Unit]
+Description=Persistent SSH Tunnel to PIK on port 1080.
+After=network.target
+
+[Service]
+Restart=on-failure
+RestartSec=5
+ExecStart=/usr/bin/ssh -D 1080 ??@ts01.pik-potsdam.de -NTC -o ServerAliveInterval=60 -o ExitOnForwardFailure=yes
+User=??
+Group=??
+
+[Install]
+WantedBy=multi-user.target
+
+```
+
 #### REST service
 sudo cat /etc/systemd/system/openalex-cache.service
 ```

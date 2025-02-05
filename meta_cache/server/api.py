@@ -35,6 +35,7 @@ async def lookup(request: CacheRequest, auth_key: AuthKey = Depends(is_valid_key
                                        func=wrapper.run,
                                        references=list(handler.queued),
                                        auth_key=auth_key.auth_key_id)
+    #                                  meta=list(handler.queued)
     handler.queued_job = job.id
     logger.debug(f'Job {job.id} @ {job.origin}')
 
