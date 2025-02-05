@@ -23,7 +23,13 @@ def date_check(value: str) -> str:
 
 
 def request_meta_cache(url: str, meta_key: str, buffer: list[WorkOut], wrapper: str = 'scopus'):
-    logging.info(f'Submitting {len(buffer)} works with missing abstract to meta-cache')
+    orig_size = len(buffer)
+    buffer = [
+        work
+        for work in buffer
+        if (int(work.id is not None) + int(work.pmid is not None) + int(work.doi is not None)) > 1
+    ]
+    logging.info(f'Submitting {len(buffer)} of {orig_size} works with missing abstract to meta-cache')
     try:
         res = httpx.post(url,
                          headers={'x-auth-key': meta_key},
@@ -45,7 +51,7 @@ def request_meta_cache(url: str, meta_key: str, buffer: list[WorkOut], wrapper: 
                          timeout=120)
         res.raise_for_status()
         info = res.json()
-        logging.info(f'Hits: {info["hits"]}, updates: {info["n_updated"]}, '
+        logging.info(f'Hits: {info["n_hits"]}, updates: {info["n_updated"]}, '
                      f'queued: {info["n_queued"]}, missed: {info["n_missed"]}, added: {info["n_added"]}')
     except httpx.HTTPError as e:
         logging.error(f'Failed to submit {url}: {e}')

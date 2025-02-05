@@ -123,7 +123,7 @@ class CacheResponseHandler:
         if self.fetch_on_missing:
             wrapper = get_wrapper(self.request.wrapper)
             if not self.is_valid_request(wrapper.db_field_id):
-                raise ValueError('Invalid request!')
+                raise ValueError('Invalid request; one requested reference only has one ID. Always need two or more!')
 
             # Prepare list for wrapper request: Missing entries via `fetch_on_missing_entry`
             if self.request.fetch_on_missing_entry:
