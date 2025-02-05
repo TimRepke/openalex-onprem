@@ -375,10 +375,11 @@ FetchOpenAlexAPI:
     - source venv/bin/activate
     - which python
     - python -V
-    - cd nacsos-academic-search/openalex-ingest/
-    - pip install -r requirements.txt
-    - export $PYTHONPATH="$PYTHONPATH:$(pwd):$(pwd)/../meta_cache/"
+    - cd nacsos-academic-search/
+    - export PYTHONPATH="$PYTHONPATH:$(pwd)/openalex-ingest:$(pwd)/meta_cache"
     - echo $PYTHONPATH
+    - cd openalex-ingest/
+    - pip install -r requirements.txt
     - python update_solr_daily.py update-solr
                                   --api-key="$OA_KEY_OPENALEX"
                                   --meta-key="$OA_KEY_CACHE"
@@ -418,9 +419,10 @@ BackfillAbstracts:
     - source venv/bin/activate
     - which python
     - python -V
-    - cd nacsos-academic-search/openalex-ingest/
-    - export $PYTHONPATH="$PYTHONPATH:$(pwd):$(pwd)/../meta_cache/"
+    - cd nacsos-academic-search/
+    - export PYTHONPATH="$PYTHONPATH:$(pwd)/openalex-ingest:$(pwd)/meta_cache"
     - echo $PYTHONPATH
+    - cd openalex-ingest/
     - python update_solr_daily.py backfill-abstracts
                                   --solr-host="$OA_SOLR_API"
                                   --solr-collection="$OA_SOLR_COLLECTION"
