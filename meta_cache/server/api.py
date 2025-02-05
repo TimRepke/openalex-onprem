@@ -1,5 +1,9 @@
 import logging
+from datetime import datetime
+
 from fastapi import APIRouter, Header, Depends, Body
+from pydantic import BaseModel
+from sqlalchemy import text
 from sqlmodel import select, or_
 
 from meta_cache.handlers.models import CacheRequest, CacheResponse, DehydratedRecord
@@ -69,3 +73,30 @@ async def read(openalex_ids: list[str] = Body(), auth_key: AuthKey = Depends(is_
         logger.debug(f'Requested {len(openalex_ids)} records')
         with db_engine.session() as session:
             return session.exec(select(Record).where(Record.openalex_id.in_(openalex_ids))).all()
+
+
+class StatsEntry(BaseModel):
+    time_created: datetime
+    n_total: int
+    n_with_abstract: int
+    n_with_scopus: int
+    n_with_dimensions: int
+
+
+@router.get('/stats', response_model=list[StatsEntry])
+async def stats(limit: int = 10):  # , auth_key: AuthKey = Depends(is_valid_key)
+    stmt = text('''
+        SELECT date_trunc('day', time_created)                    as time_created,
+               count(1)                                           as n_total,
+               count(1) FILTER (WHERE abstract IS NOT NULL)       as n_with_abstract,
+               count(1) FILTER (WHERE raw_scopus IS NOT NULL)     as n_with_scopus,
+               count(1) FILTER (WHERE raw_dimensions IS NOT NULL) as n_with_dimensions
+        FROM record
+        GROUP BY date_trunc('day', time_created)
+        ORDER BY date_trunc('day', time_created) DESC
+        LIMIT :limit;
+    ''')
+
+    with db_engine.session() as session:
+        res = session.execute(stmt, {'limit': limit})
+        return res.mappings().all()
