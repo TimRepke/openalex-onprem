@@ -8,7 +8,6 @@ from typing_extensions import Annotated
 
 from meta_cache.handlers.db import get_engine
 from meta_cache.handlers.util import update_solr_abstracts
-from meta_cache.setup import Settings
 from processors.solr_daily.structs import FIELDS_TO_FETCH, WorkOut, Work
 from processors.solr_daily.transform import transform_work
 from shared.util import rate_limit

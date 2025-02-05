@@ -378,7 +378,7 @@ FetchOpenAlexAPI:
     - cd nacsos-academic-search/openalex-ingest/
     - pip install -r requirements.txt
     - python update_solr_daily.py update-solr
-    -                             --api-key="$OA_KEY_OPENALEX"
+                                  --api-key="$OA_KEY_OPENALEX"
                                   --meta-key="$OA_KEY_CACHE"
                                   --meta-host="$OA_CACHE_API"
                                   --solr-host="$OA_SOLR_API"
@@ -387,6 +387,41 @@ FetchOpenAlexAPI:
                                   --solr-buffer-size=200
                                   --meta-buffer-size=25
                                   --wrapper=scopus
+                                  --created-since="$FROM_DATE"
+                                  --loglevel=INFO
+    - sudo /usr/bin/chown -R openalex:openalex /var/www/openalex-cache
+
+BackfillAbstracts:
+  stage: solr
+  tags:
+    - rechner
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule" && $OA_BACKFILL_ABSTRACTS == "true"
+  script:
+    - echo $OA_LOOKBACK
+    - export FROM_DATE="$(date -d "$OA_LOOKBACK day ago" "+%Y-%m-%d")"
+    - echo $FROM_DATE
+    - echo "Current working directory and user"
+    - pwd
+    - whoami
+    - groups
+    - echo $HOME
+    - echo "Go to deployment location"
+    - cd /var/www/openalex-cache/
+    - ls -lisah
+    - cd nacsos-academic-search
+    - ls -lisah
+    - cd ..
+    - echo "Load virtual environment"
+    - source venv/bin/activate
+    - which python
+    - python -V
+    - cd nacsos-academic-search/openalex-ingest/
+    - python update_solr_daily.py backfill-abstracts
+                                  --solr-host="$OA_SOLR_API"
+                                  --solr-collection="$OA_SOLR_COLLECTION"
+                                  --batch-size=200
+                                  --conf-file="$OA_SCRIPT_ENV"
                                   --created-since="$FROM_DATE"
                                   --loglevel=INFO
     - sudo /usr/bin/chown -R openalex:openalex /var/www/openalex-cache
