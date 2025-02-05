@@ -417,6 +417,7 @@ BackfillAbstracts:
     - which python
     - python -V
     - cd nacsos-academic-search/openalex-ingest/
+    - export $PYTHONPATH="$PYTHONPATH:$(pwd):$(pwd)/../meta_cache/"
     - python update_solr_daily.py backfill-abstracts
                                   --solr-host="$OA_SOLR_API"
                                   --solr-collection="$OA_SOLR_COLLECTION"
