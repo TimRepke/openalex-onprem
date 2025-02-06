@@ -420,7 +420,7 @@ BackfillAbstracts:
     - which python
     - python -V
     - cd nacsos-academic-search/
-    - export PYTHONPATH="$PYTHONPATH:$(pwd)/openalex-ingest:$(pwd)/meta_cache"
+    - export PYTHONPATH="$PYTHONPATH:$(pwd):$(pwd)/openalex-ingest:$(pwd)/meta_cache"
     - echo $PYTHONPATH
     - cd openalex-ingest/
     - python update_solr_daily.py backfill-abstracts
