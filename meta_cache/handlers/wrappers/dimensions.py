@@ -15,6 +15,7 @@ from meta_cache.handlers.schema import ApiKey
 # documentation:
 # https://docs.dimensions.ai/dsl/language.html
 # https://github.com/digital-science/dimcli/blob/master/dimcli/core/api.py
+# fields: https://docs.dimensions.ai/dsl/datasource-publications.html
 
 logger = logging.getLogger('wrapper-dimensions')
 PAGE_SIZE = 1000
@@ -134,12 +135,15 @@ class DimensionsWrapper(AbstractWrapper):
               db_engine: DatabaseEngine,
               references: list[Reference],
               auth_key: str) -> Generator[Record, None, None]:
-        parts = {'doi': [], 'id': []}
+        parts = {'doi': [], 'id': [], 'pmid': [], 'pmcid': []}
         for reference in references:
             if reference.dimensions_id:
                 parts['id'].append(f'"{reference.dimensions_id}"')
             if reference.doi:
                 parts['doi'].append(f'"{reference.doi}"')
+            if reference.pubmed_id:
+                parts['pmid'].append(f'"{reference.pubmed_id}"')
+                parts['pmcid'].append(f'"{reference.pubmed_id}"')
         filters = [
             f'{key} in [{', '.join(ids)}]'
             for key, ids in parts.items()
@@ -152,7 +156,16 @@ class DimensionsWrapper(AbstractWrapper):
         where = ' OR '.join(filters)
         yield from cls.request(body=f'search publications '
                                     f'where {where} '
-                                    f'return publications[{'+'.join(DimensionsWrapper.FIELDS)}]',
+                                    'return publications[basics+categories+extras+book]',
+                               # f'return publications[{'+'.join(DimensionsWrapper.FIELDS)}]',
+                               # basics:authors id issue journal pages title type volume year
+                               # book: book_doi book_series_title book_title
+                               # extras: altmetric date doi funders open_access pmcid pmid relative_citation_ratio
+                               #         research_org_cities research_org_countries research_org_country_names
+                               #         research_org_state_codes research_org_state_names research_orgs researchers
+                               #         times_cited
+                               # categories: category_bra category_for category_hra category_hrcs_hc category_hrcs_rac
+                               #             category_icrp_cso category_icrp_ct category_rcdc category_sdg category_uoa
                                db_engine=db_engine,
                                auth_key=auth_key)
 
