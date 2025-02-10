@@ -1,11 +1,19 @@
 import json
 import logging
+import os
+from pathlib import Path
+
 import httpx
 
 from shared.util import rate_limit
 
 logging.basicConfig(format='%(asctime)s [%(levelname)s] %(name)s (%(process)d): %(message)s', level='DEBUG')
 logging.getLogger('httpcore').setLevel(logging.WARNING)
+
+FILE = Path('../../data/climate_health_ids.txt')
+if FILE.exists():
+    logging.warning('Stopping here for safety so you do not accidentally overwrite the previous data')
+    raise RuntimeError(f'File {FILE} already exists!')
 
 # Term lookup:
 # http://10.10.12.41:8983/solr/#/openalex/query?q=*:*&q.op=AND&defType=lucene&indent=true&fl=id&rows=100&facet=true&terms.fl=title_abstract&terms.limit=100&terms.stats=true&terms.ttf=true&terms.prefix=hydroclim&useParams=&qt=%2Fterms
@@ -121,7 +129,8 @@ AND
 cursor = '*'
 ids = 0
 page_i = 0
-with open('../../data/climate_health_ids.txt', 'w') as f:
+
+with open(FILE, 'w') as f:
     while cursor is not None:
         page_i += 1
         with rate_limit(min_time_ms=100) as t:
@@ -141,6 +150,7 @@ with open('../../data/climate_health_ids.txt', 'w') as f:
                     'cursor': cursor,
                     'per-page': 200
                 },
+                headers={'api_key': os.getenv('API_KEY')},
                 timeout=None,
             )
             page = res.json()

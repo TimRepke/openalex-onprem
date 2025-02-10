@@ -4,14 +4,23 @@ import logging
 import typing
 from datetime import datetime
 from time import perf_counter, sleep
-from typing import Any
+from typing import Any, AsyncGenerator, Sequence, Generator, AsyncIterator
 
 import httpx
 import pandas as pd
 from httpx import Client, URL, USE_CLIENT_DEFAULT, Response, AsyncClient, codes
 from httpx._client import UseClientDefault
-from httpx._types import RequestContent, RequestData, RequestFiles, QueryParamTypes, HeaderTypes, CookieTypes, \
-    AuthTypes, TimeoutTypes, RequestExtensions
+from httpx._types import (
+    RequestContent,
+    RequestData,
+    RequestFiles,
+    QueryParamTypes,
+    HeaderTypes,
+    CookieTypes,
+    AuthTypes,
+    TimeoutTypes,
+    RequestExtensions,
+)
 from sqlalchemy import select
 from sqlalchemy.sql._typing import _ColumnExpressionArgument
 from typing_extensions import override
@@ -243,9 +252,13 @@ class RequestClient(Client):
 
     def switch_proxy(self, proxy: str | None = None):
         if proxy != self.kwargs.get('proxy'):
-            client = self.__init__(**self.kwargs, proxy=proxy, max_req_per_sec=self.max_req_per_sec,
-                                   max_retries=self.max_retries, timeout_rate=self.timeout_rate,
-                                   retry_on_status=self.retry_on_status)
+            client = self.__class__(**{
+                **self.kwargs,
+                'proxy': proxy,
+                'max_req_per_sec': self.max_req_per_sec,
+                'max_retries': self.max_retries,
+                'timeout_rate': self.timeout_rate,
+                'retry_on_status': self.retry_on_status})
             self.__dict__.update(client.__dict__)
 
     def on(self, status: int, func: typing.Callable[[Response], dict[str, Any]]):
@@ -319,3 +332,105 @@ class RequestClient(Client):
                     self.time_per_request = (self.time_per_request + 1) * self.timeout_rate
         else:
             raise RuntimeError('Maximum number of retries reached')
+
+
+T = typing.TypeVar('T')
+
+
+async def batched_async(lst: AsyncIterator[T] | AsyncGenerator[T, None], batch_size: int) \
+        -> AsyncGenerator[list[T], None]:
+    batch = []
+    async for li in lst:
+        batch.append(li)
+        if len(batch) >= batch_size:
+            yield batch
+            batch = []
+    yield batch
+
+
+def batched(lst: Sequence[T] | Generator[T, None, None], batch_size: int) -> Generator[list[T], None, None]:
+    batch = []
+    for li in lst:
+        batch.append(li)
+        if len(batch) >= batch_size:
+            yield batch
+            batch = []
+    yield batch
+
+
+async def gather_async(lst: AsyncIterator[T] | AsyncGenerator[T, None]) -> list[T]:
+    return [li async for li in lst]
+
+
+def clear_empty(obj: Any | None) -> Any | None:
+    """
+    Recursively checks the object for empty-like things and explicitly sets them to None (or drops keys)
+
+    :param obj:
+    :return:
+    """
+    if obj is None:
+        return None
+
+    if isinstance(obj, str):
+        if len(obj) == 0:
+            return None
+        return obj
+
+    if isinstance(obj, list):
+        tmp_l = [clear_empty(li) for li in obj]
+        tmp_l = [li for li in tmp_l if li is not None]
+        if len(tmp_l) > 0:
+            return tmp_l
+        return None
+
+    if isinstance(obj, dict):
+        tmp_d = {key: clear_empty(val) for key, val in obj.items()}
+        tmp_d = {key: val for key, val in tmp_d.items() if val is not None}
+        if len(tmp_d) > 0:
+            return tmp_d
+        return None
+
+    return obj
+
+
+# from https://stackoverflow.com/a/24088493
+def fuze_dicts(d1: dict[str, Any] | None, d2: dict[str, Any] | None) -> dict[str, Any] | None:
+    if d1 is None:
+        return d2
+    if d2 is None:
+        return d1
+
+    for k, v in d1.items():
+        if k in d2:
+            # this next check is the only difference!
+            if all(isinstance(e, MutableMapping) for e in (v, d2[k])):
+                d2[k] = fuze_dicts(v, d2[k])
+            # we could further check types and merge as appropriate here.
+    d3 = d1.copy()
+    d3.update(d2)
+    return d3
+
+
+def ensure_values(o: Any, *attrs: str | tuple[str, Any]) -> tuple[Any, ...]:
+    ret = []
+    attr: str
+    default: Any | None
+    for attr_ in attrs:
+        if type(attr_) is str:
+            attr, default = attr_, None
+        elif type(attr_) is tuple:
+            attr, default = attr_
+        else:
+            raise TypeError()
+
+        if type(o) is dict:
+            v = o.get(attr, None)
+        else:
+            v = getattr(o, attr)
+        if v is None:
+            if default is None:
+                raise KeyError(f'Attribute "{attr}" is missing or empty and has no default!')
+            v = default
+        ret.append(v)
+    return tuple(ret)
