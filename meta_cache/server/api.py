@@ -1,10 +1,11 @@
 import logging
 from datetime import datetime
 
-from fastapi import APIRouter, Header, Depends, Body
+from fastapi import APIRouter, Header, Depends, Body, status
 from pydantic import BaseModel
 from sqlalchemy import text
 from sqlmodel import select, or_
+from fastapi.responses import JSONResponse
 
 from meta_cache.handlers.models import CacheRequest, CacheResponse, DehydratedRecord
 from meta_cache.handlers.crud import CacheResponseHandler
@@ -26,6 +27,18 @@ def is_valid_key(x_auth_key: str = Header()) -> AuthKey:
             logger.debug(f'Found valid auth key: {key}')
             return key
         raise PermissionError('Auth key does not exist or is not active.')
+
+
+router.get("/health-check/")
+
+
+async def health_check() -> JSONResponse:
+    """
+    Health check endpoint for the API.
+    Returns:
+        JSONResponse: Response indicating the API is healthy.
+    """
+    return JSONResponse(content={"status": "ok"}, status_code=status.HTTP_200_OK)
 
 
 @router.post('/lookup', response_model=CacheResponse)

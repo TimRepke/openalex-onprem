@@ -6,7 +6,7 @@ import httpx
 
 from meta_cache.handlers.db import DatabaseEngine
 from meta_cache.handlers.models import Reference, Record
-from meta_cache.handlers.util import get
+from meta_cache.handlers.util import get, RequestClient
 from .base import AbstractWrapper
 from ..schema import ApiKey
 
@@ -72,60 +72,61 @@ class ScopusWrapper(AbstractWrapper):
 
         advanced_query = ' OR '.join(parts)
 
-        next_cursor = '*'
-        n_pages = 0
-        n_records = 0
-        n_results = 0
-        while True:
-            logger.info(f'Fetching page {n_pages}...')
-            key = cls.get_api_keys(db_engine=db_engine, auth_key=auth_key)[0]
+        with RequestClient() as request_client: # FIXME use AsyncRequestClient
+            next_cursor = '*'
+            n_pages = 0
+            n_records = 0
+            while True:
+                logger.info(f'Fetching page {n_pages}...')
+                key = cls.get_api_keys(db_engine=db_engine, auth_key=auth_key)[0]
+                request_client.switch_proxy(proxy=key.proxy)
 
-            page = httpx.get(
-                'https://api.elsevier.com/content/search/scopus',
-                params={
-                    'query': advanced_query,
-                    'cursor': next_cursor,
-                    'view': 'COMPLETE',
-                },
-                headers={
-                    'Accept': 'application/json',
-                    "X-ELS-APIKey": key.api_key,
-                },
-                proxy=key.proxy,
-            )
-
-            key.scopus_requests_limit = page.headers.get('x-ratelimit-limit')
-            key.scopus_requests_remaining = page.headers.get('x-ratelimit-remaining')
-            key.scopus_requests_reset = page.headers.get('x-ratelimit-reset')
-            cls.log_api_key_use(db_engine=db_engine, key=key)
-
-            n_pages += 1
-            data = page.json()
-
-            next_cursor = get(data, 'search-results', 'cursor', '@next', default=None)
-            entries = get(data, 'search-results', 'entry', default=[])
-            n_results = get(data, 'search-results', 'opensearch:totalResults', default=0)
-
-            if len(entries) == 0 or n_results == 0:
-                break
-            if len(entries) == 1 and entries[0].get('error') is not None:
-                break
-
-            for entry in entries:
-                n_records += 1
-                yield Record(
-                    title=cls.get_title(entry),
-                    abstract=cls.get_abstract(entry),
-                    doi=cls.get_doi(entry),
-                    scopus_id=cls.get_id(entry),
-                    raw_scopus=entry,
-                    time_scopus=datetime.now(),
-                    requested_scopus=True,
+                page = httpx.get(
+                    'https://api.elsevier.com/content/search/scopus',
+                    params={
+                        'query': advanced_query,
+                        'cursor': next_cursor,
+                        'view': 'COMPLETE',
+                    },
+                    headers={
+                        'Accept': 'application/json',
+                        "X-ELS-APIKey": key.api_key,
+                    },
+                    proxy=key.proxy,
                 )
-            logger.debug(f'Found {n_records:,} records after processing page {n_pages}')
 
-        # return {
-        #     'n_records': n_records,
-        #     'n_pages': n_pages,
-        #     'n_results': n_results,
-        # }
+                key.scopus_requests_limit = page.headers.get('x-ratelimit-limit')
+                key.scopus_requests_remaining = page.headers.get('x-ratelimit-remaining')
+                key.scopus_requests_reset = page.headers.get('x-ratelimit-reset')
+                cls.log_api_key_use(db_engine=db_engine, key=key)
+
+                n_pages += 1
+                data = page.json()
+
+                next_cursor = get(data, 'search-results', 'cursor', '@next', default=None)
+                entries = get(data, 'search-results', 'entry', default=[])
+                n_results = get(data, 'search-results', 'opensearch:totalResults', default=0)
+
+                if len(entries) == 0 or n_results == 0:
+                    break
+                if len(entries) == 1 and entries[0].get('error') is not None:
+                    break
+
+                for entry in entries:
+                    n_records += 1
+                    yield Record(
+                        title=cls.get_title(entry),
+                        abstract=cls.get_abstract(entry),
+                        doi=cls.get_doi(entry),
+                        scopus_id=cls.get_id(entry),
+                        raw_scopus=entry,
+                        time_scopus=datetime.now(),
+                        requested_scopus=True,
+                    )
+                logger.debug(f'Found {n_records:,} records after processing page {n_pages}')
+
+            # return {
+            #     'n_records': n_records,
+            #     'n_pages': n_pages,
+            #     'n_results': n_results,
+            # }

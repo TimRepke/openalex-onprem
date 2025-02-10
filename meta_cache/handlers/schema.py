@@ -80,6 +80,8 @@ class ApiKey(SQLModel, table=True):
     scopus_requests_remaining: int | None = None
     scopus_requests_reset: str | None = None
 
+    dimensions_jwt: str | None = None
+
     active: bool = True
 
     auth_keys: list['AuthKey'] = Relationship(back_populates='api_keys', link_model=AuthApiKeyLink)
