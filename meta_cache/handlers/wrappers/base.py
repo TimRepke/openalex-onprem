@@ -10,7 +10,10 @@ from ..db import DatabaseEngine
 from ..models import CacheResponse, Reference, ResponseRecord
 from ..schema import Record, ApiKey
 from ..util import get_reference_df, mark_status
+
 logger = logging.getLogger('wrapper.base')
+
+
 class AbstractWrapper(ABC):
     @property
     @abstractmethod
@@ -103,7 +106,8 @@ class AbstractWrapper(ABC):
             db_engine: DatabaseEngine,
             references: list[Reference],
             auth_key: str,
-            fail_on_error:bool=False,
+            fail_on_error: bool = False,
+            override_fields: bool = False,
             ) -> CacheResponse:
         # Construct tracker for missed IDs
         df = get_reference_df(references)
@@ -146,7 +150,10 @@ class AbstractWrapper(ABC):
                     # fill all empty fields in existing records that we now have data for
                     for ex_record in existing:
                         for field in Record.model_fields.keys():
-                            if getattr(record, field) is not None:  # and getattr(ex_record, field) is None
+                            if field == 'record_id':  # ignore primary key
+                                continue
+                            if getattr(record, field) is not None and (override_fields or
+                                                                       getattr(ex_record, field) is None):
                                 setattr(ex_record, field, getattr(record, field))
                         ex_record.time_updated = datetime.now()
                         found.append(ex_record)
@@ -160,7 +167,6 @@ class AbstractWrapper(ABC):
                     logger.exception(e)
                     logger.warning('Ignoring errors!')
                     session.rollback()
-
 
             # Persist that we requested this (missing)
             for _, missed in df[df['missed'] == True].iterrows():

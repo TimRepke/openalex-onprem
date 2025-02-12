@@ -19,14 +19,27 @@ def main(solr_host: Annotated[str, typer.Option(prompt='host')],
          solr_collection: Annotated[str, typer.Option(prompt='solr collection')],
          ids_file: Annotated[Path, typer.Option(prompt='path to file with ids to check')],
          auth_key: Annotated[str, typer.Option(prompt='meta-cache key')],
+         skip_until: str | None = None,
          loglevel: str = 'DEBUG'):
     logging.basicConfig(format='%(asctime)s [%(levelname)s] %(name)s (%(process)d): %(message)s', level=loglevel)
 
     with open(ids_file) as f:
-        openalex_ids = set(f.readlines())
+        openalex_ids = list(set([oai_id.strip() for oai_id in f.readlines() if len(oai_id.strip()) > 0]))
+
+    openalex_ids = sorted(openalex_ids)
+
+    found_starting_point = False
 
     with httpx.Client() as client:
-        for batch in batched(openalex_ids, BATCH_SIZE):
+        for bi, batch in enumerate(batched(openalex_ids, BATCH_SIZE)):
+            logger.info(f'----------- Processing batch {bi} -----------')
+
+            if skip_until and not found_starting_point:
+                if skip_until not in batch:
+                    logger.debug(f'Skipping batch {bi}')
+                    continue
+                found_starting_point = True
+
             res = client.get(f'{solr_host}/api/collections/{solr_collection}/select',
                              params={
                                  'q': '-abstract:*',  # -abstract:[* TO ""]
@@ -43,12 +56,17 @@ def main(solr_host: Annotated[str, typer.Option(prompt='host')],
                 continue
             logger.info(f'Missing abstract for {len(res['response']['docs']):,} entries')
 
-            # request dimensions
-            cache_response = DimensionsWrapper.run(db_engine=db_engine_cache, references=[
+            references = [
                 Reference(openalex_id=doc['id'], doi=doc['doi'][16:])
                 for doc in res['response']['docs']
                 if doc.get('doi') is not None
-            ], auth_key=auth_key)
+            ]
+            if len(references) == 0:
+                logger.debug('Batch has no DOIs.')
+                continue
+
+            # request dimensions
+            cache_response = DimensionsWrapper.run(db_engine=db_engine_cache, references=references, auth_key=auth_key)
 
             # with remaining request scopus
             remaining = [ref for ref in cache_response.references if ref.missed]
