@@ -42,7 +42,7 @@ async def health_check() -> JSONResponse:
 class StatsEntry(BaseModel):
     time_created: datetime | None = None
     n_total: int
-    n_with_titlet: int
+    n_with_title: int
     n_with_abstract: int
     n_with_scopus: int
     n_with_dimensions: int
