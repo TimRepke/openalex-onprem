@@ -116,10 +116,11 @@ class WebOfScienceWrapper(AbstractWrapper):
                     "X-ApiKey": key.api_key,
                 },
                 proxy=key.proxy,
+                timeout=120,
             )
             # res = httpx.get('https://api.clarivate.com/apis/wos-starter/v1/documents/',
             #                 params={'q': 'TS=(school uniform)', 'db': 'WOK', 'limit': 50, 'cursor': '*'},
-            #                 headers={"X-ApiKey": 'xxx'})
+            #                 headers={"X-ApiKey": 'xxx'}, timeout=120)
 
             # FIXME
             key.scopus_requests_limit = page.headers.get('x-ratelimit-limit')

@@ -75,7 +75,7 @@ class DimensionsWrapper(AbstractWrapper):
     @classmethod
     def request(cls, body: str, db_engine: DatabaseEngine, auth_key: str):
         key = cls.get_api_keys(db_engine=db_engine, auth_key=auth_key)[0]
-        with RequestClient(proxy=key.proxy, timeout=60) as request_client:  # FIXME use AsyncRequestClient
+        with RequestClient(proxy=key.proxy, timeout=120) as request_client:  # FIXME use AsyncRequestClient
 
             def update_jwt(response: httpx.Response) -> dict[str, dict[str, str]]:
                 logger.debug('Fetching JWT token')

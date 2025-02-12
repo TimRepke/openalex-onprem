@@ -72,7 +72,7 @@ class ScopusWrapper(AbstractWrapper):
 
         advanced_query = ' OR '.join(parts)
 
-        with RequestClient() as request_client: # FIXME use AsyncRequestClient
+        with RequestClient(timeout=120) as request_client: # FIXME use AsyncRequestClient
             next_cursor = '*'
             n_pages = 0
             n_records = 0
@@ -81,7 +81,7 @@ class ScopusWrapper(AbstractWrapper):
                 key = cls.get_api_keys(db_engine=db_engine, auth_key=auth_key)[0]
                 request_client.switch_proxy(proxy=key.proxy)
 
-                page = httpx.get(
+                page = request_client.get(
                     'https://api.elsevier.com/content/search/scopus',
                     params={
                         'query': advanced_query,
@@ -92,7 +92,6 @@ class ScopusWrapper(AbstractWrapper):
                         'Accept': 'application/json',
                         "X-ELS-APIKey": key.api_key,
                     },
-                    proxy=key.proxy,
                 )
 
                 key.scopus_requests_limit = page.headers.get('x-ratelimit-limit')

@@ -1,15 +1,16 @@
+import logging
 from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Any, Generator
 
+from sqlalchemy.exc import IntegrityError
 from sqlmodel import text, select, or_
 
 from ..db import DatabaseEngine
 from ..models import CacheResponse, Reference, ResponseRecord
 from ..schema import Record, ApiKey
 from ..util import get_reference_df, mark_status
-
-
+logger = logging.getLogger('wrapper.base')
 class AbstractWrapper(ABC):
     @property
     @abstractmethod
@@ -98,7 +99,12 @@ class AbstractWrapper(ABC):
         raise NotImplementedError()
 
     @classmethod
-    def run(cls, db_engine: DatabaseEngine, references: list[Reference], auth_key: str) -> CacheResponse:
+    def run(cls,
+            db_engine: DatabaseEngine,
+            references: list[Reference],
+            auth_key: str,
+            fail_on_error:bool=False,
+            ) -> CacheResponse:
         # Construct tracker for missed IDs
         df = get_reference_df(references)
 
@@ -146,7 +152,15 @@ class AbstractWrapper(ABC):
                         found.append(ex_record)
                         session.add(ex_record)
                     mark_status(df, record, status='updated')
-                session.commit()
+                try:
+                    session.commit()
+                except IntegrityError as e:
+                    if fail_on_error:
+                        raise e
+                    logger.exception(e)
+                    logger.warning('Ignoring errors!')
+                    session.rollback()
+
 
             # Persist that we requested this (missing)
             for _, missed in df[df['missed'] == True].iterrows():

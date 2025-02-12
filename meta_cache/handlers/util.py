@@ -96,7 +96,8 @@ def post2solr(records: list[Record], solr_host: str, collection: str, force: boo
                             'rows': len(records),
                             'useParams': '',
                             'defType': 'lucene'
-                        }).json()
+                        },
+                        timeout=120).json()
 
         needs_update = set([doc['id'] for doc in res['response']['docs']])
         logger.info(f'Partition with {len(records):,} records '
@@ -124,7 +125,8 @@ def post2solr(records: list[Record], solr_host: str, collection: str, force: boo
 
     res = httpx.post((f'{solr_host}/api/collections/{collection}/update/json?commit=true'),
                      headers={'Content-Type': 'application/json'},
-                     data=buffer)
+                     data=buffer,
+                     timeout=120)
 
     logger.info(f'Partition posted to solr via {res}')
 
