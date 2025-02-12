@@ -19,7 +19,8 @@ def main(solr_host: Annotated[str, typer.Option(prompt='host')],
          solr_collection: Annotated[str, typer.Option(prompt='solr collection')],
          ids_file: Annotated[Path, typer.Option(prompt='path to file with ids to check')],
          auth_key: Annotated[str, typer.Option(prompt='meta-cache key')],
-         skip_until: str | None = None,
+         skip_until_id: str | None = None,
+         skip_batches: int = 0,
          loglevel: str = 'DEBUG'):
     logging.basicConfig(format='%(asctime)s [%(levelname)s] %(name)s (%(process)d): %(message)s', level=loglevel)
 
@@ -33,9 +34,11 @@ def main(solr_host: Annotated[str, typer.Option(prompt='host')],
     with httpx.Client() as client:
         for bi, batch in enumerate(batched(openalex_ids, BATCH_SIZE)):
             logger.info(f'----------- Processing batch {bi} -----------')
-
-            if skip_until and not found_starting_point:
-                if skip_until not in batch:
+            if skip_batches > bi:
+                logger.debug(f'Skipping batch {bi}')
+                continue
+            if skip_until_id and not found_starting_point:
+                if skip_until_id not in batch:
                     logger.debug(f'Skipping batch {bi}')
                     continue
                 found_starting_point = True
