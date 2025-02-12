@@ -29,9 +29,7 @@ def is_valid_key(x_auth_key: str = Header()) -> AuthKey:
         raise PermissionError('Auth key does not exist or is not active.')
 
 
-router.get("/health-check/")
-
-
+@router.get('/health-check')
 async def health_check() -> JSONResponse:
     """
     Health check endpoint for the API.
@@ -39,6 +37,51 @@ async def health_check() -> JSONResponse:
         JSONResponse: Response indicating the API is healthy.
     """
     return JSONResponse(content={"status": "ok"}, status_code=status.HTTP_200_OK)
+
+
+class StatsEntry(BaseModel):
+    time_created: datetime | None = None
+    n_total: int
+    n_with_titlet: int
+    n_with_abstract: int
+    n_with_scopus: int
+    n_with_dimensions: int
+
+
+@router.get('/daily-stats', response_model=list[StatsEntry])
+async def daily_stats(limit: int = 10):  # , auth_key: AuthKey = Depends(is_valid_key)
+    stmt = text('''
+        SELECT date_trunc('day', time_created) as time_created,
+               count(1)                        as n_total,
+               count(title)                    as n_with_title,
+               count(abstract)                 as n_with_abstract,
+               count(raw_scopus)               as n_with_scopus,
+               count(raw_dimensions)           as n_with_dimensions
+        FROM record
+        GROUP BY date_trunc('day', time_created)
+        ORDER BY date_trunc('day', time_created) DESC
+        LIMIT :limit;
+    ''')
+
+    with db_engine.session() as session:
+        res = session.execute(stmt, {'limit': limit})
+        return res.mappings().all()
+
+
+@router.get('/stats', response_model=list[StatsEntry])
+async def stats():  # , auth_key: AuthKey = Depends(is_valid_key)
+    stmt = text('''
+        SELECT count(1)                        as n_total,
+               count(title)                    as n_with_title,
+               count(abstract)                 as n_with_abstract,
+               count(raw_scopus)               as n_with_scopus,
+               count(raw_dimensions)           as n_with_dimensions
+        FROM record;
+    ''')
+
+    with db_engine.session() as session:
+        res = session.execute(stmt)
+        return res.mappings().all()
 
 
 @router.post('/lookup', response_model=CacheResponse)
@@ -86,30 +129,3 @@ async def read(openalex_ids: list[str] = Body(), auth_key: AuthKey = Depends(is_
         logger.debug(f'Requested {len(openalex_ids)} records')
         with db_engine.session() as session:
             return session.exec(select(Record).where(Record.openalex_id.in_(openalex_ids))).all()
-
-
-class StatsEntry(BaseModel):
-    time_created: datetime
-    n_total: int
-    n_with_abstract: int
-    n_with_scopus: int
-    n_with_dimensions: int
-
-
-@router.get('/stats', response_model=list[StatsEntry])
-async def stats(limit: int = 10):  # , auth_key: AuthKey = Depends(is_valid_key)
-    stmt = text('''
-        SELECT date_trunc('day', time_created)                    as time_created,
-               count(1)                                           as n_total,
-               count(1) FILTER (WHERE abstract IS NOT NULL)       as n_with_abstract,
-               count(1) FILTER (WHERE raw_scopus IS NOT NULL)     as n_with_scopus,
-               count(1) FILTER (WHERE raw_dimensions IS NOT NULL) as n_with_dimensions
-        FROM record
-        GROUP BY date_trunc('day', time_created)
-        ORDER BY date_trunc('day', time_created) DESC
-        LIMIT :limit;
-    ''')
-
-    with db_engine.session() as session:
-        res = session.execute(stmt, {'limit': limit})
-        return res.mappings().all()
