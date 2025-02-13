@@ -81,6 +81,7 @@ def main(solr_host: Annotated[str, typer.Option(prompt='host')],
                 logger.debug('Skipping scopus, all ready')
 
             # with remaining request wos
+            # with remaining request s2
 
 
 if __name__ == '__main__':
