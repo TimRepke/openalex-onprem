@@ -149,7 +149,7 @@ class Work(Struct, kw_only=True, omit_defaults=True):
     # primary_topic
     publication_date: str | None = None
     publication_year: int | None = None
-    # referenced_works
+    referenced_works: list[str] | None = None
     # related_works
     # sustainable_development_goals
     title: str | None = None
@@ -186,9 +186,12 @@ class WorkOut(Struct, kw_only=True, omit_defaults=True):
 
     publisher: str | None = None
     publisher_id: str | None = None
+    source: str | None = None
+    source_id: str | None = None
 
     locations: str | None = None  # list[Location]
     topics: str | None = None  # list[Topic]
+    references: str | None = None   # list[str]
 
     publication_date: str | None = None
     publication_year: int | None = None

@@ -54,6 +54,10 @@ def transform_partition(in_file: str | Path, out_file: str | Path) -> tuple[int,
                 authorships = encoder.encode(work.authorships).decode()
 
             locations = None
+            publisher = None
+            publisher_id = None
+            source = None
+            source_id = None
             if work.locations is not None and len(work.locations) > 0:
                 locations = encoder.encode([
                     LocationOut(
@@ -72,12 +76,11 @@ def transform_partition(in_file: str | Path, out_file: str | Path) -> tuple[int,
                         version=loc.version
                     )
                     for loc in work.locations]).decode()
-
-            publisher = None
-            publisher_id = None
-            if work.primary_location is not None and work.primary_location.source is not None:
-                publisher_id = work.primary_location.source.host_organization
-                publisher = work.primary_location.source.host_organization_name
+                if work.locations[0].source is not None:
+                    publisher_id = work.locations[0].source.host_organization
+                    publisher = work.locations[0].source.host_organization_name
+                    source = work.locations[0].source.display_name
+                    source_id = work.locations[0].source.id
 
             topics = None
             if work.topics is not None and len(work.topics) > 0:
@@ -109,6 +112,10 @@ def transform_partition(in_file: str | Path, out_file: str | Path) -> tuple[int,
             if work.open_access:
                 is_oa = work.open_access.is_oa
 
+            references = None
+            if work.referenced_works is not None and len(work.referenced_works) > 0:
+                references = encoder.encode(work.referenced_works).decode()
+
             wo = structs.WorkOut(id=wid,
                                  # display_name=work.display_name,
                                  title=work.title,
@@ -133,6 +140,9 @@ def transform_partition(in_file: str | Path, out_file: str | Path) -> tuple[int,
                                  publication_year=work.publication_year,
                                  publisher=publisher,
                                  publisher_id=publisher_id,
+                                 source=source,
+                                 source_id=source_id,
+                                 references=references,
                                  topics=topics,
                                  type=work.type,
                                  created_date=work.created_date,
