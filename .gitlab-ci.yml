@@ -184,7 +184,7 @@ Solr-import:
     - echo "$OA_SCRIPT_DIR"
     - echo "$OA_ENV_FILE"
     - cd "$OA_SCRIPT_DIR/openalex-ingest" || exit
-    - ./update.sh --config "$OA_ENV_FILE" --solr --solr-import-full --solr-clr --with-tmp
+    - ./update.sh --config "$OA_ENV_FILE" --solr --solr-import-full --solr-tmp --solr-clr --with-tmp
 Solr-switch:
   except:
     - schedules

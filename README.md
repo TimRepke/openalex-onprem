@@ -100,7 +100,8 @@ gitlab-runner ALL= NOPASSWD: /usr/bin/systemctl status openalex-cache.service
 ### Scripts
 Bulk-importing from a nacsos project:
 ```
-export PYTHONPATH=$PYTHONPATH:/var/www/openalex-cache/nacsos-academic-search:/var/www/openalex-cache/nacsos-academic-search/meta_cache && export OACACHE_CONFIG=/var/www/openalex-cache/nacsos-academic-search/meta_cache/config/scripts.env && python scripts/nacsos.py [project-id]
+cd path/to/nacsos-academic-search/meta_cache/
+export PYTHONPATH=$PYTHONPATH:$(pwd)/..:$(pwd)/../meta_cache:$(pwd)/../openalex-ingest && export OACACHE_CONFIG=$(pwd)/config/scripts.env && python scripts/nacsos.py [project-id]
 ```
 
 Writing full cache to solr
