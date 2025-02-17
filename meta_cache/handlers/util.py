@@ -120,7 +120,7 @@ def post2solr(records: list[Record], solr_host: str, collection: str, force: boo
             'external_abstract': True,
         }
         if record.doi:
-            rec['doi'] = f'https://https://doi.org/{record.doi}'
+            rec['doi'] = f'https://doi.org/{record.doi}'
         buffer += json.dumps(rec) + '\n'
 
     res = httpx.post((f'{solr_host}/api/collections/{collection}/update/json?commit=true'),

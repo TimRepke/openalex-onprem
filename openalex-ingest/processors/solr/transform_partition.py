@@ -2,6 +2,7 @@ import time
 import gzip
 import logging
 import argparse
+from io import BytesIO
 from pathlib import Path
 
 from msgspec import DecodeError
@@ -15,7 +16,7 @@ from shared.util import strip_id
 from processors.solr import structs
 
 
-def transform_partition(in_file: str | Path, out_file: str | Path) -> tuple[int, int]:
+def transform_partition(in_file: str | Path, output: BytesIO) -> tuple[int, int]:
     decoder_work = Decoder(structs.Work)
     encoder = Encoder()
 
@@ -23,7 +24,7 @@ def transform_partition(in_file: str | Path, out_file: str | Path) -> tuple[int,
     n_works: int = 0
     buffer = bytearray(256)
 
-    with gzip.open(in_file, 'rb') as f_in, open(out_file, 'wb') as f_out:
+    with gzip.open(in_file, 'rb') as f_in:
         for line in f_in:
             n_works += 1
             try:
@@ -150,7 +151,7 @@ def transform_partition(in_file: str | Path, out_file: str | Path) -> tuple[int,
 
             encoder.encode_into(wo, buffer)
             buffer.extend(b'\n')
-            f_out.write(buffer)
+            output.write(buffer)
 
     return n_works, n_abstracts
 
@@ -171,7 +172,7 @@ if __name__ == '__main__':
     startTime = time.time()
     logging.info(f'Processing partition file "{args.infile}" and writing to "{args.outfile}"')
 
-    n_works, n_abstracts = transform_partition(args.infile, args.outfile)
+    _n_works, _n_abstracts = transform_partition(args.infile, args.outfile)
 
     executionTime = (time.time() - startTime)
-    logging.info(f'Found {n_abstracts:,} abstracts in {n_works:,} works in {executionTime}s')
+    logging.info(f'Found {_n_abstracts:,} abstracts in {_n_works:,} works in {executionTime}s')

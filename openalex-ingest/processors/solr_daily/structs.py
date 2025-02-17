@@ -170,6 +170,7 @@ class OpenAccess(BaseModel):
 
 class Work(BaseModel):
     model_config = ConfigDict(extra='ignore')
+
     abstract_inverted_index: dict[str, list[int]] | None = None
     authorships: list[Authorship] | None = None
     # apc_list
@@ -209,7 +210,7 @@ class Work(BaseModel):
     # primary_topic
     publication_date: str | None = None
     publication_year: int | None = None
-    # referenced_works
+    referenced_works: list[str] | None = None
     # related_works
     # sustainable_development_goals
     title: str | None = None
@@ -238,7 +239,7 @@ class WorkOut(BaseModel):
     pmcid: str | None = None
 
     indexed_in: str | None = None
-    # external_abstract: bool| None = None
+    external_abstract: bool | None = None
     is_oa: bool | None = None
     is_paratext: bool | None = None
     is_retracted: bool | None = None
@@ -248,9 +249,12 @@ class WorkOut(BaseModel):
 
     publisher: str | None = None
     publisher_id: str | None = None
+    source: str | None = None
+    source_id: str | None = None
 
     locations: str | None = None  # list[Location]
     topics: str | None = None  # list[Topic]
+    references: str | None = None  # list[str]
 
     publication_date: str | None = None
     publication_year: int | None = None

@@ -1,10 +1,13 @@
 import logging
 import subprocess
+from io import BytesIO
 from pathlib import Path
 
+import httpx
 import typer
 from typing_extensions import Annotated
 
+from meta_cache.handlers.util import post2solr
 from shared.util import get_globs
 from processors.solr.transform_partition import transform_partition
 
@@ -21,6 +24,7 @@ def update_solr(tmp_dir: Annotated[Path, typer.Option(help='Directory for tempor
                 solr_port: Annotated[int, typer.Option(help='Solr port')],
                 last_solr_update: Annotated[str, typer.Option(help='YYYY-MM-DD of when solr was last updated')],
                 skip_deletion: bool = False,
+                skip_n_partitions: int = 0,
                 loglevel: str = 'INFO'):
     logging.basicConfig(format='%(asctime)s [%(levelname)s] %(name)s (%(process)d): %(message)s', level=loglevel)
 
@@ -37,27 +41,28 @@ def update_solr(tmp_dir: Annotated[Path, typer.Option(help='Directory for tempor
     logging.info(f'Looks like there are {len(works)} works partitions '
                  f'and {len(merged)} merged_ids partitions since last update.')
 
-    for pi, partition in enumerate(works):
-        out_file = tmp_dir / f'solr-{name_part(partition)}.jsonl'
-        out_file.parent.mkdir(exist_ok=True, parents=True)
+    for pi, partition in enumerate(works, 1):
+        if pi <= skip_n_partitions:
+            logging.debug(f'Skipping partition {pi}: {partition}')
+            continue
 
-        logging.debug(f'Reading partition from "{partition}" and writing to "{out_file}"')
-        n_works, n_abstracts = transform_partition(partition, out_file)
+        logging.debug(f'Reading partition from: {partition}')
+        buffer = BytesIO()
+        n_works, n_abstracts = transform_partition(partition, output=buffer)
         logging.info(f'({pi:,}/{len(works):,}) Partition contained {n_works:,} works '
                      f'with {n_abstracts:,} abstracts (referring to {partition})')
 
-        subprocess.run(['curl',
-                        '-X', 'POST',
-                        (f'http://{solr_host}:{solr_port}'
-                         f'/api/collections/{solr_collection}/update/json?commit=true'),
-                        '-H', 'Content-type:application/json',
-                        '--silent',
-                        '-T', str(out_file)])
+        buffer.seek(0)
 
-        logging.info('Partition posted to solr!')
-
-        # Cleaning up
-        out_file.unlink()
+        res = httpx.post((f'{solr_host}/api/collections/{solr_collection}/update/json?commit=true'),
+                         headers={'Content-Type': 'application/json'},
+                         data=buffer.read().decode(),
+                         timeout=120)
+        logging.info(f'Partition posted to solr: {res.status_code}!')
+        try:
+            res.raise_for_status()
+        except httpx.HTTPError as e:
+            logging.exception(e)
 
     logging.info('Solr collection is up to date.')
 
