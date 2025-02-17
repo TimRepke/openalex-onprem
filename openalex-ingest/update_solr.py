@@ -1,5 +1,4 @@
 import logging
-import subprocess
 from io import BytesIO
 from pathlib import Path
 
@@ -7,7 +6,6 @@ import httpx
 import typer
 from typing_extensions import Annotated
 
-from meta_cache.handlers.util import post2solr
 from shared.util import get_globs
 from processors.solr.transform_partition import transform_partition
 
@@ -17,13 +15,10 @@ def name_part(partition: Path):
     return f'{update}-{partition.stem}'
 
 
-def update_solr(tmp_dir: Annotated[Path, typer.Option(help='Directory for temporary parsed partition files')],
-                snapshot_dir: Annotated[Path, typer.Option(help='Path to openalex snapshot from S3')],
+def update_solr(snapshot_dir: Annotated[Path, typer.Option(help='Path to openalex snapshot from S3')],
                 solr_collection: Annotated[str, typer.Option(help='Name of the Solr collection')],
                 solr_host: Annotated[str, typer.Option(help='Solr hostname')],
-                solr_port: Annotated[int, typer.Option(help='Solr port')],
                 last_solr_update: Annotated[str, typer.Option(help='YYYY-MM-DD of when solr was last updated')],
-                skip_deletion: bool = False,
                 skip_n_partitions: int = 0,
                 loglevel: str = 'INFO'):
     logging.basicConfig(format='%(asctime)s [%(levelname)s] %(name)s (%(process)d): %(message)s', level=loglevel)

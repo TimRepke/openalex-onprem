@@ -348,11 +348,11 @@ if [ "$run_solr" = true ]; then
     fi
 
     echo "Running solr import..."
-    python update_solr.py --tmp-dir="$OA_TMP_DIR/solr" \
-                          --snapshot-dir="$OA_SNAPSHOT" \
+    python update_solr.py --snapshot-dir="$OA_SNAPSHOT" \
                           --solr-collection="$OA_SOLR_COLLECTION" \
-                          --solr-host="$OA_SOLR_HOST" \
-                          --solr-port="$OA_SOLR_PORT" --last-solr-update="$LAST_UP" "$solr_skip_del" --loglevel=INFO
+                          --solr-host="$OA_SOLR_API" \
+                          --last-solr-update="$LAST_UP" \
+                          --loglevel=INFO
 
     # Leave python environment
     deactivate
