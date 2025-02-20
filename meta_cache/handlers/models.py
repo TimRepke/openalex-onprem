@@ -71,7 +71,7 @@ class CacheRequest(BaseModel):
     fetch_on_previous_try: bool = False
 
     # Wrapper to use for external API request
-    wrapper: WrapperEnum = WrapperEnum.SCOPUS
+    wrapper: WrapperEnum | None = None
 
     # If true, will return full result set instead of just dehydrated records
     include_full_records: bool = False

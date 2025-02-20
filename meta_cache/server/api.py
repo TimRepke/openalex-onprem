@@ -9,7 +9,7 @@ from fastapi.responses import JSONResponse
 
 from meta_cache.handlers.models import CacheRequest, CacheResponse, DehydratedRecord
 from meta_cache.handlers.crud import CacheResponseHandler
-from meta_cache.handlers.wrappers import get_wrapper
+from meta_cache.handlers.wrappers import get_wrapper, DimensionsWrapper, ScopusWrapper
 from meta_cache.handlers.schema import AuthKey, Record
 from meta_cache.handlers.util import get_ors
 
@@ -88,16 +88,25 @@ async def stats():  # , auth_key: AuthKey = Depends(is_valid_key)
 async def lookup(request: CacheRequest, auth_key: AuthKey = Depends(is_valid_key)) -> CacheResponse:
     handler = CacheResponseHandler(request=request, db_engine=db_engine)
     handler.fetch()
-    wrapper = get_wrapper(handler.request.wrapper)
 
-    logger.debug('Queueing job')
-    job = queues[wrapper.name].enqueue(run,
-                                       func=wrapper.run,
-                                       references=list(handler.queued),
-                                       auth_key=auth_key.auth_key_id)
-    #                                  meta=list(handler.queued)
-    handler.queued_job = job.id
-    logger.debug(f'Job {job.id} @ {job.origin}')
+    if handler.request.wrapper:
+        wrappers = [
+            get_wrapper(handler.request.wrapper)
+        ]
+    else:
+        wrappers = [
+            ScopusWrapper,
+            DimensionsWrapper
+        ]
+
+    for wrapper in wrappers:
+        logger.debug('Queueing job')
+        job = queues[wrapper.name].enqueue(run,
+                                           func=wrapper.run,
+                                           references=list(handler.queued),
+                                           auth_key=auth_key.auth_key_id)
+        handler.queued_job = job.id
+        logger.debug(f'Job {job.id} @ {job.origin}')
 
     return handler.response
 

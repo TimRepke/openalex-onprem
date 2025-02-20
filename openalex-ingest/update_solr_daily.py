@@ -21,7 +21,7 @@ def date_check(value: str) -> str:
     return value
 
 
-def request_meta_cache(url: str, meta_key: str, buffer: list[WorkOut], wrapper: str = 'scopus'):
+def request_meta_cache(url: str, meta_key: str, buffer: list[WorkOut], wrapper: str | None = None):
     orig_size = len(buffer)
     buffer = [
         work
