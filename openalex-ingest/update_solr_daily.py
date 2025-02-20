@@ -80,7 +80,7 @@ def update_solr(api_key: Annotated[str, typer.Option(help='OpenAlex premium API 
                 oa_page_size: int = 200,
                 solr_buffer_size: int = 200,
                 meta_buffer_size: int = 25,
-                wrapper: str = 'scopus',
+                wrapper: str | None = None,
                 loglevel: str = 'INFO'):
     logging.basicConfig(format='%(asctime)s [%(levelname)s] %(name)s (%(process)d): %(message)s', level=loglevel)
 
