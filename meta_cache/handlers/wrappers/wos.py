@@ -6,9 +6,9 @@ import httpx
 
 from meta_cache.handlers.db import DatabaseEngine
 from meta_cache.handlers.models import Reference, Record
-from meta_cache.handlers.util import get
-from .base import AbstractWrapper
-from ..schema import ApiKey
+from meta_cache.handlers.util import get, RequestClient
+from meta_cache.handlers.wrappers.base import AbstractWrapper
+from meta_cache.handlers.schema import ApiKey
 
 logger = logging.getLogger('wrapper-wos')
 # Documentation:
@@ -118,6 +118,9 @@ class WebOfScienceWrapper(AbstractWrapper):
                 proxy=key.proxy,
                 timeout=120,
             )
+            print(page)
+
+            raise Exception()
             # res = httpx.get('https://api.clarivate.com/apis/wos-starter/v1/documents/',
             #                 params={'q': 'TS=(school uniform)', 'db': 'WOK', 'limit': 50, 'cursor': '*'},
             #                 headers={"X-ApiKey": 'xxx'}, timeout=120)
@@ -155,3 +158,18 @@ class WebOfScienceWrapper(AbstractWrapper):
             logger.debug(f'Found {n_records:,} records after processing page {n_pages}')
 
 
+if __name__ == '__main__':
+    from meta_cache.server.db import db_engine as engine
+    import os
+
+    for ri, record in enumerate(WebOfScienceWrapper.fetch(
+            db_engine=engine,
+            references=[Reference(doi='10.4103/ija.ija_382_20', openalex_id='W3095414299'),
+                        Reference(doi='10.1111/jfr3.12673', openalex_id='W3095428461'),
+                        Reference(doi='10.18517/ijaseit.10.5.10817', openalex_id='W3095407431'),
+                        Reference(doi='10.1080/00141844.2020.1839527', openalex_id='W3095413630')],
+            auth_key=os.getenv('AUTH_KEY'))):
+        print(record)
+        if ri > 100:
+            break
+    print('Force stopped')

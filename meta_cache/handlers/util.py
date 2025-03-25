@@ -114,10 +114,10 @@ def post2solr(records: list[Record], solr_host: str, collection: str, force: boo
 
         rec = {
             'id': record.openalex_id,
-            'title': record.title,
-            'abstract': record.abstract,
-            'title_abstract': f'{record.title} {record.abstract}',
-            'external_abstract': True,
+            'title': {'set': record.title},
+            'abstract': {'set': record.abstract},
+            'title_abstract': {'set': f'{record.title} {record.abstract}'},
+            'external_abstract': {'set': True},
         }
         if record.doi:
             rec['doi'] = f'https://doi.org/{record.doi}'
