@@ -15,9 +15,9 @@ from meta_cache.handlers.wrappers import DimensionsWrapper, ScopusWrapper
 from meta_cache.scripts.config import db_engine_cache
 from shared.util import rate_limit, batched
 
-logging.basicConfig(format='%(asctime)s [%(levelname)s] %(name)s (%(process)d): %(message)s', level='DEBUG')
+logging.basicConfig(format='%(asctime)s [%(levelname)s] %(name)s (%(process)d): %(message)s', level='INFO')
 logging.getLogger('httpcore').setLevel(logging.WARNING)
-
+logging.getLogger('sqlalchemy.engine.Engine').setLevel(logging.WARNING)
 app = typer.Typer()
 
 
@@ -68,6 +68,7 @@ def openalex_ids(query: Annotated[str, typer.Option(help='query for openalex')],
                 logging.info(f'Retrieved {ids:,}/{page['meta']['count']:,}; currently on page {page_i}')
 
                 page_ids = [raw_work['id'][21:] for raw_work in page['results']]
+                ids += len(page_ids)
                 f.write('\n'.join(page_ids) + '\n')
 
 
@@ -88,6 +89,11 @@ def request_ids(solr_host: Annotated[str, typer.Option(prompt='solr host')],
         oa_ids = list(set([oai_id.strip() for oai_id in f.readlines() if len(oai_id.strip()) > 0]))
 
     oa_ids = sorted(oa_ids)
+
+    logging.info(f'Reading {len(oa_ids):,} from {file_ids}')
+
+    if len(oa_ids) < 1:
+        raise Exception(f'No OAI-IDs found in {file_ids}')
 
     found_starting_point = False
 
@@ -135,6 +141,9 @@ def request_ids(solr_host: Annotated[str, typer.Option(prompt='solr host')],
             remaining = [ref for ref in cache_response.references if ref.missed]
             if len(remaining) > 0:
                 logging.info(f'{len(remaining):,} references remaining for scopus')
+
+                # FIXME never stops!
+
                 cache_response = ScopusWrapper.run(db_engine=db_engine_cache, references=[
                     Reference(openalex_id=doc.openalex_id, doi=doc.doi) for doc in remaining], auth_key=auth_key)
             else:
