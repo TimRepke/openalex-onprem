@@ -99,7 +99,7 @@ def request_ids(solr_host: Annotated[str, typer.Option(prompt='solr host')],
 
     with httpx.Client() as client:
         for bi, batch in enumerate(batched(oa_ids, batch_size)):
-            logging.info(f'----------- Processing batch {bi} -----------')
+            logging.info(f'----------- Processing batch {bi} / {(len(oa_ids) // batch_size) + 1:,} -----------')
             if skip_batches > bi:
                 logging.debug(f'Skipping batch {bi}')
                 continue
@@ -123,7 +123,7 @@ def request_ids(solr_host: Annotated[str, typer.Option(prompt='solr host')],
             if len(res['response']['docs']) == 0:
                 logging.debug('Batch has no missing abstracts in solr.')
                 continue
-            logging.info(f'Missing abstract for {len(res['response']['docs']):,} entries')
+            logging.info(f'Missing abstract for {len(res['response']['docs']):,}/{len(batch)} entries')
 
             references = [
                 Reference(openalex_id=doc['id'], doi=doc['doi'][16:])
