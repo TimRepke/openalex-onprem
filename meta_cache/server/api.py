@@ -9,8 +9,7 @@ from fastapi.responses import JSONResponse
 
 from meta_cache.handlers.models import CacheRequest, CacheResponse, DehydratedRecord
 from meta_cache.handlers.crud import CacheResponseHandler
-from meta_cache.handlers.wrappers import get_wrapper, DimensionsWrapper, ScopusWrapper
-from meta_cache.handlers.schema import AuthKey, Record
+from meta_cache.handlers.schema import AuthKey, Request
 from meta_cache.handlers.util import get_ors
 
 from .db import db_engine
@@ -55,9 +54,9 @@ async def daily_stats(limit: int = 10):  # , auth_key: AuthKey = Depends(is_vali
                count(1)                        as n_total,
                count(title)                    as n_with_title,
                count(abstract)                 as n_with_abstract,
-               count(raw_scopus)               as n_with_scopus,
-               count(raw_dimensions)           as n_with_dimensions
-        FROM record
+               count(1) FILTER ( WHERE raw is not NULL and wrapper = 'scopus' )     as n_with_scopus,
+               count(1) FILTER ( WHERE raw is not NULL and wrapper = 'dimensions' ) as n_with_dimensions
+        FROM request
         GROUP BY date_trunc('day', time_created)
         ORDER BY date_trunc('day', time_created) DESC
         LIMIT :limit;
@@ -74,9 +73,9 @@ async def stats():  # , auth_key: AuthKey = Depends(is_valid_key)
         SELECT count(1)                        as n_total,
                count(title)                    as n_with_title,
                count(abstract)                 as n_with_abstract,
-               count(raw_scopus)               as n_with_scopus,
-               count(raw_dimensions)           as n_with_dimensions
-        FROM record;
+               count(1) FILTER ( WHERE raw is not NULL and wrapper = 'scopus' )     as n_with_scopus,
+               count(1) FILTER ( WHERE raw is not NULL and wrapper = 'dimensions' ) as n_with_dimensions
+        FROM request;
     ''')
 
     with db_engine.session() as session:
@@ -89,17 +88,7 @@ async def lookup(request: CacheRequest, auth_key: AuthKey = Depends(is_valid_key
     handler = CacheResponseHandler(request=request, db_engine=db_engine)
     handler.fetch()
 
-    if handler.request.wrapper:
-        wrappers = [
-            get_wrapper(handler.request.wrapper)
-        ]
-    else:
-        wrappers = [
-            ScopusWrapper,
-            DimensionsWrapper
-        ]
-
-    for wrapper in wrappers:
+    for wrapper in request.wrappers():
         logger.debug('Queueing job')
         job = queues[wrapper.name].enqueue(run,
                                            func=wrapper.run,
@@ -112,12 +101,12 @@ async def lookup(request: CacheRequest, auth_key: AuthKey = Depends(is_valid_key
 
 
 @router.post('/write')
-async def write(reference: Record, auth_key: AuthKey = Depends(is_valid_key)) -> bool:
+async def write(reference: Request, auth_key: AuthKey = Depends(is_valid_key)) -> bool:
     ret = False
     if auth_key.write:
         logger.debug('Received new record')
         with db_engine.session() as session:
-            for record in session.exec(select(Record).where(or_(*get_ors(reference)))):
+            for record in session.exec(select(Request).where(or_(*get_ors(reference)))):
                 logger.debug(f'Found received record as {record.record_id}')
                 ret = True
                 record.sqlmodel_update(reference.model_dump(exclude_unset=True, exclude_none=True))
@@ -129,12 +118,14 @@ async def write(reference: Record, auth_key: AuthKey = Depends(is_valid_key)) ->
     return ret
 
 
-@router.post('/read', response_model=CacheResponse)
-async def read(openalex_ids: list[str] = Body(), auth_key: AuthKey = Depends(is_valid_key)) -> DehydratedRecord:
+@router.post('/read', response_model=list[DehydratedRecord])
+async def read(openalex_ids: list[str] = Body(), auth_key: AuthKey = Depends(is_valid_key)) -> list[Request]:
     if auth_key.write:
         if len(openalex_ids) > 200:
             raise PermissionError('Requested too many openalex ids at once!')
 
         logger.debug(f'Requested {len(openalex_ids)} records')
         with db_engine.session() as session:
-            return session.exec(select(Record).where(Record.openalex_id.in_(openalex_ids))).all()
+            return session.exec(select(Request).where(Request.openalex_id.in_(openalex_ids))).all()
+
+    raise PermissionError('Can\'t touch that!')

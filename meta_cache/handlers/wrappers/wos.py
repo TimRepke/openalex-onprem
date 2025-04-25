@@ -87,9 +87,9 @@ class WebOfScienceWrapper(AbstractWrapper):
         DOIs = ' '.join([reference.doi for reference in references if reference.doi])
         PMIDs = ' '.join([reference.pubmed_id for reference in references if reference.pubmed_id])
         parts = []
-        if len(DOIs)>0:
-            parts.append(f'DOI=({DOIs})')
-        if len(PMIDs)>0:
+        if len(DOIs) > 0:
+            parts.append(f'DO=({DOIs})')
+        if len(PMIDs) > 0:
             parts.append(f'PMID=({PMIDs})')
 
         if len(parts) == 0:
@@ -97,19 +97,38 @@ class WebOfScienceWrapper(AbstractWrapper):
 
         advanced_query = ' OR '.join(parts)
 
-        next_cursor = '*'
+        next_page = 0
         n_pages = 0
         n_records = 0
         n_results = 0
+
         while True:
             logger.info(f'Fetching page {n_pages}...')
             key = cls.get_api_keys(db_engine=db_engine, auth_key=auth_key)[0]
-
+            next_page += 1
             page = httpx.get(
                 'https://api.clarivate.com/apis/wos-starter/v1/documents',
                 params={
-                    'query': advanced_query,
-                    'cursor': next_cursor,
+                    # https://webofscience.help.clarivate.com/en-us/Content/wos-core-collection/woscc-search-field-tags.htm
+                    'q': advanced_query,
+                    'detail': 'full',
+                    'page': next_page,
+
+                    # WOS - Web of Science Core collection
+                    # BIOABS - Biological Abstracts
+                    # BCI - BIOSIS Citation Index
+                    # BIOSIS - BIOSIS Previews
+                    # CCC - Current Contents Connect
+                    # DIIDW - Derwent Innovations Index
+                    # DRCI - Data Citation Index
+                    # MEDLINE - MEDLINE The U.S. National Library of Medicine® (NLM®) premier life sciences database.
+                    # ZOOREC - Zoological Records
+                    # PPRN - Preprint Citation Index
+                    # WOK - All databases
+                    'db': 'WOK',
+
+                    # limit of records on the page (1-50)
+                    'limit': 50,
                 },
                 headers={
                     'Accept': 'application/json',
@@ -118,6 +137,9 @@ class WebOfScienceWrapper(AbstractWrapper):
                 proxy=key.proxy,
                 timeout=120,
             )
+
+            result = page.json()
+
             print(page)
 
             raise Exception()
@@ -150,10 +172,10 @@ class WebOfScienceWrapper(AbstractWrapper):
                     title=cls.get_title(entry),
                     abstract=cls.get_abstract(entry),
                     doi=cls.get_doi(entry),
-                    scopus_id=cls.get_id(entry),# FIXME
-                    raw_scopus=entry,# FIXME
-                    time_scopus=datetime.now(),# FIXME
-                    requested_scopus=True,# FIXME
+                    scopus_id=cls.get_id(entry),  # FIXME
+                    raw_scopus=entry,  # FIXME
+                    time_scopus=datetime.now(),  # FIXME
+                    requested_scopus=True,  # FIXME
                 )
             logger.debug(f'Found {n_records:,} records after processing page {n_pages}')
 

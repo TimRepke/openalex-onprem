@@ -1,5 +1,4 @@
 import logging
-import sys
 from datetime import datetime
 from typing import Any, Generator
 
@@ -7,7 +6,7 @@ import httpx
 from httpx import HTTPError
 
 from meta_cache.handlers.db import DatabaseEngine
-from meta_cache.handlers.models import Reference, Record
+from meta_cache.handlers.models import Reference, Request
 from meta_cache.handlers.util import get, RequestClient
 from meta_cache.handlers.wrappers.base import AbstractWrapper
 from meta_cache.handlers.schema import ApiKey
@@ -24,9 +23,6 @@ PAGE_SIZE = 1000
 class DimensionsWrapper(AbstractWrapper):
     name = 'dimensions'
     db_field_id = 'dimensions_id'
-    db_field_raw = 'raw_dimensions'
-    db_field_time = 'time_dimensions'
-    db_field_requested = 'requested_dimensions'
 
     FIELDS = [
         'title', 'type', 'abstract', 'authors_count', 'date',
@@ -113,14 +109,14 @@ class DimensionsWrapper(AbstractWrapper):
 
                     for entry in entries:
                         n_records += 1
-                        yield Record(
+                        yield Request(
+                            wrapper=cls.name,
+                            api_key_id=key.api_key_id,
                             title=cls.get_title(entry),
                             abstract=cls.get_abstract(entry),
                             doi=cls.get_doi(entry),
                             dimensions_id=cls.get_id(entry),
-                            raw_dimensions=entry,
-                            time_dimensions=datetime.now(),
-                            requested_dimensions=True,
+                            raw=entry,
                         )
                     logger.debug(f'Found {n_records:,} records after processing page {n_pages} '
                                  f'(total {n_results:,} records)')
@@ -134,7 +130,7 @@ class DimensionsWrapper(AbstractWrapper):
     def fetch(cls,
               db_engine: DatabaseEngine,
               references: list[Reference],
-              auth_key: str) -> Generator[Record, None, None]:
+              auth_key: str) -> Generator[Request, None, None]:
         parts = {'doi': [], 'id': [], 'pmid': [], 'pmcid': []}
         for reference in references:
             if reference.dimensions_id:

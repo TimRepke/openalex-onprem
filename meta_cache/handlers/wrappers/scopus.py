@@ -1,11 +1,8 @@
 import logging
-from datetime import datetime
 from typing import Any, Generator
 
-import httpx
-
 from meta_cache.handlers.db import DatabaseEngine
-from meta_cache.handlers.models import Reference, Record
+from meta_cache.handlers.models import Reference, Request
 from meta_cache.handlers.util import get, RequestClient
 from .base import AbstractWrapper
 from ..schema import ApiKey
@@ -17,9 +14,6 @@ PAGE_SIZE = 25
 class ScopusWrapper(AbstractWrapper):
     name = 'scopus'
     db_field_id = 'scopus_id'
-    db_field_raw = 'raw_scopus'
-    db_field_time = 'time_scopus'
-    db_field_requested = 'requested_scopus'
 
     @staticmethod
     def get_title(obj: dict[str, Any]) -> str | None:
@@ -59,7 +53,7 @@ class ScopusWrapper(AbstractWrapper):
     def fetch(cls,
               db_engine: DatabaseEngine,
               references: list[Reference],
-              auth_key: str) -> Generator[Record, None, None]:
+              auth_key: str) -> Generator[Request, None, None]:
         parts = []
         for reference in references:
             if reference.scopus_id:
@@ -113,14 +107,14 @@ class ScopusWrapper(AbstractWrapper):
 
                 for entry in entries:
                     n_records += 1
-                    yield Record(
+                    yield Request(
+                        wrapper=cls.name,
+                        api_key_id=key.api_key_id,
                         title=cls.get_title(entry),
                         abstract=cls.get_abstract(entry),
                         doi=cls.get_doi(entry),
                         scopus_id=cls.get_id(entry),
-                        raw_scopus=entry,
-                        time_scopus=datetime.now(),
-                        requested_scopus=True,
+                        raw=entry,
                     )
                 logger.debug(f'Found {n_records:,} records after processing page {n_pages}')
 

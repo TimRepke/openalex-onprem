@@ -1,5 +1,4 @@
 import os
-import json
 import logging
 from datetime import datetime
 from pathlib import Path
@@ -18,6 +17,7 @@ from shared.util import rate_limit, batched
 logging.basicConfig(format='%(asctime)s [%(levelname)s] %(name)s (%(process)d): %(message)s', level='INFO')
 logging.getLogger('httpcore').setLevel(logging.WARNING)
 logging.getLogger('sqlalchemy.engine.Engine').setLevel(logging.WARNING)
+logger = logging.getLogger('abstract-completion')
 app = typer.Typer()
 
 
@@ -28,7 +28,7 @@ def openalex_ids(query: Annotated[str, typer.Option(help='query for openalex')],
                  use_stemming: bool = True,
                  search_fulltext: bool = False):
     if file_ids.exists():
-        logging.warning('Data already exists, not downloading again')
+        logger.warning('Data already exists, not downloading again')
         return
 
     cursor = '*'
@@ -65,7 +65,7 @@ def openalex_ids(query: Annotated[str, typer.Option(help='query for openalex')],
                 )
                 page = res.json()
                 cursor = page['meta']['next_cursor']
-                logging.info(f'Retrieved {ids:,}/{page['meta']['count']:,}; currently on page {page_i}')
+                logger.info(f'Retrieved {ids:,}/{page['meta']['count']:,}; currently on page {page_i}')
 
                 page_ids = [raw_work['id'][21:] for raw_work in page['results']]
                 ids += len(page_ids)
@@ -82,7 +82,7 @@ def request_ids(solr_host: Annotated[str, typer.Option(prompt='solr host')],
                 skip_batches: int = 0,
                 batch_size: int = 500):
     if not file_ids.exists():
-        logging.error(f'Data does not exists: {file_ids}')
+        logger.error(f'Data does not exists: {file_ids}')
         return
 
     with open(file_ids) as f:
@@ -90,7 +90,7 @@ def request_ids(solr_host: Annotated[str, typer.Option(prompt='solr host')],
 
     oa_ids = sorted(oa_ids)
 
-    logging.info(f'Reading {len(oa_ids):,} from {file_ids}')
+    logger.info(f'Reading {len(oa_ids):,} from {file_ids}')
 
     if len(oa_ids) < 1:
         raise Exception(f'No OAI-IDs found in {file_ids}')
@@ -99,13 +99,13 @@ def request_ids(solr_host: Annotated[str, typer.Option(prompt='solr host')],
 
     with httpx.Client() as client:
         for bi, batch in enumerate(batched(oa_ids, batch_size)):
-            logging.info(f'----------- Processing batch {bi} / {(len(oa_ids) // batch_size) + 1:,} -----------')
+            logger.info(f'----------- Processing batch {bi} / {(len(oa_ids) // batch_size) + 1:,} -----------')
             if skip_batches > bi:
-                logging.debug(f'Skipping batch {bi}')
+                logger.debug(f'Skipping batch {bi}')
                 continue
             if skip_until_id and not found_starting_point:
                 if skip_until_id not in batch:
-                    logging.debug(f'Skipping batch {bi}')
+                    logger.debug(f'Skipping batch {bi}')
                     continue
                 found_starting_point = True
 
@@ -121,9 +121,10 @@ def request_ids(solr_host: Annotated[str, typer.Option(prompt='solr host')],
                              }).json()
 
             if len(res['response']['docs']) == 0:
-                logging.debug('Batch has no missing abstracts in solr.')
+                logger.debug('Batch has no missing abstracts in solr.')
                 continue
-            logging.info(f'Missing abstract for {len(res['response']['docs']):,}/{len(batch)} entries')
+
+            logger.info(f'Missing abstract for {len(res['response']['docs']):,} / {len(batch)} entries')
 
             references = [
                 Reference(openalex_id=doc['id'], doi=doc['doi'][16:])
@@ -131,26 +132,35 @@ def request_ids(solr_host: Annotated[str, typer.Option(prompt='solr host')],
                 if doc.get('doi') is not None
             ]
             if len(references) == 0:
-                logging.debug('Batch has no DOIs.')
+                logger.debug('Batch has no DOIs.')
                 continue
+            logger.info(f'  > {len(references)} references with missing abstract have a DOI')
 
             # request dimensions
-            cache_response = DimensionsWrapper.run(db_engine=db_engine_cache, references=references, auth_key=auth_key)
+            cache_response = DimensionsWrapper.run(db_engine=db_engine_cache,
+                                                   references=references,
+                                                   auth_key=auth_key,
+                                                   skip_existing=True)
 
             # with remaining request scopus
-            remaining = [ref for ref in cache_response.references if ref.missed]
+            remaining = [ref for ref in cache_response.references if ref.missed or not ref.abstract]
             if len(remaining) > 0:
-                logging.info(f'{len(remaining):,} references remaining for scopus')
-
-                # FIXME never stops!
-
-                cache_response = ScopusWrapper.run(db_engine=db_engine_cache, references=[
-                    Reference(openalex_id=doc.openalex_id, doi=doc.doi) for doc in remaining], auth_key=auth_key)
-            else:
-                logging.debug('Skipping scopus, all ready')
+                logger.info(f'{len(remaining):,} references remaining for scopus')
+                cache_response = ScopusWrapper.run(db_engine=db_engine_cache,
+                                                   references=[Reference(openalex_id=doc.openalex_id, doi=doc.doi)
+                                                               for doc in remaining],
+                                                   auth_key=auth_key,
+                                                   skip_existing=True)
 
             # with remaining request wos
+            remaining = [ref for ref in cache_response.references if ref.missed or not ref.abstract]
+            if len(remaining) > 0:
+                logger.info(f'{len(remaining):,} references remaining for the Web of Science')
+                # TODO
+                logger.warning('Not implemented, not investigating further...')
+
             # with remaining request s2
+            # TODO
 
 
 @app.command()
@@ -159,10 +169,10 @@ def push_cache(solr_host: Annotated[str, typer.Option(help='Solr base url')],
                conf_file: Annotated[str, typer.Option(help='Path to configuration .env file')],
                created_since: Annotated[str | None, typer.Option(help='Get works created on or after')] = None,
                batch_size: int = 200):
-    logging.info(f'Connecting to database.')
+    logger.info(f'Connecting to database.')
     db_engine = get_engine(conf_file=conf_file)
 
-    logging.info(f'Starting backfill of abstracts.')
+    logger.info(f'Starting backfill of abstracts.')
     update_solr_abstracts(
         db_engine=db_engine,
         solr_host=solr_host,

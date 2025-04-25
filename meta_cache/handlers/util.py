@@ -21,13 +21,13 @@ from httpx._types import (
     TimeoutTypes,
     RequestExtensions,
 )
-from sqlalchemy import select
+from sqlalchemy import select, distinct
 from sqlalchemy.sql._typing import _ColumnExpressionArgument
 from typing_extensions import override
 
 from .db import DatabaseEngine
 from .models import Reference
-from .schema import Record
+from .schema import Request
 
 logger = logging.getLogger('util')
 
@@ -46,7 +46,6 @@ def get_reference_df(references: list[Reference]) -> pd.DataFrame:
     # Extra fields for status tracking
     df['hit'] = None
     df['queued'] = None
-    df['updated'] = None
     df['added'] = None
     # Set all as missed by default
     df['missed'] = True
@@ -63,9 +62,9 @@ def get_reference_df(references: list[Reference]) -> pd.DataFrame:
     return df
 
 
-def mark_status(df: pd.DataFrame, record: Record, status: str = 'hit'):
+def mark_status(df: pd.DataFrame, record: Request, status: str = 'hit'):
     for field, value in Reference.ids(record):
-        mask = df[field] == value
+        mask = (df[field] == value) & (df['hit'].isna())
         df.loc[mask, 'missed'] = False
         df.loc[mask, status] = True
         if record.record_id:
@@ -76,14 +75,14 @@ def mark_status(df: pd.DataFrame, record: Record, status: str = 'hit'):
             df.loc[mask, 'abstract'] = record.abstract
 
 
-def get_ors(reference: Reference | Record) -> list[_ColumnExpressionArgument[bool]]:
+def get_ors(reference: Reference | Request) -> list[_ColumnExpressionArgument[bool]]:
     return [
-        getattr(Record, field) == value
+        getattr(Request, field) == value
         for field, value in Reference.ids(reference)
     ]
 
 
-def post2solr(records: list[Record], solr_host: str, collection: str, force: bool = False) -> tuple[int, int]:
+def post2solr(records: list[Request], solr_host: str, collection: str, force: bool = False) -> tuple[int, int]:
     needs_update: set[str] | None = None
     if not force:
         logging.debug(f'Asking solr for which IDs are missing abstracts...')
@@ -140,11 +139,15 @@ def update_solr_abstracts(db_engine: DatabaseEngine,
                           from_time: datetime | None = None,
                           force_override: bool = False):
     with db_engine.engine.connect() as connection:
-        stmt = select(Record).where(Record.openalex_id != None,
-                                    Record.abstract != None,
-                                    Record.title != None)
+        stmt = (
+            select(Request)
+            .distinct(Request.openalex_id)
+            .where(Request.openalex_id != None,
+                   Request.abstract != None,
+                   Request.title != None)
+        )
         if from_time is not None:
-            stmt = stmt.where(Record.time_updated >= from_time)
+            stmt = stmt.where(Request.time_updated >= from_time)
 
         with connection.execution_options(yield_per=batch_size).execute(stmt) as result:
             for pi, partition in enumerate(result.partitions(batch_size)):
@@ -406,7 +409,7 @@ def fuze_dicts(d1: dict[str, Any] | None, d2: dict[str, Any] | None) -> dict[str
     for k, v in d1.items():
         if k in d2:
             # this next check is the only difference!
-            if all(isinstance(e, MutableMapping) for e in (v, d2[k])):
+            if all(isinstance(e, typing.MutableMapping) for e in (v, d2[k])):
                 d2[k] = fuze_dicts(v, d2[k])
             # we could further check types and merge as appropriate here.
     d3 = d1.copy()

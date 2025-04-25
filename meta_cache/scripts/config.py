@@ -73,4 +73,6 @@ db_engine_nacsos = DatabaseEngine(host=settings.NACSOS_HOST,
                                   database=settings.NACSOS_DATABASE,
                                   debug=settings.DEBUG_MODE)
 
+db_engine_cache.startup()
+
 __all__ = ['settings', 'conf_file', 'db_engine_cache', 'db_engine_nacsos']
