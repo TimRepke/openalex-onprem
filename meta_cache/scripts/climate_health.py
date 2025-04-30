@@ -1,4 +1,3 @@
-import json
 import logging
 import os
 from pathlib import Path
@@ -29,6 +28,7 @@ if FILE.exists():
 # ENSO OR "sea surface temperature" OR "sea surface temperatures" OR SST OR snowmelt* OR flood* OR
 # storm* OR cyclone* OR hurricane* OR typhoon* OR "sea-level" OR "sea level" OR wildfire* OR
 # "wild-fire" OR "forest-fire" OR "forest fire" OR "forest fires"
+# TODO: extend climat*
 # TODO: verify precipitat*
 # TODO: verify drought*
 # TODO: verify flood*
