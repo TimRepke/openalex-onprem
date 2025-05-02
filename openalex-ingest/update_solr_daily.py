@@ -209,15 +209,19 @@ def request_abstracts(
             remaining = references
             for wrapper in get_wrappers(keys=wrapper):
                 logging.debug(f'  > Using {wrapper} on {len(remaining):,}/{len(references):,} references')
-                cache_response = wrapper.run(db_engine=db_engine,
-                                             references=remaining,
-                                             auth_key=auth_key,
-                                             skip_existing=True)
-                remaining = [
-                    Reference(openalex_id=ref.openalex_id, doi=ref.doi)
-                    for ref in cache_response.references
-                    if ref.missed or not ref.abstract
-                ]
+                try:
+                    cache_response = wrapper.run(db_engine=db_engine,
+                                                 references=remaining,
+                                                 auth_key=auth_key,
+                                                 skip_existing=True)
+                    remaining = [
+                        Reference(openalex_id=ref.openalex_id, doi=ref.doi)
+                        for ref in cache_response.references
+                        if ref.missed or not ref.abstract
+                    ]
+                except Exception as e:
+                    logging.exception(e)
+                    logging.warning(f'Ignoring {e} and continuing...')
 
                 if len(remaining) == 0:
                     logging.info('No references remaining')
