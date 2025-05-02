@@ -437,7 +437,7 @@ FetchMissingAbstracts:
                                   --conf-file="$OA_ENV_FILE"
                                   --auth-key="$OA_KEY_CACHE"
                                   --created-since="$FROM_DATE"
-                                  --batch-size=200
+                                  --batch-size=20
                                   --loglevel=DEBUG
     - sudo /usr/bin/chown -R openalex:openalex /var/www/openalex-cache
 
