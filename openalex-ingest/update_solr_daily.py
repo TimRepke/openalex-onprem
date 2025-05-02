@@ -1,13 +1,18 @@
 import re
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
+from pathlib import Path
+from time import time
 
 import typer
 import httpx
 from typing_extensions import Annotated
 
+from meta_cache import config
 from meta_cache.handlers.db import get_engine
+from meta_cache.handlers.models import Reference
 from meta_cache.handlers.util import update_solr_abstracts
+from meta_cache.handlers.wrappers import get_wrappers
 from processors.solr_daily.structs import FIELDS_TO_FETCH, WorkOut, Work
 from processors.solr_daily.transform import transform_work
 from shared.util import rate_limit
@@ -72,22 +77,15 @@ def commit_solr(url: str, buffer: list[str]):
 
 @app.command()
 def update_solr(api_key: Annotated[str, typer.Option(help='OpenAlex premium API key')],
-                meta_key: Annotated[str, typer.Option(help='meta-cache API key')],
-                meta_host: Annotated[str, typer.Option(help='meta-cache base url')],
                 solr_host: Annotated[str, typer.Option(help='Solr base url')],
                 solr_collection: Annotated[str, typer.Option(help='Name of the Solr collection')],
                 created_since: Annotated[str, typer.Option(callback=date_check, help='Get works created on or after')],
                 oa_page_size: int = 200,
                 solr_buffer_size: int = 200,
-                meta_buffer_size: int = 25,
-                wrapper: str | None = None,
                 loglevel: str = 'INFO'):
     logging.basicConfig(format='%(asctime)s [%(levelname)s] %(name)s (%(process)d): %(message)s', level=loglevel)
 
     solr_url = f'{solr_host}/api/collections/{solr_collection}/update/json?commit=true'
-    meta_url = f'{meta_host}/api/lookup'
-
-    meta_cache_buffer = []
     solr_buffer = []
 
     cursor = '*'
@@ -123,27 +121,103 @@ def update_solr(api_key: Annotated[str, typer.Option(help='OpenAlex premium API 
                 work = transform_work(Work.model_validate(raw_work))
                 solr_buffer.append(work.model_dump_json(exclude_unset=True, exclude_none=True))
 
-                if work.abstract is None:
-                    meta_cache_buffer.append(work)
-
                 if len(solr_buffer) >= solr_buffer_size:
                     logging.info(f'Committing buffer of {len(solr_buffer)} works to solr')
                     commit_solr(url=solr_url, buffer=solr_buffer)
                     solr_buffer = []
 
-                if len(meta_cache_buffer) >= meta_buffer_size:
-                    n_cache_works += len(meta_cache_buffer)
-                    request_meta_cache(url=meta_url, meta_key=meta_key, buffer=meta_cache_buffer, wrapper=wrapper)
-                    meta_cache_buffer = []
-
     if len(solr_buffer) > 0:
         logging.info(f'Committing buffer of {len(solr_buffer)} works to solr')
         commit_solr(url=solr_url, buffer=solr_buffer)
 
-    if len(meta_cache_buffer) > 0:
-        request_meta_cache(url=meta_url, meta_key=meta_key, buffer=meta_cache_buffer, wrapper=wrapper)
-
     logging.info('Solr collection is up to date.')
+
+
+@app.command()
+def request_abstracts(
+        conf_file: Path,
+        auth_key: Annotated[str, typer.Option(prompt='meta-cache key')],
+        created_since: Annotated[str, typer.Option(callback=date_check, help='Get works created on or after')],
+        created_until: Annotated[str | None, typer.Option(callback=date_check,
+                                                          help='Get works created on or after')] = None,
+        use_updated: bool = True,
+        batch_size: int = 200,
+        wrapper: str | None = None,
+        loglevel: str = 'INFO'):
+    logging.basicConfig(format='%(asctime)s [%(levelname)s] %(name)s (%(process)d): %(message)s', level=loglevel)
+    settings = config.Settings(_env_file=str(conf_file), _env_file_encoding='utf-8')
+    db_engine = get_engine(settings=settings)
+
+    end_date = 'NOW'
+    if created_until:
+        end_date = f'{end_date}T01:01:00.123Z'
+    date_field = 'created_date'
+    if use_updated:
+        date_field = 'updated_date'
+
+    with httpx.Client() as client:
+        cursor = '*'
+        page = 1
+        t0 = time()
+        while True:
+            t1 = time()
+            res = client.post(
+                f'{settings.OA_SOLR}/select',
+                data={
+                    'q': '-abstract:*',
+                    'fq': f'{date_field}:[{created_since}T01:01:00Z TO {end_date}]',
+                    'fl': 'id,doi',
+                    'q.op': 'AND',
+                    'rows': batch_size,
+                    'useParams': '',
+                    'defType': 'lucene',
+                    'cursorMark': cursor
+                },
+                timeout=60).json()
+            page += 1
+            cursor = res.get('nextCursorMark')
+            n_docs_total = res['response']['numFound']
+            batch_docs = res['response']['docs']
+            logging.debug(f'Got batch with {batch_docs} records, now at {batch_size * page:,}/{n_docs_total:,}')
+
+            if len(res['response']['docs']) == 0:
+                logging.info('No data in batch, assuming done!')
+                break
+
+            logging.debug(f'Done with page {page} in {timedelta(seconds=time() - t1)}h; '
+                          f'{timedelta(seconds=time() - t0)}h passed overall')
+
+            if cursor is None:
+                logging.info('Did not receive a `nextCursorMark`, assuming to be done!')
+                break
+
+            references = [
+                Reference(openalex_id=doc['id'], doi=doc['doi'][16:])
+                for doc in res['response']['docs']
+                if doc.get('doi') is not None
+            ]
+            if len(references) == 0:
+                logging.info('  > Batch has no DOIs.')
+                continue
+
+            logging.info(f'  > {len(references)} references with missing abstract have a DOI')
+
+            remaining = references
+            for wrapper in get_wrappers(keys=wrapper):
+                logging.debug(f'  > Using {wrapper} on {len(remaining):,}/{len(references):,} references')
+                cache_response = wrapper.run(db_engine=db_engine,
+                                             references=remaining,
+                                             auth_key=auth_key,
+                                             skip_existing=True)
+                remaining = [
+                    Reference(openalex_id=ref.openalex_id, doi=ref.doi)
+                    for ref in cache_response.references
+                    if ref.missed or not ref.abstract
+                ]
+
+                if len(remaining) == 0:
+                    logging.info('No references remaining')
+                    break
 
 
 @app.command()

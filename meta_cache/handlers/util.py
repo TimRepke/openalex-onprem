@@ -21,7 +21,7 @@ from httpx._types import (
     TimeoutTypes,
     RequestExtensions,
 )
-from sqlalchemy import select, distinct
+from sqlalchemy import select
 from sqlalchemy.sql._typing import _ColumnExpressionArgument
 from typing_extensions import override
 

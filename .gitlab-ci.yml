@@ -382,17 +382,66 @@ FetchOpenAlexAPI:
     - pip install -r requirements.txt
     - python update_solr_daily.py update-solr
                                   --api-key="$OA_KEY_OPENALEX"
-                                  --meta-key="$OA_KEY_CACHE"
-                                  --meta-host="$OA_CACHE_API"
                                   --solr-host="$OA_SOLR_API"
                                   --solr-collection="$OA_SOLR_COLLECTION"
                                   --oa-page-size=200
                                   --solr-buffer-size=200
-                                  --meta-buffer-size=25
-                                  --wrapper=scopus
                                   --created-since="$FROM_DATE"
                                   --loglevel=INFO
     - sudo /usr/bin/chown -R openalex:openalex /var/www/openalex-cache
+
+
+FetchMissingAbstracts:
+  stage: solr
+#  only:
+#    - schedules
+  tags:
+    - rechner
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule" && $FETCH_OA_API == "true"
+  script:
+    - echo $OA_LOOKBACK
+    - export FROM_DATE="$(date -d "$OA_LOOKBACK day ago" "+%Y-%m-%d")"
+    - echo $FROM_DATE
+    - echo "Current working directory and user"
+    - pwd
+    - whoami
+    - groups
+    - echo $HOME
+    - echo "Reset git config"
+    - rm -f /home/gitlab-runner/.gitconfig
+    - git config --global url."https://gitlab.pik-potsdam.de/".insteadOf "ssh://git@gitlab.pik-potsdam.de/"
+    - git config --global user.name gitlab-runner
+    - git config --global user.email gitlab-runner@gitlab.pik-potsdam.de
+    - git config --global -l --show-origin
+    - echo "Go to deployment location"
+    - cd /var/www/openalex-cache/
+    - ls -lisah
+    - sudo /usr/bin/chown -R gitlab-runner:gitlab-runner /var/www/openalex-cache
+    - cd nacsos-academic-search
+    - ls -lisah
+    - git stash  # "reset" softly by stashing (in case files changed)
+    - git pull origin main  # pull from origin (production branch)
+    - ls -lisah
+    - cd ..
+    - echo "Update virtual environment"
+    - source venv/bin/activate
+    - which python
+    - python -V
+    - cd nacsos-academic-search/
+    - export PYTHONPATH="$PYTHONPATH:$(pwd):$(pwd)/openalex-ingest:$(pwd)/meta_cache"
+    - echo $PYTHONPATH
+    - cd openalex-ingest/
+    - pip install -r requirements.txt
+    - python update_solr_daily.py request-abstracts
+                                  --conf-file="$OA_CONF_FILE"
+                                  --auth-key="$OA_AUTH_KEY"
+                                  --created-since="$FROM_DATE"
+                                  --use-updated
+                                  --batch-size=200
+                                  --loglevel=INFO
+    - sudo /usr/bin/chown -R openalex:openalex /var/www/openalex-cache
+
 
 BackfillAbstracts:
   stage: solr
