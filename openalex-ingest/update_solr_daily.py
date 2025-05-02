@@ -150,10 +150,11 @@ def request_abstracts(
     logging.getLogger('httpcore').setLevel(logging.WARNING)
     logging.getLogger('sqlalchemy.engine.Engine').setLevel(logging.WARNING)
     logging.getLogger('urllib3').setLevel(logging.WARNING)
-
+    conf_file = conf_file.absolute().resolve()
     logging.info(f'Loading settings from {conf_file}')
     settings = Settings(_env_file=str(conf_file), _env_file_encoding='utf-8')  # type: ignore[call-arg]
     db_engine = get_engine(settings=settings)
+    logging.debug(f'Using solr at {settings.OA_SOLR}')
 
     end_date = 'NOW'
     if created_until:
@@ -186,7 +187,7 @@ def request_abstracts(
             cursor = res.get('nextCursorMark')
             n_docs_total = res['response']['numFound']
             batch_docs = res['response']['docs']
-            logging.info(f'Got batch with {batch_docs} records, now at {batch_size * page:,}/{n_docs_total:,}')
+            logging.info(f'Got batch with {len(batch_docs):,} records, now at {batch_size * page:,}/{n_docs_total:,}')
 
             if len(res['response']['docs']) == 0:
                 logging.info('No data in batch, assuming done!')
@@ -212,7 +213,7 @@ def request_abstracts(
 
             remaining = references
             for wrapper_cls in get_wrappers(keys=wrapper):
-                logging.debug(f'  > Using {wrapper} on {len(remaining):,}/{len(references):,} references')
+                logging.debug(f'  > Using {wrapper_cls.name} on {len(remaining):,}/{len(references):,} references')
                 try:
                     cache_response = wrapper_cls.run(db_engine=db_engine,
                                                      references=remaining,
