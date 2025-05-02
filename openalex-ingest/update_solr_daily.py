@@ -8,7 +8,7 @@ import typer
 import httpx
 from typing_extensions import Annotated
 
-from meta_cache import config
+from meta_cache.setup import Settings
 from meta_cache.handlers.db import get_engine
 from meta_cache.handlers.models import Reference
 from meta_cache.handlers.util import update_solr_abstracts
@@ -147,7 +147,7 @@ def request_abstracts(
         wrapper: str | None = None,
         loglevel: str = 'INFO'):
     logging.basicConfig(format='%(asctime)s [%(levelname)s] %(name)s (%(process)d): %(message)s', level=loglevel)
-    settings = config.Settings(_env_file=str(conf_file), _env_file_encoding='utf-8')
+    settings = Settings(_env_file=str(conf_file), _env_file_encoding='utf-8')
     db_engine = get_engine(settings=settings)
 
     end_date = 'NOW'
