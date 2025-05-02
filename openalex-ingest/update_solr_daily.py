@@ -135,7 +135,7 @@ def update_solr(api_key: Annotated[str, typer.Option(help='OpenAlex premium API 
 
 @app.command()
 def request_abstracts(
-        conf_file: Path,
+        conf_file: Annotated[Path, typer.Option(prompt='.env config file')],
         auth_key: Annotated[str, typer.Option(prompt='meta-cache key')],
         created_since: Annotated[str, typer.Option(callback=date_check, help='Get works created on or after')],
         created_until: Annotated[str | None, typer.Option(callback=date_check,
