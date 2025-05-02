@@ -1,3 +1,4 @@
+from abc import ABCMeta
 from typing import Type, Generator
 
 from .dimensions import DimensionsWrapper
@@ -18,7 +19,8 @@ def get_wrapper(key: WrapperEnum) -> Type[AnyWrapper]:
 def get_wrappers(keys: list[WrapperEnum] | str | None) -> Generator[Type[AnyWrapper], None, None]:
     if keys is None:
         keys = [WrapperEnum.DIMENSIONS, WrapperEnum.SCOPUS]
-    if type(keys) == str:
+
+    if type(keys) == str or type(keys) == ABCMeta:
         keys = [keys]
 
     for key in keys:
