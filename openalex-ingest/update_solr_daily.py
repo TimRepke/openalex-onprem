@@ -207,13 +207,13 @@ def request_abstracts(
             logging.info(f'  > {len(references)} references with missing abstract have a DOI')
 
             remaining = references
-            for wrapper in get_wrappers(keys=wrapper):
+            for wrapper_cls in get_wrappers(keys=wrapper):
                 logging.debug(f'  > Using {wrapper} on {len(remaining):,}/{len(references):,} references')
                 try:
-                    cache_response = wrapper.run(db_engine=db_engine,
-                                                 references=remaining,
-                                                 auth_key=auth_key,
-                                                 skip_existing=True)
+                    cache_response = wrapper_cls.run(db_engine=db_engine,
+                                                     references=remaining,
+                                                     auth_key=auth_key,
+                                                     skip_existing=True)
                     remaining = [
                         Reference(openalex_id=ref.openalex_id, doi=ref.doi)
                         for ref in cache_response.references
