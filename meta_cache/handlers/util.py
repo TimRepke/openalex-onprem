@@ -147,7 +147,7 @@ def update_solr_abstracts(db_engine: DatabaseEngine,
                    Request.title != None)
         )
         if from_time is not None:
-            stmt = stmt.where(Request.time_updated >= from_time)
+            stmt = stmt.where(Request.time_created >= from_time)
 
         with connection.execution_options(yield_per=batch_size).execute(stmt) as result:
             for pi, partition in enumerate(result.partitions(batch_size)):
