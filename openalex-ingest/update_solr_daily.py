@@ -172,6 +172,7 @@ def request_abstracts(
                     'q.op': 'AND',
                     'rows': batch_size,
                     'useParams': '',
+                    'sort': 'id desc',
                     'defType': 'lucene',
                     'cursorMark': cursor
                 },
