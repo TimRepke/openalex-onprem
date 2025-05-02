@@ -20,9 +20,11 @@ from shared.util import rate_limit
 app = typer.Typer()
 
 
-def date_check(value: str) -> str:
+def date_check(value: str | None) -> str:
+    if None:
+        return value
     if not re.match(r'^\d{4}-\d{2}-\d{2}$', value):
-        raise typer.BadParameter('Only Camila is allowed')
+        raise typer.BadParameter(f'Invalid date format, not seeing YYYY-MM-DD instead got  {value}')
     return value
 
 
