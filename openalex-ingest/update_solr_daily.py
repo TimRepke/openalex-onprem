@@ -147,7 +147,9 @@ def request_abstracts(
         wrapper: str | None = None,
         loglevel: str = 'INFO'):
     logging.basicConfig(format='%(asctime)s [%(levelname)s] %(name)s (%(process)d): %(message)s', level=loglevel)
-    settings = Settings(_env_file=str(conf_file), _env_file_encoding='utf-8')
+    logging.info(f'Loading settings from {conf_file}')
+    settings = Settings(_env_file=str(conf_file), _env_file_encoding='utf-8')  # type: ignore[call-arg]
+    logging.warning(settings)
     db_engine = get_engine(settings=settings)
 
     end_date = 'NOW'
