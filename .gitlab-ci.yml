@@ -398,7 +398,7 @@ FetchMissingAbstracts:
   tags:
     - rechner
   rules:
-    - if: $CI_PIPELINE_SOURCE == "schedule" && $FETCH_OA_API == "true"
+    - if: $CI_PIPELINE_SOURCE == "schedule" && $FETCH_ABSTRACTS == "true"
   script:
     - echo $OA_LOOKBACK
     - export FROM_DATE="$(date -d "$OA_LOOKBACK day ago" "+%Y-%m-%d")"
@@ -434,10 +434,9 @@ FetchMissingAbstracts:
     - cd openalex-ingest/
     - pip install -r requirements.txt
     - python update_solr_daily.py request-abstracts
-                                  --conf-file="$OA_CONF_FILE"
-                                  --auth-key="$OA_AUTH_KEY"
+                                  --conf-file="$OA_ENV_FILE"
+                                  --auth-key="$OA_KEY_CACHE"
                                   --created-since="$FROM_DATE"
-                                  --use-updated
                                   --batch-size=200
                                   --loglevel=INFO
     - sudo /usr/bin/chown -R openalex:openalex /var/www/openalex-cache
