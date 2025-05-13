@@ -89,7 +89,7 @@ protozoa OR protozoan OR protozoal OR lyme OR "tick borne" OR salmonella OR giar
 "food borne" OR aflatoxin OR poison OR poisonous OR ciguatera OR respiratory OR allergic OR allergen OR allergy OR 
 lung OR asthma OR asthmatic OR bronchial OR bronchitis OR pulmonary OR COPD OR rhinitis OR wheezing OR wheeze OR 
 mental OR depression OR depressive OR depressed OR anxiety OR PTSD OR psychological OR psychosocial OR psychometric OR
-psychotic OR suicide OR "pre trauma" OR pretrauma "post trauma" OR posttrauma OR (CVD NOT (vapor OR vapour))
+psychotic OR suicide OR "pre trauma" OR pretrauma OR "post trauma" OR posttrauma OR (CVD NOT (vapor OR vapour))
 '''
 
 query = f'''
