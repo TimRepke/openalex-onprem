@@ -2,9 +2,11 @@ import asyncio
 import json
 import logging
 import typing
+from collections import defaultdict
 from datetime import datetime
 from time import perf_counter, sleep
 from typing import Any, AsyncGenerator, Sequence, Generator, AsyncIterator
+from xml.etree.ElementTree import Element
 
 import httpx
 import pandas as pd
@@ -439,3 +441,15 @@ def ensure_values(o: Any, *attrs: str | tuple[str, Any]) -> tuple[Any, ...]:
             v = default
         ret.append(v)
     return tuple(ret)
+
+
+def xml2dict(element: Element) -> dict[str, Any]:
+    base = {}
+    for child in element:
+        if child.tag not in base:
+            base[child.tag] = []
+        base[child.tag].append(xml2dict(child))
+    base |= {f'@{attr}': val for attr, val in element.attrib.items()}
+    if element.text and len(element.text.strip()) > 0:
+        base['_text'] = element.text.strip()
+    return base

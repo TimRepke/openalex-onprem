@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 from typing import Any, Generator
 
 from meta_cache.handlers.db import DatabaseEngine
@@ -44,7 +45,8 @@ class ScopusWrapper(AbstractWrapper):
             orm_key.sqlmodel_update({
                 'scopus_requests_limit': key.scopus_requests_limit,
                 'scopus_requests_remaining': key.scopus_requests_remaining,
-                'scopus_requests_reset': key.scopus_requests_reset
+                'scopus_requests_reset': key.scopus_requests_reset,
+                'last_used': datetime.now(),
             })
             session.add(orm_key)
             session.commit()
