@@ -19,7 +19,7 @@ class PubmedWrapper(AbstractWrapper):
 
     @staticmethod
     def get_title(article: Element) -> str | None:
-        hits = article.findall('.//Title')
+        hits = article.findall('.//ArticleTitle')
         if len(hits) > 0:
             return ' '.join(hits[0].itertext())
         return None
@@ -47,7 +47,7 @@ class PubmedWrapper(AbstractWrapper):
 
     @staticmethod
     def _api_key_query_extra() -> str:
-        return 'AND (api_key.scopus_requests_remaining IS NULL OR api_key.scopus_requests_remaining > 0)'
+        return ''
 
     @classmethod
     def log_api_key_use(cls, db_engine: DatabaseEngine, key: ApiKey) -> None:

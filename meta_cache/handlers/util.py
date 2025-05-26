@@ -352,7 +352,8 @@ async def batched_async(lst: AsyncIterator[T] | AsyncGenerator[T, None], batch_s
         if len(batch) >= batch_size:
             yield batch
             batch = []
-    yield batch
+    if len(batch) > 0:
+        yield batch
 
 
 def batched(lst: Sequence[T] | Generator[T, None, None], batch_size: int) -> Generator[list[T], None, None]:
@@ -362,7 +363,8 @@ def batched(lst: Sequence[T] | Generator[T, None, None], batch_size: int) -> Gen
         if len(batch) >= batch_size:
             yield batch
             batch = []
-    yield batch
+    if len(batch) > 0:
+        yield batch
 
 
 async def gather_async(lst: AsyncIterator[T] | AsyncGenerator[T, None]) -> list[T]:
