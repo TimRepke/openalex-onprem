@@ -247,7 +247,7 @@ if [ "$sync_s3" = true ] && [ "$TODAY" \> "$LAST_SYNC" ]; then
   cd ..
 
   # Commission S3 sync
-  aws s3 sync "s3://openalex" "openalex-snapshot" --no-sign-request --delete "$show_aws_progress"
+  aws s3 sync "s3://openalex/data" "openalex-snapshot/data" --no-sign-request --delete "$show_aws_progress"
 
   # Update group to openalex, so that everyone can read it later
   $with_sudo chgrp -R openalex "$OA_SNAPSHOT"

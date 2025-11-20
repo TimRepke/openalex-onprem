@@ -19,7 +19,7 @@ variables:
     description: "Base URL to meta-cache API"
   OA_LOOKBACK:
     description: "Number of days to look back when pulling updates from OpenAlex"
-    value: "1"
+    value: "2"
 
 
 # Pip's cache doesn't store the python packages
