@@ -63,6 +63,7 @@ if [[ -z "$config_file" ]]; then
   exit 1
 fi
 
+export UV_PROJECT_ENVIRONMENT=.venv
 export NACSOS_CONFIG="${config_file}"
 source "${NACSOS_CONFIG}"
 
