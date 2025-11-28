@@ -72,10 +72,6 @@ cd "${SCRIPT_DIR}"
 cd ../..
 echo $(pwd)
 
-# Ensure environment is ready and up-to-date
-uv sync
-source .venv/bin/activate
-
 echo "-=# Load snapshot into solr #=-"
 pyhton snapshot/load.py --snapshot="$NACSOS_OPENALEX__SNAPSHOT_DIR" \
                         --config-file="$config_file" \

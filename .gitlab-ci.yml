@@ -7,9 +7,10 @@ variables:
 
   OA_REPO_DIR:
     description: "Absolute path to parent where this repository is cloned for ingest jobs"
-
-  OA_CACHE_API:
-    description: "Base URL to meta-cache API"
+  OA_TMP_CONF:
+    description: "Path to conf/secret-temp.env"
+  OA_PROD_CONF:
+    description: "Path to conf/secret-prod.env"
   OA_LOOKBACK:
     description: "Number of days to look back when pulling updates from OpenAlex"
     value: "2"
@@ -50,9 +51,14 @@ ResetSnapshot:
     - git stash
     - git pull origin main
     - cd openalex-ingest
-    - uv sync
+    - python3.13 -m venv .venv
+    - source .venv/bin/activate
+    - which python
+    - which pip
+    - pip install uv
+    - uv sync --active
     - cd snapshot
-    - ./scripts/01_sync_s3.sh
-    - ./scripts/02_solr_setup.sh
+    - ./scripts/01_sync_s3.sh --config $OA_TMP_CONF
+    - ./scripts/02_solr_setup.sh --config $OA_TMP_CONF
     - ./scripts/03_load.sh
     - ./scripts/04_swap.sh
