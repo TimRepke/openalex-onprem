@@ -77,12 +77,14 @@ Setup-environment|1:
     - git stash  # "reset" softly by stashing (in case files changed)
     - git pull origin main  # pull from origin
     - echo "Creating new virtual environment"
-    - python3.11 -m venv venv
+    - python3.13 -m venv venv
     - source venv/bin/activate
     - which python
     - python -V
     - echo "Installing requirements"
-    - pip install -r openalex-ingest/requirements.txt
+    - pip install uv
+    - cd openalex-ingest
+    - uv sync
   when: manual
   allow_failure: false
 

@@ -1,0 +1,14 @@
+[project]
+name = "openalex-ingest"
+version = "2.0.0"
+requires-python = ">=3.13"
+
+dependencies = [
+    "cython==3.2.1",
+    "httpx==0.28.1",
+    "msgspec==0.19.0",
+    "nacsos_data[utils,scripts]"
+]
+
+[tool.uv.sources]
+nacsos_data = { git = "git+ssh://git@gitlab.pik-potsdam.de/mcc-apsis/nacsos/nacsos-data.git", tag = "v0.22.5" }

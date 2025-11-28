@@ -26,13 +26,14 @@ configset/
 solr/
 pg_users_secret.sql
 
+uv.lock
+
 hypercorn.access
 hypercorn.error
 
-!openalex-ingest/processors/solr
-!openalex-ingest/setup/configset
-
 openalex-guts
+
+!ingest_v1/processors/solr/
 
 meta_cache/config/
 !meta_cache/data/
@@ -40,3 +41,9 @@ meta_cache/config/
 !meta_cache/config/default.env
 !meta_cache/config/hypercorn.toml
 !meta_cache/scripts/
+!openalex-ingest/snapshot/scripts/
+!openalex-ingest/snapshot/solr/
+!openalex-ingest/daily/scripts/
+!conf/default.env
+!conf/default-prod.env
+!conf/default-temp.env
