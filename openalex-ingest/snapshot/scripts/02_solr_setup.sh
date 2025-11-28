@@ -54,7 +54,7 @@ export NACSOS_CONFIG="${config_file}"
 source "${NACSOS_CONFIG}"
 
 cd "${SCRIPT_DIR}"
-cd ../solr
+cd ..
 echo $(pwd)
 
 echo "-=# SOLR setup #=-"
@@ -64,14 +64,14 @@ echo "  - Binaries: $NACSOS_OPENALEX__SOLR_BIN"
 echo "  - Home: $NACSOS_OPENALEX__SOLR_HOME"
 
 echo "Making sure solr instance is running..."
-"${NACSOS_OPENALEX__SOLR_BIN}/solr" stop -p "$NACSOS_OPENALEX__SOLR_PORT" -h "$NACSOS_OPENALEX__SOLR_BIN" || echo "Tried to stop solr, but wasn't running"
-"${NACSOS_OPENALEX__SOLR_BIN}/solr" start -c -p "$NACSOS_OPENALEX__SOLR_PORT" -s "$NACSOS_OPENALEX__SOLR_HOME" -h "$NACSOS_OPENALEX__SOLR_BIN"
+"${NACSOS_OPENALEX__SOLR_BIN}/solr" stop --port "$NACSOS_OPENALEX__SOLR_PORT" --host "$NACSOS_OPENALEX__SOLR_HOST" || echo "Tried to stop solr, but wasn't running"
+"${NACSOS_OPENALEX__SOLR_BIN}/solr" start -c --host "$NACSOS_OPENALEX__SOLR_HOST" --port "$NACSOS_OPENALEX__SOLR_PORT" --solr-home "$NACSOS_OPENALEX__SOLR_HOME"
 
 echo "Dropping solr collection..."
-"${NACSOS_OPENALEX__SOLR_BIN}/solr" delete -c "$NACSOS_OPENALEX__SOLR_COLLECTION" -p "$NACSOS_OPENALEX__SOLR_PORT"  || echo "Collection '$NACSOS_OPENALEX__SOLR_COLLECTION' did not exist!"
+"${NACSOS_OPENALEX__SOLR_BIN}/solr" delete -c "$NACSOS_OPENALEX__SOLR_COLLECTION" --solr-url "http://$NACSOS_OPENALEX__SOLR_HOST:$NACSOS_OPENALEX__SOLR_PORT"  || echo "Collection '$NACSOS_OPENALEX__SOLR_COLLECTION' did not exist!"
 
 echo "Creating empty solr collection..."
-"${NACSOS_OPENALEX__SOLR_BIN}/solr" zk upconfig -d "solr_configset" -n _openalex_conf -z "$NACSOS_OPENALEX__SOLR_BIN:$NACSOS_OPENALEX__SOLR_ZOO_PORTO"
+"${NACSOS_OPENALEX__SOLR_BIN}/solr" zk upconfig -d "solr/solr_configset" -n _openalex_conf -z "$NACSOS_OPENALEX__SOLR_BIN:$NACSOS_OPENALEX__SOLR_ZOO_PORTO"
 "${NACSOS_OPENALEX__SOLR_BIN}/solr" create -c "$NACSOS_OPENALEX__SOLR_COLLECTION" -n _openalex_conf -p "$NACSOS_OPENALEX__SOLR_PORT"
 
 echo "Waiting a bit..."
