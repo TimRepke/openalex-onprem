@@ -60,5 +60,5 @@ ResetSnapshot:
     - cd snapshot
     - ./scripts/01_sync_s3.sh --config $OA_TMP_CONF
     - ./scripts/02_solr_setup.sh --config $OA_TMP_CONF
-    - ./scripts/03_load.sh
-    #- ./scripts/04_swap.sh
+    - ./scripts/03_load.sh --config $OA_TMP_CONF
+    #- ./scripts/04_swap.sh --temp-config $OA_TMP_CONF --prod-config $OA_PROD_CONF
