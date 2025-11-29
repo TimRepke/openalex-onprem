@@ -68,7 +68,7 @@ echo "Making sure solr instance is running..."
 "${NACSOS_OPENALEX__SOLR_BIN}/solr" start -c --host "$NACSOS_OPENALEX__SOLR_HOST" --port "$NACSOS_OPENALEX__SOLR_PORT" --solr-home "$NACSOS_OPENALEX__SOLR_HOME"
 
 echo "Dropping solr collection..."
-"${NACSOS_OPENALEX__SOLR_BIN}/solr" delete -c "$NACSOS_OPENALEX__SOLR_COLLECTION" --solr-url "http://$NACSOS_OPENALEX__SOLR_HOST:$NACSOS_OPENALEX__SOLR_PORT"  || echo "Collection '$NACSOS_OPENALEX__SOLR_COLLECTION' did not exist!"
+"${NACSOS_OPENALEX__SOLR_BIN}/solr" delete --name "$NACSOS_OPENALEX__SOLR_COLLECTION" --solr-url "http://$NACSOS_OPENALEX__SOLR_HOST:$NACSOS_OPENALEX__SOLR_PORT"  || echo "Collection '$NACSOS_OPENALEX__SOLR_COLLECTION' did not exist!"
 
 echo "Creating empty solr collection..."
 "${NACSOS_OPENALEX__SOLR_BIN}/solr" zk upconfig --conf-dir "solr/solr_configset" --conf-name _openalex_conf --solr-url "http://$NACSOS_OPENALEX__SOLR_HOST:$NACSOS_OPENALEX__SOLR_ZOO_PORT"
