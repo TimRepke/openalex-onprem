@@ -71,8 +71,8 @@ echo "Dropping solr collection..."
 "${NACSOS_OPENALEX__SOLR_BIN}/solr" delete -c "$NACSOS_OPENALEX__SOLR_COLLECTION" --solr-url "http://$NACSOS_OPENALEX__SOLR_HOST:$NACSOS_OPENALEX__SOLR_PORT"  || echo "Collection '$NACSOS_OPENALEX__SOLR_COLLECTION' did not exist!"
 
 echo "Creating empty solr collection..."
-"${NACSOS_OPENALEX__SOLR_BIN}/solr" zk upconfig -d "solr/solr_configset" -n _openalex_conf -z "$NACSOS_OPENALEX__SOLR_BIN:$NACSOS_OPENALEX__SOLR_ZOO_PORTO"
-"${NACSOS_OPENALEX__SOLR_BIN}/solr" create -c "$NACSOS_OPENALEX__SOLR_COLLECTION" -n _openalex_conf -p "$NACSOS_OPENALEX__SOLR_PORT"
+"${NACSOS_OPENALEX__SOLR_BIN}/solr" zk upconfig --conf-dir "solr/solr_configset" --conf-name _openalex_conf --solr-url "$NACSOS_OPENALEX__SOLR_HOST:$NACSOS_OPENALEX__SOLR_ZOO_PORT"
+"${NACSOS_OPENALEX__SOLR_BIN}/solr" create --name "$NACSOS_OPENALEX__SOLR_COLLECTION" --conf-name _openalex_conf --solr-url "$NACSOS_OPENALEX__SOLR_HOST:$NACSOS_OPENALEX__SOLR_ZOO_PORT"
 
 echo "Waiting a bit..."
 sleep 5
