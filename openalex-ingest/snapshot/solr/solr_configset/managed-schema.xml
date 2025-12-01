@@ -68,7 +68,7 @@
   <fieldType name="point" class="solr.PointType" subFieldSuffix="_d" dimension="2"/>
   <fieldType name="random" class="solr.RandomSortField" indexed="true"/>
   <fieldType name="rank" class="solr.RankField"/>
-  <fieldType name="string" class="solr.StrField" sortMissingLast="true" docValues="true"/>
+  <fieldType name="string" class="solr.StrField" sortMissingLast="true" docValues="true" multiValued="false" />
   <fieldType name="strings" class="solr.StrField" sortMissingLast="true" docValues="true" multiValued="true"/>
   <fieldType name="text_ar" class="solr.TextField" positionIncrementGap="100">
     <analyzer>
@@ -449,58 +449,69 @@
   </fieldType>
 
 
+
+    <fieldType name="oa_string" class="solr.StrField" sortMissingLast="true" docValues="true" multiValued="false" required="false" indexed="true" stored="true"/>
+    <fieldType name="oa_nested" class="solr.StrField" sortMissingLast="true" docValues="true" multiValued="false" required="false" indexed="false" stored="false" large="true"/>
+    <fieldType name="oa_text" class="solr.StrField" sortMissingLast="true" docValues="true" multiValued="false" required="false" indexed="false" stored="false" large="true"/>
+    <fieldType name="oa_bool" class="solr.BoolField" sortMissingLast="true" docValues="true" multiValued="false" required="false" indexed="true" stored="true"/>
+    <fieldType name="oa_int" class="solr.IntPointField" sortMissingLast="true" docValues="true" multiValued="false" required="false" indexed="true" stored="true"/>
+    <fieldType name="oa_float" class="solr.FloatPointField" sortMissingLast="true" docValues="true" multiValued="false" required="false" indexed="true" stored="true"/>
+    <fieldType name="oa_date" class="solr.DatePointField" sortMissingLast="true" docValues="true" multiValued="false" required="false" indexed="true" stored="true"/>
+
+
+
     <field name="_text_" type="text_general" multiValued="true" indexed="true" stored="false"/>
     <field name="_version_" type="plong" indexed="false" stored="false"/>
 
-    <field name="id" type="string" multiValued="false" indexed="true" required="true" stored="true"/>
-    <field name="doi" type="string" docValues="true" indexed="true" stored="false" useDocValuesAsStored="true"/>
-    <field name="id_mag" type="string" docValues="true" indexed="true" stored="false" useDocValuesAsStored="true"/>
-    <field name="id_pmcid" type="string" docValues="true" indexed="true" stored="false" useDocValuesAsStored="true"/>
-    <field name="id_pmid" type="string" docValues="true" indexed="true" stored="false" useDocValuesAsStored="true"/>
+    <field name="id" type="oa_string" required="true"/>
+    <field name="doi " type="oa_string"/>
+    <field name="id_mag " type="oa_string"/>
+    <field name="id_pmcid " type="oa_string"/>
+    <field name="id_pmid " type="oa_string"/>
 
-    <field name="title" type="string" uninvertible="false" docValues="false" large="true" indexed="false" required="false"/>
-    <field name="abstract" type="string" uninvertible="false" docValues="false" large="true" indexed="false" required="false"/>
+    <field name="title" type="oa_text"/>
+    <field name="abstract" type="oa_text"/>
     <field name="title_abstract" type="text_general" docValues="false" multiValued="false" indexed="true" stored="true"/>
-    <field name="abstract_source" type="string" docValues="true" indexed="true" stored="false" useDocValuesAsStored="true"/>
+    <field name="abstract_source " type="oa_string"/>
 
-    <field name="publication_date" type="pdate" docValues="true" indexed="true" stored="false" useDocValuesAsStored="true"/>
-    <field name="publication_year" type="pint" docValues="true" indexed="true" stored="false" useDocValuesAsStored="true"/>
-    <field name="created_date" type="pdate" docValues="true" indexed="true" stored="false" useDocValuesAsStored="true"/>
-    <field name="updated_date" type="pdate" docValues="true" indexed="true" stored="false" useDocValuesAsStored="true"/>
+    <field name="publication_date" type="oa_date"/>
+    <field name="publication_year" type="oa_int"/>
+    <field name="created_date" type="oa_date"/>
+    <field name="updated_date" type="oa_date"/>
 
-    <field name="is_published" type="boolean" docValues="true" indexed="true" stored="false" useDocValuesAsStored="true"/>
-    <field name="is_accepted" type="boolean" docValues="true" indexed="true" stored="false" useDocValuesAsStored="true"/>
-    <field name="is_open_access" type="boolean" docValues="true" indexed="true" stored="false" useDocValuesAsStored="true"/>
-    <field name="is_retracted" type="boolean" docValues="true" indexed="true" stored="false" useDocValuesAsStored="true"/>
-    <field name="is_paratext" type="boolean" docValues="true" indexed="true" stored="false" useDocValuesAsStored="true"/>
-    <field name="is_xpac" type="boolean" docValues="true" indexed="true" stored="false" useDocValuesAsStored="true"/>
-    <field name="has_content" type="boolean" docValues="true" indexed="true" stored="false" useDocValuesAsStored="true"/>
-    <field name="has_fulltext" type="boolean" docValues="true" indexed="true" stored="false" useDocValuesAsStored="true"/>
-    <field name="cited_by_count" type="pint" uninvertible="false" indexed="false" required="false" stored="false" useDocValuesAsStored="true"/>
+    <field name="is_published" type="oa_bool"/>
+    <field name="is_accepted" type="oa_bool"/>
+    <field name="is_open_access" type="oa_bool"/>
+    <field name="is_retracted" type="oa_bool"/>
+    <field name="is_paratext" type="oa_bool"/>
+    <field name="is_xpac" type="oa_bool"/>
+    <field name="has_content" type="oa_bool"/>
+    <field name="has_fulltext" type="oa_bool"/>
+    <field name="cited_by_count" type="oa_int"/>
 
-    <field name="cited_by_count" type="pint" uninvertible="false" indexed="false" required="false" stored="false" useDocValuesAsStored="true"/>
-    <field name="fwci" type="pfloat" uninvertible="false" indexed="false" required="false" stored="false" useDocValuesAsStored="true"/>
+    <field name="cited_by_count" type="oa_int"/>
+    <field name="fwci" type="oa_float"/>
 
-    <field name="publisher" type="string" docValues="true" indexed="true" stored="false" useDocValuesAsStored="true"/>
-    <field name="publisher_id" type="string" docValues="true" indexed="true" stored="false" useDocValuesAsStored="true"/>
-    <field name="source" type="string" docValues="true" indexed="true" stored="false" useDocValuesAsStored="true"/>
-    <field name="source_id" type="string" docValues="true" indexed="true" stored="false" useDocValuesAsStored="true"/>
+    <field name="publisher " type="oa_string"/>
+    <field name="publisher_id " type="oa_string"/>
+    <field name="source " type="oa_string"/>
+    <field name="source_id " type="oa_string"/>
 
-    <field name="language" type="string" docValues="true" indexed="true" stored="false" useDocValuesAsStored="true"/>
-    <field name="type" type="string" docValues="true" indexed="true" stored="false" useDocValuesAsStored="true"/>
-    <field name="type_crossref" type="string" docValues="true" indexed="true" stored="false" useDocValuesAsStored="true"/>
+    <field name="language " type="oa_string"/>
+    <field name="type " type="oa_string"/>
+    <field name="type_crossref " type="oa_string"/>
 
-    <field name="authorships" type="string" uninvertible="false" docValues="false" large="true" indexed="false" required="false"/>
-    <field name="locations" type="string" uninvertible="false" docValues="false" large="true" indexed="false" required="false"/>
-    <field name="grants" type="string" uninvertible="false" docValues="false" large="true" indexed="false" required="false"/>
-    <field name="referenced_works" type="string" uninvertible="false" docValues="false" large="true" indexed="false" required="false"/>
+    <field name="authorships" type="oa_nested"/>
+    <field name="locations" type="oa_nested"/>
+    <field name="grants" type="oa_nested"/>
+    <field name="referenced_works" type="oa_nested"/>
 
-    <field name="indexed_in" type="string" uninvertible="false" docValues="false" large="true" indexed="false" required="false"/>
-    <field name="keywords" type="string" uninvertible="false" docValues="false" large="true" indexed="false" required="false"/>
-    <field name="open_access" type="string" uninvertible="false" docValues="false" large="true" indexed="false" required="false"/>
-    <field name="concepts" type="string" uninvertible="false" docValues="false" large="true" indexed="false" required="false"/>
-    <field name="topics" type="string" uninvertible="false" docValues="false" large="true" indexed="false" required="false"/>
-    <field name="sustainable_development_goals" type="string" uninvertible="false" docValues="false" large="true" indexed="false" required="false"/>
+    <field name="indexed_in" type="oa_nested"/>
+    <field name="keywords" type="oa_nested"/>
+    <field name="open_access" type="oa_nested"/>
+    <field name="concepts" type="oa_nested"/>
+    <field name="topics" type="oa_nested"/>
+    <field name="sustainable_development_goals" type="oa_nested"/>
 
 
   <dynamicField name="*_txt_en_split_tight" type="text_en_splitting_tight" indexed="true" stored="true"/>
