@@ -73,7 +73,7 @@ cd ../..
 echo $(pwd)
 
 echo "-=# Load snapshot into solr #=-"
-pyhton snapshot/load.py --snapshot="$NACSOS_OPENALEX__SNAPSHOT_DIR" \
+python snapshot/load.py --snapshot="$NACSOS_OPENALEX__SNAPSHOT_DIR" \
                         --config-file="$config_file" \
                         --skip-n-partitions="$skip" \
                         --filter-since="$from_dt" \

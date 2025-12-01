@@ -28,6 +28,11 @@ def update_solr(
         loglevel: str = 'INFO',
 ) -> None:
     logging.basicConfig(format='%(asctime)s [%(levelname)s] %(name)s (%(process)d): %(message)s', level=loglevel)
+    logging.getLogger('matplotlib').setLevel(logging.WARNING)
+    logging.getLogger('urllib3').setLevel(logging.WARNING)
+    logging.getLogger('httpcore').setLevel(logging.WARNING)
+    logging.getLogger('httpx').setLevel(logging.WARNING)
+    logging.getLogger('root').setLevel(logging.WARNING)
 
     logging.info(f'Loading config from {config_file.resolve()}...')
     config = load_settings(config_file)
