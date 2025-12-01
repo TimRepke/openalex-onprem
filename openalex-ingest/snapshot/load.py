@@ -76,7 +76,7 @@ def update_solr(
                     logging.exception(e)
                     failed += len(batch)
 
-        total += 1
+        total += len(works)
 
     logging.info('Finished loading partitions!')
 
