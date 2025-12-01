@@ -32,9 +32,11 @@ def update_solr(
     logging.getLogger('urllib3').setLevel(logging.WARNING)
     logging.getLogger('httpcore').setLevel(logging.WARNING)
     logging.getLogger('httpx').setLevel(logging.WARNING)
-    logging.getLogger('root').setLevel(logging.WARNING)
+    #logging.getLogger('root').setLevel(logging.WARNING)
 
     logging.info(f'Loading config from {config_file.resolve()}...')
+    if not config_file.exists():
+        raise AssertionError(f'Config file does not exist at {config_file.resolve()}!')
     config = load_settings(config_file)
     logging.info(f'Will use solr collection at: {config.OPENALEX.solr_url}')
 
@@ -67,8 +69,8 @@ def update_solr(
 
             for bi, batch in enumerate(batched(works, batch_size=post_batchsize)):
                 res = solr.post(
-                    f'{config.OPENALEX.SOLR_ENDPOINT}/solr/{config.OPENALEX.SOLR_COLLECTION}/update/json?commit=true&overwrite=true',
-                    data=f'[{b','.join(batch).decode()}]',
+                    f'{config.OPENALEX.SOLR_ENDPOINT}/api/collections/{config.OPENALEX.SOLR_COLLECTION}/update/json?commit=true&overwrite=true',
+                    data=b'\n'.join(batch).decode(),
                 )
                 try:
                     res.raise_for_status()
