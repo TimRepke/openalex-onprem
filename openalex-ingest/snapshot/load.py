@@ -50,7 +50,7 @@ def update_solr(
     partitions = [p for p in partitions if p.parent.name > f'updated_date={filter_since}']
     logging.info(f'Looks like there are {len(partitions):,} partitions after filtering for update >= {filter_since}.')
 
-    progress = tqdm.tqdm()
+    progress = tqdm.tqdm(total=len(partitions))
     total = 0
     failed = 0
     for pi, partition in enumerate(partitions, 1):
@@ -65,7 +65,7 @@ def update_solr(
 
         with Client(auth=config.OPENALEX.auth, timeout=120, headers={'Content-Type': 'application/json'}) as solr:
 
-            for batch in batched(works, batch_size=post_batchsize):
+            for bi, batch in enumerate(batched(works, batch_size=post_batchsize)):
                 res = solr.post(
                     f'{config.OPENALEX.SOLR_ENDPOINT}/api/collections/{config.OPENALEX.SOLR_COLLECTION}/update/json?commit=true',
                     data=b'\n'.join(batch).decode(),
@@ -75,6 +75,8 @@ def update_solr(
                 except httpx.HTTPError as e:
                     logging.exception(e)
                     failed += len(batch)
+
+                progress.set_description_str(f'LOAD ({pi:,}) | {bi*post_batchsize:,}/{len(works):,}')
 
         total += len(works)
 
