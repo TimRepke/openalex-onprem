@@ -52,15 +52,16 @@ def update_solr(
 
     progress = tqdm.tqdm()
     total = 0
+    failed = 0
     for pi, partition in enumerate(partitions, 1):
         progress.set_description_str(f'READ ({pi:,})')
-        progress.set_postfix_str(f'total={total:,}, partition={'/'.join(partition.parts[-2:])}')
+        progress.set_postfix_str(f'total={total:,}, failed={failed:,}, partition={'/'.join(partition.parts[-2:])}')
 
         with gzip.open(partition, 'rb') as f_in:
             works = [json.dumps(translate_work_to_solr(WorksSchema.model_validate(json.loads(line)))) for line in f_in]
 
         progress.set_description_str(f'LOAD ({pi:,})')
-        progress.set_postfix_str(f'total={total:,}, size={len(works):,}, partition={'/'.join(partition.parts[-2:])}')
+        progress.set_postfix_str(f'total={total:,}, failed={failed:,}, size={len(works):,}, partition={'/'.join(partition.parts[-2:])}')
 
         with Client(auth=config.OPENALEX.auth, timeout=120, headers={'Content-Type': 'application/json'}) as solr:
 
@@ -69,10 +70,13 @@ def update_solr(
                     f'{config.OPENALEX.SOLR_ENDPOINT}/api/collections/{config.OPENALEX.SOLR_COLLECTION}/update/json?commit=true',
                     data=b'\n'.join(batch).decode(),
                 )
-            try:
-                res.raise_for_status()
-            except httpx.HTTPError as e:
-                logging.exception(e)
+                try:
+                    res.raise_for_status()
+                except httpx.HTTPError as e:
+                    logging.exception(e)
+                    failed += len(batch)
+
+        total += 1
 
     logging.info('Finished loading partitions!')
 
