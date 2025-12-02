@@ -11,10 +11,10 @@
             <!-- If true, the original token is preserved: "thé" → "the", "thé" -->
             <!--filter name="asciiFolding" preserveOriginal="false" /-->
 
-            <filter name="lowercase" maxTokenLen="127"/>
+            <filter name="lowercase"/>
         </analyzer>
         <analyzer type="query">
-            <tokenizer name="letter"/>
+            <tokenizer name="letter" maxTokenLen="127"/>
             <!--filter name="stop" ignoreCase="true" words="stopwords.txt"/-->
             <!--filter expand="true" ignoreCase="true" synonyms="synonyms.txt" name="synonymGraph"/-->
             <filter name="lowercase"/>
