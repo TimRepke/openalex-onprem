@@ -17,6 +17,7 @@ usage() {
  echo " --config FILE       .env config destination"
  echo " --from              Only include partitions after date"
  echo " --skip              Skip first n partitions"
+ echo " --batchsize         How many items to post at once to solr"
  echo ""
  echo " -h, --help          Display this help message"
 }
@@ -26,6 +27,7 @@ if [ $# -lt 2 ]; then
   exit 1
 fi
 
+bs=50000
 skip=0
 from_dt="1970-01-01"
 config_file=
@@ -48,6 +50,10 @@ while [ $# -gt 0 ]; do
     --skip)
       shift
       skip=$1
+      ;;
+    --batchsize)
+      shift
+      bs=$1
       ;;
     *)
       echo "Invalid option: $1" >&2
@@ -86,5 +92,9 @@ python snapshot/load.py --snapshot="$NACSOS_OPENALEX__SNAPSHOT_DIR" \
                         --config-file="$config_file" \
                         --skip-n-partitions="$skip" \
                         --filter-since="$from_dt" \
-                        --loglevel=INFO
+                        --loglevel=INFO \
+                        --post-batchsize="$bs"
+
 deactivate
+
+echo "Yay, done!"

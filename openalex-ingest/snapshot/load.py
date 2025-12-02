@@ -24,7 +24,7 @@ def update_solr(
         config_file: Annotated[Path, typer.Option(help='Path to config file')],
         skip_n_partitions: int = 0,
         filter_since: str = '2000-01-01',
-        post_batchsize: int = 1000,
+        post_batchsize: int = 10000,
         loglevel: str = 'INFO',
 ) -> None:
     logging.basicConfig(format='%(asctime)s [%(levelname)s] %(name)s (%(process)d): %(message)s', level=loglevel)
