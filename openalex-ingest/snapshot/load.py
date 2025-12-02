@@ -69,7 +69,7 @@ def update_solr(
 
             for bi, batch in enumerate(batched(works, batch_size=post_batchsize)):
                 res = solr.post(
-                    f'{config.OPENALEX.SOLR_ENDPOINT}/api/collections/{config.OPENALEX.SOLR_COLLECTION}/update/json?commit=true&overwrite=true',
+                    f'{config.OPENALEX.SOLR_ENDPOINT}/api/collections/{config.OPENALEX.SOLR_COLLECTION}/update/json?overwrite=true',#&commit=true
                     data=b'\n'.join(batch).decode(),
                 )
                 try:
