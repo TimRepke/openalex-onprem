@@ -292,6 +292,8 @@
         <autoCommit>
             <maxTime>${solr.autoCommit.maxTime:15000}</maxTime>
             <openSearcher>false</openSearcher>
+            <maxDocs>500000</maxDocs>
+            <maxSize>512m</maxSize>
         </autoCommit>
 
         <!-- softAutoCommit is like autoCommit except it causes a
