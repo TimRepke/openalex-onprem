@@ -55,7 +55,6 @@
     <field name="is_xpac" type="oa_bool"/>
     <field name="has_content" type="oa_bool"/>
     <field name="has_fulltext" type="oa_bool"/>
-    <field name="cited_by_count" type="oa_int"/>
 
     <field name="cited_by_count" type="oa_int"/>
     <field name="fwci" type="oa_float"/>
