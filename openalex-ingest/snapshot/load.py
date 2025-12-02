@@ -89,7 +89,7 @@ def update_solr(
 
                 progress.set_description_str(f'LOAD ({pi:,}) | {bi * post_batchsize:,}/{len(works):,}')
 
-        solr.post(f'{config.OPENALEX.SOLR_ENDPOINT}/api/collections/{config.OPENALEX.SOLR_COLLECTION}/update/json?commit=true')
+            solr.post(f'{config.OPENALEX.SOLR_ENDPOINT}/api/collections/{config.OPENALEX.SOLR_COLLECTION}/update/json?commit=true')
 
         total += len(works)
         progress.update()
