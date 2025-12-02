@@ -72,8 +72,14 @@ cd "${SCRIPT_DIR}"
 cd ../..
 echo $(pwd)
 
+if [ -f ".venv" ]; then
+  source .venv/bin/activate
+else
+  python3.13 -m venv .venv
+  source .venv/bin/activate
+  pip install uv
+fi
 uv sync
-source .venv/bin/activate
 
 echo "-=# Load snapshot into solr #=-"
 python snapshot/load.py --snapshot="$NACSOS_OPENALEX__SNAPSHOT_DIR" \
