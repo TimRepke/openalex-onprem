@@ -929,7 +929,7 @@
             <filter name="lowercase"/>
         </analyzer>
     </fieldType>
-    <fieldType name="oa_nested" class="solr.TextField" sortMissingLast="true" docValues="false" multiValued="false" required="false" indexed="false" stored="false" large="true" omitNorms="true">
+    <fieldType name="oa_nested" class="solr.TextField" sortMissingLast="true" docValues="false" multiValued="false" required="false" indexed="false" stored="true" large="true" omitNorms="true">
         <analyzer>
             <tokenizer class="solr.KeywordTokenizerFactory"/>
         </analyzer>
