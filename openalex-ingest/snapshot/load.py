@@ -81,6 +81,7 @@ def update_solr(
                 progress.set_description_str(f'LOAD ({pi:,}) | {bi*post_batchsize:,}/{len(works):,}')
 
         total += len(works)
+        progress.update()
 
     logging.info('Finished loading partitions!')
 
