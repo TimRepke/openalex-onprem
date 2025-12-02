@@ -65,7 +65,7 @@ echo "  - Home: $NACSOS_OPENALEX__SOLR_HOME"
 
 echo "Making sure solr instance is running..."
 "${NACSOS_OPENALEX__SOLR_BIN}/solr" stop --port "$NACSOS_OPENALEX__SOLR_PORT" --host "$NACSOS_OPENALEX__SOLR_HOST" || echo "Tried to stop solr, but wasn't running"
-"${NACSOS_OPENALEX__SOLR_BIN}/solr" start -c --host "$NACSOS_OPENALEX__SOLR_HOST" --port "$NACSOS_OPENALEX__SOLR_PORT"  --memory 2g -Denable.packages=true -Dsolr.modules=sql,clustering -Dsolr.max.booleanClauses=4096 # --solr-home "$NACSOS_OPENALEX__SOLR_HOME"
+"${NACSOS_OPENALEX__SOLR_BIN}/solr" start -c --host "$NACSOS_OPENALEX__SOLR_HOST" --port "$NACSOS_OPENALEX__SOLR_PORT" --memory 2g -Denable.packages=true -Dsolr.modules=sql,clustering -Dsolr.max.booleanClauses=8192 --solr-home "$NACSOS_OPENALEX__SOLR_HOME"
 
 echo "Dropping solr collection..."
 "${NACSOS_OPENALEX__SOLR_BIN}/solr" delete --name "$NACSOS_OPENALEX__SOLR_COLLECTION" -f --solr-url "http://$NACSOS_OPENALEX__SOLR_HOST:$NACSOS_OPENALEX__SOLR_PORT"  || echo "Collection '$NACSOS_OPENALEX__SOLR_COLLECTION' did not exist!"
