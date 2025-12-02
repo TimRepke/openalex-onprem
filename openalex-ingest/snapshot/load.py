@@ -57,7 +57,7 @@ def update_solr(
     failed = 0
     for pi, partition in enumerate(partitions, 1):
         progress.set_description_str(f'READ ({pi:,})')
-        progress.set_postfix_str(f'total={total:,}, failed={failed:,}, filesize={partition.stat().st_size/1024/1024:,.2f}MB, partition={'/'.join(partition.parts[-2:])}')
+        progress.set_postfix_str(f'total={total:,}, failed={failed:,}, filesize={partition.stat().st_size/1024/1024/1024:,.2f}GB, partition={'/'.join(partition.parts[-2:])}')
 
         with gzip.open(partition, 'rb') as f_in:
             works = [json.dumps(translate_work_to_solr(WorksSchema.model_validate(json.loads(line)))) for line in f_in]
