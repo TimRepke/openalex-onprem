@@ -21,6 +21,7 @@
         </analyzer>
     </fieldType>
 
+    <fieldType name="plong" class="solr.LongPointField" docValues="true"/>
     <fieldType name="oa_string" class="solr.StrField" sortMissingLast="true" docValues="true" multiValued="false" required="false" indexed="true" stored="true"/>
     <fieldType name="oa_nested" class="solr.StrField" sortMissingLast="true" docValues="true" multiValued="false" required="false" indexed="false" stored="false" large="true"/>
     <fieldType name="oa_bool" class="solr.BoolField" sortMissingLast="true" docValues="true" multiValued="false" required="false" indexed="true" stored="true"/>
