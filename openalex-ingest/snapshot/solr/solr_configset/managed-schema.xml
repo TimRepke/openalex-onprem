@@ -911,7 +911,6 @@
 
 
     <uniqueKey>id</uniqueKey>
-docValues="false" multiValued="false" indexed="true" stored="true"
     <fieldType name="oa_text" class="solr.TextField" positionIncrementGap="100" docValues="false" multiValued="false" indexed="true" stored="true">
         <analyzer type="index">
             <!-- https://solr.apache.org/guide/solr/latest/indexing-guide/tokenizers.html -->
@@ -930,14 +929,21 @@ docValues="false" multiValued="false" indexed="true" stored="true"
             <filter name="lowercase"/>
         </analyzer>
     </fieldType>
-
-    <fieldType name="oa_long" class="solr.LongPointField" docValues="true"/>
-    <fieldType name="oa_string" class="solr.StrField" sortMissingLast="true" docValues="true" multiValued="false" required="false" indexed="true" stored="true"/>
-    <fieldType name="oa_nested" class="solr.TextField" sortMissingLast="true" docValues="true" multiValued="false" required="false" indexed="false" stored="false" large="true"/>
+   <fieldType name="oa_nested" class="solr.TextField" sortMissingLast="true" docValues="true" multiValued="false" required="false" indexed="false" stored="false" large="true" omitNorms="true">
+        <analyzer>
+            <tokenizer class="solr.KeywordTokenizerFactory"/>
+        </analyzer>
+    </fieldType>
+   <fieldType name="oa_string" class="solr.StrField" sortMissingLast="true" docValues="true" multiValued="false" required="false" indexed="true" stored="true">
+        <analyzer>
+            <tokenizer class="solr.KeywordTokenizerFactory"/>
+        </analyzer>
+    </fieldType>
     <fieldType name="oa_bool" class="solr.BoolField" sortMissingLast="true" docValues="true" multiValued="false" required="false" indexed="true" stored="true"/>
     <fieldType name="oa_int" class="solr.IntPointField" sortMissingLast="true" docValues="true" multiValued="false" required="false" indexed="true" stored="true"/>
     <fieldType name="oa_float" class="solr.FloatPointField" sortMissingLast="true" docValues="true" multiValued="false" required="false" indexed="true" stored="true"/>
     <fieldType name="oa_date" class="solr.DatePointField" sortMissingLast="true" docValues="true" multiValued="false" required="false" indexed="true" stored="true"/>
+    <fieldType name="oa_long" class="solr.LongPointField" docValues="true"/>
 
     <field name="_version_" type="oa_long" indexed="false" stored="false"/>
 
