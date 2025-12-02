@@ -79,7 +79,7 @@ else
   source .venv/bin/activate
   pip install uv
 fi
-uv sync
+uv sync --active
 
 echo "-=# Load snapshot into solr #=-"
 python snapshot/load.py --snapshot="$NACSOS_OPENALEX__SNAPSHOT_DIR" \
