@@ -49,7 +49,7 @@ def update_solr(
     logging.info(f'Looks like there are {len(partitions):,} partitions.')
     partitions = partitions[skip_n_partitions:]
     logging.info(f'Looks like there are {len(partitions):,} partitions after skipping the first {skip_n_partitions}.')
-    partitions = [p for p in partitions if p.parent.name > f'updated_date={filter_since}']
+    partitions = [p for p in partitions if p.parent.name >= f'updated_date={filter_since}']
     logging.info(f'Looks like there are {len(partitions):,} partitions after filtering for update >= {filter_since}.')
 
     progress = tqdm.tqdm(total=len(partitions))
