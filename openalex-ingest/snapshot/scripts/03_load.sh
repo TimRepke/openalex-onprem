@@ -72,6 +72,9 @@ cd "${SCRIPT_DIR}"
 cd ../..
 echo $(pwd)
 
+uv sync
+source .venv/bin/activate
+
 echo "-=# Load snapshot into solr #=-"
 python snapshot/load.py --snapshot="$NACSOS_OPENALEX__SNAPSHOT_DIR" \
                         --config-file="$config_file" \
