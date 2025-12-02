@@ -63,7 +63,7 @@ def update_solr(
             works = [json.dumps(translate_work_to_solr(WorksSchema.model_validate(json.loads(line)))) for line in f_in]
 
         progress.set_description_str(f'LOAD ({pi:,})')
-        progress.set_postfix_str(f'total={total:,}, failed={failed:,}, size={len(works):,}, partition={'/'.join(partition.parts[-2:])}')
+        progress.set_postfix_str(f'total={total:,}, failed={failed:,}, size={len(works):,}, filesize={partition.stat().st_size/1024/1024/1024:,.2f}GB, partition={'/'.join(partition.parts[-2:])}')
 
         with Client(auth=config.OPENALEX.auth, timeout=120, headers={'Content-Type': 'application/json'}) as solr:
 

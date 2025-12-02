@@ -933,7 +933,7 @@ docValues="false" multiValued="false" indexed="true" stored="true"
 
     <fieldType name="oa_long" class="solr.LongPointField" docValues="true"/>
     <fieldType name="oa_string" class="solr.StrField" sortMissingLast="true" docValues="true" multiValued="false" required="false" indexed="true" stored="true"/>
-    <fieldType name="oa_nested" class="solr.StrField" sortMissingLast="true" docValues="true" multiValued="false" required="false" indexed="false" stored="false" large="true"/>
+    <fieldType name="oa_nested" class="solr.TextField" sortMissingLast="true" docValues="true" multiValued="false" required="false" indexed="false" stored="false" large="true"/>
     <fieldType name="oa_bool" class="solr.BoolField" sortMissingLast="true" docValues="true" multiValued="false" required="false" indexed="true" stored="true"/>
     <fieldType name="oa_int" class="solr.IntPointField" sortMissingLast="true" docValues="true" multiValued="false" required="false" indexed="true" stored="true"/>
     <fieldType name="oa_float" class="solr.FloatPointField" sortMissingLast="true" docValues="true" multiValued="false" required="false" indexed="true" stored="true"/>
