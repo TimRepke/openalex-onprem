@@ -65,8 +65,8 @@ echo "  - Home: $NACSOS_OPENALEX__SOLR_HOME"
 
 echo "Making sure solr instance is running..."
 "${NACSOS_OPENALEX__SOLR_BIN}/solr" stop --port "$NACSOS_OPENALEX__SOLR_PORT" --host "$NACSOS_OPENALEX__SOLR_HOST" || echo "Tried to stop solr, but wasn't running"
-rm -rf $NACSOS_OPENALEX__SOLR_HOME
-mkdir -p $NACSOS_OPENALEX__SOLR_HOME/data
+#rm -rf $NACSOS_OPENALEX__SOLR_HOME
+#mkdir -p $NACSOS_OPENALEX__SOLR_HOME/data
 "${NACSOS_OPENALEX__SOLR_BIN}/solr" start -c --host "$NACSOS_OPENALEX__SOLR_HOST" --port "$NACSOS_OPENALEX__SOLR_PORT" --memory 2g -Denable.packages=true -Dsolr.modules=sql,clustering -Dsolr.max.booleanClauses=4096 --solr-home "$NACSOS_OPENALEX__SOLR_HOME"
 
 echo "Dropping solr collection..."
