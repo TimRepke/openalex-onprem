@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<schema name="default-config" version="1.6">
+<schema name="openalex_schema" version="1.6">
     <uniqueKey>id</uniqueKey>
 
     <fieldType name="text" class="solr.TextField" positionIncrementGap="100" docValues="false" multiValued="false" indexed="true" stored="true">
