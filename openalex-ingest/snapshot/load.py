@@ -32,7 +32,7 @@ def update_solr(
     logging.getLogger('urllib3').setLevel(logging.WARNING)
     logging.getLogger('httpcore').setLevel(logging.WARNING)
     logging.getLogger('httpx').setLevel(logging.WARNING)
-    #logging.getLogger('root').setLevel(logging.WARNING)
+    logging.getLogger('root').setLevel(logging.WARNING)
 
     logging.info(f'Loading config from {config_file.resolve()}...')
     if not config_file.exists():
