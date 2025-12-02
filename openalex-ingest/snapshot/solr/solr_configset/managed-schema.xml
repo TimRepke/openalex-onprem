@@ -911,7 +911,7 @@
 
 
     <uniqueKey>id</uniqueKey>
-
+docValues="false" multiValued="false" indexed="true" stored="true"
     <fieldType name="oa_text" class="solr.TextField" positionIncrementGap="100" docValues="false" multiValued="false" indexed="true" stored="true">
         <analyzer type="index">
             <!-- https://solr.apache.org/guide/solr/latest/indexing-guide/tokenizers.html -->
@@ -948,8 +948,8 @@
     <field name="id_pmid" type="oa_string"/>
 
     <field name="title" type="oa_text" />
-    <field name="abstract" type="oa_text"/>
-    <field name="title_abstract" type="oa_text"/>
+    <field name="abstract" type="oa_text" large="true"/>
+    <field name="title_abstract" type="oa_text" large="true"/>
     <field name="abstract_source" type="oa_string"/>
 
     <field name="publication_date" type="oa_date"/>
@@ -963,7 +963,6 @@
     <field name="is_retracted" type="oa_bool"/>
     <field name="is_paratext" type="oa_bool"/>
     <field name="is_xpac" type="oa_bool"/>
-    <field name="has_content" type="oa_bool"/>
     <field name="has_fulltext" type="oa_bool"/>
 
     <field name="cited_by_count" type="oa_int"/>
@@ -983,6 +982,7 @@
     <field name="grants" type="oa_nested"/>
     <field name="referenced_works" type="oa_nested"/>
 
+    <field name="has_content" type="oa_nested"/>
     <field name="indexed_in" type="oa_nested"/>
     <field name="keywords" type="oa_nested"/>
     <field name="open_access" type="oa_nested"/>
