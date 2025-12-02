@@ -5,13 +5,13 @@
     <fieldType name="text" class="solr.TextField" positionIncrementGap="100" docValues="false" multiValued="false" indexed="true" stored="true">
         <analyzer type="index">
             <!-- https://solr.apache.org/guide/solr/latest/indexing-guide/tokenizers.html -->
-            <tokenizer name="letter" maxTokenLength="127"/>
+            <tokenizer name="letter" maxTokenLen="127"/>
             <filter name="stop" ignoreCase="true" words="stopwords.txt"/>
 
             <!-- If true, the original token is preserved: "thé" → "the", "thé" -->
             <!--filter name="asciiFolding" preserveOriginal="false" /-->
 
-            <filter name="lowercase" maxTokenLength="127"/>
+            <filter name="lowercase" maxTokenLen="127"/>
         </analyzer>
         <analyzer type="query">
             <tokenizer name="letter"/>
