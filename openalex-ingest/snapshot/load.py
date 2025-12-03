@@ -47,10 +47,10 @@ def update_solr(
 
     partitions = list(sorted(snapshot.glob(f'data/works/**/*.gz')))
     logging.info(f'Looks like there are {len(partitions):,} partitions.')
-    partitions = partitions[skip_n_partitions:]
-    logging.info(f'Looks like there are {len(partitions):,} partitions after skipping the first {skip_n_partitions}.')
     partitions = [p for p in partitions if p.parent.name >= f'updated_date={filter_since}']
     logging.info(f'Looks like there are {len(partitions):,} partitions after filtering for update >= {filter_since}.')
+    partitions = partitions[skip_n_partitions:]
+    logging.info(f'Looks like there are {len(partitions):,} partitions after skipping the next {skip_n_partitions}.')
 
     progress = tqdm.tqdm(total=len(partitions))
     total = 0
@@ -89,7 +89,10 @@ def update_solr(
 
                 progress.set_description_str(f'LOAD ({pi:,}) | {bi * post_batchsize:,}/{len(works):,}')
 
-            solr.post(f'{config.OPENALEX.SOLR_ENDPOINT}/api/collections/{config.OPENALEX.SOLR_COLLECTION}/update/json?commit=true')
+            try:
+                solr.post(f'{config.OPENALEX.SOLR_ENDPOINT}/api/collections/{config.OPENALEX.SOLR_COLLECTION}/update/json?commit=true')
+            except httpx.ReadTimeout as e:
+                logging.warning(f'Timed out on commit ({e})')
 
         total += len(works)
         progress.update()
