@@ -65,7 +65,7 @@ def update_solr(
     failed = 0
     commit_buffer = 0
     for pi, partition in enumerate(partitions, 1):
-        progress.set_description_str(f'LOADING {pi:,}: 0')
+        progress.set_description_str(f'PART-{pi:,}')
         progress.set_postfix_str(
             f'total={total:,}, '
             f'failed={failed:,}, '
@@ -90,13 +90,13 @@ def update_solr(
                     logging.exception(e)
                     failed += len(works)
 
-                progress.set_description_str(f'LOADING {pi:,} ({bi * post_batchsize:,})')
+                progress.set_description_str(f'PART-{pi:,} ({bi * post_batchsize:,})')
+                total += len(works)
 
         if commit_buffer > commit_interval:
             commit(config.OPENALEX)
             commit_buffer = 0
 
-        total += len(works)
         progress.update()
 
     commit(config.OPENALEX)
