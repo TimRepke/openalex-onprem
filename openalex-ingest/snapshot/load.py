@@ -65,7 +65,7 @@ def update_solr(
     failed = 0
     commit_buffer = 0
     for pi, partition in enumerate(partitions, 1):
-        progress.set_description_str(f'READ ({pi:,})')
+        progress.set_description_str(f'LOADING {pi:,}: 0')
         progress.set_postfix_str(
             f'total={total:,}, '
             f'failed={failed:,}, '
@@ -73,22 +73,13 @@ def update_solr(
             f'partition={'/'.join(partition.parts[-2:])}',
         )
 
-        with gzip.open(partition, 'rb') as f_in:
-            works = [json.dumps(translate_work_to_solr(WorksSchema.model_validate(json.loads(line)))) for line in f_in]
-
-        progress.set_description_str(f'LOAD ({pi:,})')
-        progress.set_postfix_str(
-            f'total={total:,}, '
-            f'failed={failed:,}, '
-            f'size={len(works):,}, '
-            f'filesize={partition.stat().st_size / 1024 / 1024 / 1024:,.2f}GB, '
-            f'partition={'/'.join(partition.parts[-2:])}',
-        )
-
-        commit_buffer += len(works)
-        with Client(auth=config.OPENALEX.auth, timeout=120, headers={'Content-Type': 'application/json'}) as solr:
-
-            for bi, batch in enumerate(batched(works, batch_size=post_batchsize)):
+        with (
+            gzip.open(partition, 'rb') as f_in,
+            Client(auth=config.OPENALEX.auth, timeout=120, headers={'Content-Type': 'application/json'}) as solr
+        ):
+            for bi, batch in enumerate(batched(f_in, batch_size=post_batchsize)):
+                works = [json.dumps(translate_work_to_solr(WorksSchema.model_validate(json.loads(line)))) for line in batch]
+                commit_buffer += len(works)
                 res = solr.post(
                     f'{config.OPENALEX.SOLR_ENDPOINT}/api/collections/{config.OPENALEX.SOLR_COLLECTION}/update/json?overwrite=true',  # &commit=true
                     data=b'\n'.join(batch).decode(),
@@ -98,11 +89,12 @@ def update_solr(
                 except httpx.HTTPError as e:
                     logging.exception(e)
                     failed += len(batch)
-                progress.set_description_str(f'LOAD ({pi:,}) | {bi * post_batchsize:,}/{len(works):,}')
 
-            if commit_buffer > commit_interval:
-                commit(config.OPENALEX)
-                commit_buffer = 0
+                progress.set_description_str(f'LOADING {pi:,}: {bi * post_batchsize:,}')
+
+        if commit_buffer > commit_interval:
+            commit(config.OPENALEX)
+            commit_buffer = 0
 
         total += len(works)
         progress.update()
