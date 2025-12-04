@@ -82,15 +82,15 @@ def update_solr(
                 commit_buffer += len(works)
                 res = solr.post(
                     f'{config.OPENALEX.SOLR_ENDPOINT}/api/collections/{config.OPENALEX.SOLR_COLLECTION}/update/json?overwrite=true',  # &commit=true
-                    data=b'\n'.join(batch).decode(),
+                    data=b'\n'.join(works).decode(),
                 )
                 try:
                     res.raise_for_status()
                 except httpx.HTTPError as e:
                     logging.exception(e)
-                    failed += len(batch)
+                    failed += len(works)
 
-                progress.set_description_str(f'LOADING {pi:,}: {bi * post_batchsize:,}')
+                progress.set_description_str(f'LOADING {pi:,} ({bi * post_batchsize:,})')
 
         if commit_buffer > commit_interval:
             commit(config.OPENALEX)
