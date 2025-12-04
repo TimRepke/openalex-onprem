@@ -11,12 +11,19 @@ from nacsos_data.models.openalex import WorksSchema
 from nacsos_data.util import batched
 from typing_extensions import Annotated
 from nacsos_data.util.academic.apis.openalex import translate_work_to_solr
-from nacsos_data.util.conf import load_settings
+from nacsos_data.util.conf import load_settings, OpenAlexConfig
 
 
 def name_part(partition: Path):
     update = str(partition.parent.name).replace('updated_date=', '')
     return f'{update}-{partition.stem}'
+
+
+def commit(conf: OpenAlexConfig):
+    try:
+        httpx.post(f'{conf.SOLR_ENDPOINT}/api/collections/{conf.SOLR_COLLECTION}/update/json?commit=true', timeout=120, auth=conf.auth)
+    except httpx.ReadTimeout as e:
+        logging.warning(f'Timed out on commit ({e})')
 
 
 def update_solr(
@@ -25,6 +32,7 @@ def update_solr(
         skip_n_partitions: int = 0,
         filter_since: str = '2000-01-01',
         post_batchsize: int = 10000,
+        commit_interval: int = 2500000,
         loglevel: str = 'INFO',
 ) -> None:
     logging.basicConfig(format='%(asctime)s [%(levelname)s] %(name)s (%(process)d): %(message)s', level=loglevel)
@@ -55,25 +63,29 @@ def update_solr(
     progress = tqdm.tqdm(total=len(partitions))
     total = 0
     failed = 0
+    commit_buffer = 0
     for pi, partition in enumerate(partitions, 1):
         progress.set_description_str(f'READ ({pi:,})')
-        progress.set_postfix_str(f'total={total:,}, '
-                                 f'failed={failed:,}, '
-                                 f'filesize={partition.stat().st_size / 1024 / 1024 / 1024:,.2f}GB, '
-                                 f'partition={'/'.join(partition.parts[-2:])}',
+        progress.set_postfix_str(
+            f'total={total:,}, '
+            f'failed={failed:,}, '
+            f'filesize={partition.stat().st_size / 1024 / 1024 / 1024:,.2f}GB, '
+            f'partition={'/'.join(partition.parts[-2:])}',
         )
 
         with gzip.open(partition, 'rb') as f_in:
             works = [json.dumps(translate_work_to_solr(WorksSchema.model_validate(json.loads(line)))) for line in f_in]
 
         progress.set_description_str(f'LOAD ({pi:,})')
-        progress.set_postfix_str(f'total={total:,}, '
-                                 f'failed={failed:,}, '
-                                 f'size={len(works):,}, '
-                                 f'filesize={partition.stat().st_size / 1024 / 1024 / 1024:,.2f}GB, '
-                                 f'partition={'/'.join(partition.parts[-2:])}',
+        progress.set_postfix_str(
+            f'total={total:,}, '
+            f'failed={failed:,}, '
+            f'size={len(works):,}, '
+            f'filesize={partition.stat().st_size / 1024 / 1024 / 1024:,.2f}GB, '
+            f'partition={'/'.join(partition.parts[-2:])}',
         )
 
+        commit_buffer += len(works)
         with Client(auth=config.OPENALEX.auth, timeout=120, headers={'Content-Type': 'application/json'}) as solr:
 
             for bi, batch in enumerate(batched(works, batch_size=post_batchsize)):
@@ -86,16 +98,16 @@ def update_solr(
                 except httpx.HTTPError as e:
                     logging.exception(e)
                     failed += len(batch)
-
                 progress.set_description_str(f'LOAD ({pi:,}) | {bi * post_batchsize:,}/{len(works):,}')
 
-            try:
-                solr.post(f'{config.OPENALEX.SOLR_ENDPOINT}/api/collections/{config.OPENALEX.SOLR_COLLECTION}/update/json?commit=true')
-            except httpx.ReadTimeout as e:
-                logging.warning(f'Timed out on commit ({e})')
+            if commit_buffer > commit_interval:
+                commit(config.OPENALEX)
+                commit_buffer = 0
 
         total += len(works)
         progress.update()
+
+    commit(config.OPENALEX)
 
     logging.info('Finished loading partitions!')
 
