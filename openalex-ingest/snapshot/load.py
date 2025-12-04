@@ -1,6 +1,7 @@
 import gzip
 import logging
 from pathlib import Path
+from time import sleep
 
 import tqdm
 import httpx
@@ -73,6 +74,7 @@ def update_solr(
             f'partition={'/'.join(partition.parts[-2:])}',
         )
 
+        max_retry = 3
         with (
             gzip.open(partition, 'rb') as f_in,
             Client(auth=config.OPENALEX.auth, timeout=120, headers={'Content-Type': 'application/json'}) as solr
@@ -80,15 +82,20 @@ def update_solr(
             for bi, batch in enumerate(batched(f_in, batch_size=post_batchsize)):
                 works = [json.dumps(translate_work_to_solr(WorksSchema.model_validate(json.loads(line)))) for line in batch]
                 commit_buffer += len(works)
-                res = solr.post(
-                    f'{config.OPENALEX.SOLR_ENDPOINT}/api/collections/{config.OPENALEX.SOLR_COLLECTION}/update/json?overwrite=true',  # &commit=true
-                    data=b'\n'.join(works).decode(),
-                )
-                try:
-                    res.raise_for_status()
-                except httpx.HTTPError as e:
-                    logging.exception(e)
-                    failed += len(works)
+                for retry in range(max_retry):
+                    res = solr.post(
+                        f'{config.OPENALEX.SOLR_ENDPOINT}/api/collections/{config.OPENALEX.SOLR_COLLECTION}/update/json?overwrite=true',
+                        data=b'\n'.join(works).decode(),
+                    )
+                    try:
+                        res.raise_for_status()
+                    except (httpx.HTTPError, httpx.ReadTimeout) as e:
+                        logging.exception(e)
+                        if (retry + 1) == max_retry:
+                            failed += len(works)
+                            raise e
+                        logging.info(f'Will try again in {retry * 60} seconds...')
+                        sleep(retry * 60)
 
                 progress.set_description_str(f'PART-{pi:,} ({bi * post_batchsize:,})')
                 total += len(works)
