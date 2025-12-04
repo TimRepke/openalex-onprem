@@ -34,6 +34,7 @@ def update_solr(
         filter_since: str = '2000-01-01',
         post_batchsize: int = 10000,
         commit_interval: int = 2500000,
+        force_commit: bool = False,
         loglevel: str = 'INFO',
 ) -> None:
     logging.basicConfig(format='%(asctime)s [%(levelname)s] %(name)s (%(process)d): %(message)s', level=loglevel)
@@ -41,7 +42,7 @@ def update_solr(
     logging.getLogger('urllib3').setLevel(logging.WARNING)
     logging.getLogger('httpcore').setLevel(logging.WARNING)
     logging.getLogger('httpx').setLevel(logging.WARNING)
-    logging.getLogger('root').setLevel(logging.WARNING)
+    logging.getLogger('root').setLevel(logging.DEBUG)
 
     logging.info(f'Loading config from {config_file.resolve()}...')
     if not config_file.exists():
@@ -60,6 +61,8 @@ def update_solr(
     logging.info(f'Looks like there are {len(partitions):,} partitions after filtering for update >= {filter_since}.')
     partitions = partitions[skip_n_partitions:]
     logging.info(f'Looks like there are {len(partitions):,} partitions after skipping the next {skip_n_partitions}.')
+
+    logging.getLogger('root').setLevel(logging.WARNING)
 
     progress = tqdm.tqdm(total=len(partitions))
     total = 0
@@ -101,7 +104,8 @@ def update_solr(
                 total += len(works)
 
         if commit_buffer > commit_interval:
-            commit(config.OPENALEX)
+            if force_commit:
+                commit(config.OPENALEX)
             commit_buffer = 0
 
         progress.update()
