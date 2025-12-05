@@ -69,7 +69,6 @@ def update_solr(
     failed = 0
     commit_buffer = 0
     for pi, partition in enumerate(partitions, 1):
-        progress.set_description_str(f'PART-{pi:,}')
         progress.set_postfix_str(
             f'total={total:,}, '
             f'failed={failed:,}, '
@@ -83,8 +82,10 @@ def update_solr(
             Client(auth=config.OPENALEX.auth, timeout=120, headers={'Content-Type': 'application/json'}) as solr
         ):
             for bi, batch in enumerate(batched(f_in, batch_size=post_batchsize)):
+                progress.set_description_str(f'READ ({pi:,} | {bi * post_batchsize:,})')
                 works = [json.dumps(translate_work_to_solr(WorksSchema.model_validate(json.loads(line)))) for line in batch]
                 commit_buffer += len(works)
+                progress.set_description_str(f'POST ({pi:,} | {bi * post_batchsize:,})')
                 for retry in range(max_retry):
                     res = solr.post(
                         f'{config.OPENALEX.SOLR_ENDPOINT}/api/collections/{config.OPENALEX.SOLR_COLLECTION}/update/json?overwrite=true',
@@ -100,7 +101,6 @@ def update_solr(
                         logging.warning(f'Will try again in {retry * 60} seconds...')
                         sleep(retry * 60)
 
-                progress.set_description_str(f'PART-{pi:,} ({bi * post_batchsize:,})')
                 total += len(works)
 
         if commit_buffer > commit_interval:
