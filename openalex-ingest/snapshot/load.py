@@ -23,7 +23,7 @@ def name_part(partition: Path):
 def commit(conf: OpenAlexConfig):
     try:
         httpx.post(f'{conf.SOLR_ENDPOINT}/api/collections/{conf.SOLR_COLLECTION}/update/json?commit=true', timeout=120, auth=conf.auth)
-    except httpx.ReadTimeout as e:
+    except (httpx.ReadTimeout, httpx.WriteTimeout) as e:
         logging.warning(f'Timed out on commit ({e})')
 
 
@@ -92,7 +92,7 @@ def update_solr(
                     )
                     try:
                         res.raise_for_status()
-                    except (httpx.HTTPError, httpx.ReadTimeout) as e:
+                    except (httpx.HTTPError, httpx.WriteTimeout, httpx.ReadTimeout) as e:
                         logging.exception(e)
                         if (retry + 1) == max_retry:
                             failed += len(works)
