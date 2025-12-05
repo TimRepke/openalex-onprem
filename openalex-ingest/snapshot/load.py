@@ -106,6 +106,7 @@ def update_solr(
                             res.raise_for_status()
                             n_posted += len(post_works)
                             progress.set_description_str(f'POST ({pi:,} | {n_read:,} | {n_posted:,})')
+                            break
                         except Exception as e:
                             if retry < (max_retry - 1):
                                 logging.error(e)
