@@ -115,11 +115,12 @@ def update_solr(
                                 n_failed += len(works)
                                 # raise e
 
+                    if (commit_interval > 0) and (n_uncommited >= commit_interval):
+                        commit(config.OPENALEX)
+                        n_uncommited = 0
+
                 progress.set_description_str(f'READ ({pi:,} | {n_read:,} | {n_posted:,})')
 
-        if (commit_interval > 0) and (n_uncommited >= commit_interval):
-            commit(config.OPENALEX)
-            n_uncommited = 0
 
         progress.update()
 
