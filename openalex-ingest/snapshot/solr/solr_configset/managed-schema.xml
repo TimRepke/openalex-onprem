@@ -966,6 +966,10 @@
     <field name="is_paratext" type="oa_bool"/>
     <field name="is_xpac" type="oa_bool"/>
     <field name="has_fulltext" type="oa_bool"/>
+    <field name="has_pdf" type="oa_bool"/>
+    <field name="has_grobid_xml" type="oa_bool"/>
+    <field name="open_access_status" type="oa_bool"/>
+    <field name="any_repository_has_fulltext" type="oa_bool"/>
 
     <field name="cited_by_count" type="oa_int"/>
     <field name="fwci" type="oa_float"/>

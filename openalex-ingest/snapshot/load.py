@@ -23,7 +23,7 @@ def name_part(partition: Path):
 def commit(conf: OpenAlexConfig):
     try:
         httpx.post(f'{conf.SOLR_ENDPOINT}/api/collections/{conf.SOLR_COLLECTION}/update/json?commit=true', timeout=120, auth=conf.auth)
-    except (httpx.ReadTimeout, httpx.WriteTimeout) as e:
+    except (httpx.ReadTimeout, httpx.WriteTimeout, httpx.HTTPError, httpx.HTTPStatusError, httpx.RequestError) as e:
         logging.warning(f'Timed out on commit ({e})')
 
 
@@ -32,7 +32,7 @@ def update_solr(
         config_file: Annotated[Path, typer.Option(help='Path to config file')],
         skip_n_partitions: int = 0,
         filter_since: str = '2000-01-01',
-        post_batchsize: int = 10000,
+        post_batchsize: int = 40000,
         commit_interval: int = 2500000,
         force_commit: bool = False,
         loglevel: str = 'INFO',
@@ -77,7 +77,7 @@ def update_solr(
             f'partition={'/'.join(partition.parts[-2:])}',
         )
 
-        max_retry = 3
+        max_retry = 10
         with (
             gzip.open(partition, 'rb') as f_in,
             Client(auth=config.OPENALEX.auth, timeout=120, headers={'Content-Type': 'application/json'}) as solr
@@ -92,12 +92,12 @@ def update_solr(
                     )
                     try:
                         res.raise_for_status()
-                    except (httpx.HTTPError, httpx.WriteTimeout, httpx.ReadTimeout) as e:
+                    except (httpx.HTTPError, httpx.WriteTimeout, httpx.ReadTimeout, httpx.RequestError, httpx.HTTPStatusError) as e:
                         logging.exception(e)
                         if (retry + 1) == max_retry:
                             failed += len(works)
                             raise e
-                        logging.info(f'Will try again in {retry * 60} seconds...')
+                        logging.warning(f'Will try again in {retry * 60} seconds...')
                         sleep(retry * 60)
 
                 progress.set_description_str(f'PART-{pi:,} ({bi * post_batchsize:,})')
