@@ -23,7 +23,7 @@ def name_part(partition: Path):
 def commit(conf: OpenAlexConfig):
     try:
         httpx.post(f'{conf.SOLR_ENDPOINT}/api/collections/{conf.SOLR_COLLECTION}/update/json?commit=true', timeout=120, auth=conf.auth)
-    except (httpx.ReadTimeout, httpx.WriteTimeout, httpx.HTTPError, httpx.HTTPStatusError, httpx.RequestError) as e:
+    except Exception as e:
         logging.warning(f'Timed out on commit ({e})')
 
 
@@ -77,23 +77,23 @@ def update_solr(
         )
 
         max_retry = 10
-        with (
-            gzip.open(partition, 'rb') as f_in,
-            Client(auth=config.OPENALEX.auth, timeout=120, headers={'Content-Type': 'application/json'}) as solr
-        ):
+        with             gzip.open(partition, 'rb') as f_in:
             for bi, batch in enumerate(batched(f_in, batch_size=post_batchsize)):
                 progress.set_description_str(f'READ ({pi:,} | {bi * post_batchsize:,})')
                 works = [json.dumps(translate_work_to_solr(WorksSchema.model_validate(json.loads(line)))) for line in batch]
                 commit_buffer += len(works)
                 progress.set_description_str(f'POST ({pi:,} | {bi * post_batchsize:,})')
                 for retry in range(max_retry):
-                    res = solr.post(
+                    res = httpx.post(
                         f'{config.OPENALEX.SOLR_ENDPOINT}/api/collections/{config.OPENALEX.SOLR_COLLECTION}/update/json?overwrite=true',
                         data=b'\n'.join(works).decode(),
+                        auth=config.OPENALEX.auth,
+                        timeout=120,
+                        headers={'Content-Type': 'application/json'},
                     )
                     try:
                         res.raise_for_status()
-                    except (httpx.HTTPError, httpx.WriteTimeout, httpx.ReadTimeout, httpx.RequestError, httpx.HTTPStatusError) as e:
+                    except Exception as e:
                         logging.exception(e)
                         if (retry + 1) == max_retry:
                             failed += len(works)
