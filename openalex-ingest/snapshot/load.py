@@ -32,9 +32,10 @@ def update_solr(
         config_file: Annotated[Path, typer.Option(help='Path to config file')],
         skip_n_partitions: int = 0,
         filter_since: str = '2000-01-01',
-        post_batchsize: int = 40000,
-        commit_interval: int = 2500000,
-        force_commit: bool = False,
+        post_batchsize: int = 1000,
+        read_batchsize: int = 50000,
+        commit_interval: int = -1,
+        max_retry: int = 10,
         loglevel: str = 'INFO',
 ) -> None:
     logging.basicConfig(format='%(asctime)s [%(levelname)s] %(name)s (%(process)d): %(message)s', level=loglevel)
@@ -65,48 +66,60 @@ def update_solr(
     logging.getLogger('root').setLevel(logging.WARNING)
 
     progress = tqdm.tqdm(total=len(partitions))
-    total = 0
-    failed = 0
-    commit_buffer = 0
+
+    n_total = 0
+    n_failed = 0
+    n_uncommited = 0
+
     for pi, partition in enumerate(partitions, 1):
         progress.set_postfix_str(
-            f'total={total:,}, '
-            f'failed={failed:,}, '
+            f'total={n_total:,}, '
+            f'failed={n_failed:,}, '
             f'filesize={partition.stat().st_size / 1024 / 1024 / 1024:,.2f}GB, '
             f'partition={'/'.join(partition.parts[-2:])}',
         )
 
-        max_retry = 10
-        with             gzip.open(partition, 'rb') as f_in:
-            for bi, batch in enumerate(batched(f_in, batch_size=post_batchsize)):
-                progress.set_description_str(f'READ ({pi:,} | {bi * post_batchsize:,})')
+        with gzip.open(partition, 'rb') as f_in:
+            n_read = 0
+            n_posted = 0
+            progress.set_description_str(f'READ ({pi:,} | -- | --)')
+
+            for bi, batch in enumerate(batched(f_in, batch_size=read_batchsize)):
+
                 works = [json.dumps(translate_work_to_solr(WorksSchema.model_validate(json.loads(line)))) for line in batch]
-                commit_buffer += len(works)
-                progress.set_description_str(f'POST ({pi:,} | {bi * post_batchsize:,})')
-                for retry in range(max_retry):
-                    res = httpx.post(
-                        f'{config.OPENALEX.SOLR_ENDPOINT}/api/collections/{config.OPENALEX.SOLR_COLLECTION}/update/json?overwrite=true',
-                        data=b'\n'.join(works).decode(),
-                        auth=config.OPENALEX.auth,
-                        timeout=120,
-                        headers={'Content-Type': 'application/json'},
-                    )
-                    try:
-                        res.raise_for_status()
-                    except Exception as e:
-                        logging.exception(e)
-                        if (retry + 1) == max_retry:
-                            failed += len(works)
-                            raise e
-                        logging.warning(f'Will try again in {retry * 60} seconds...')
-                        sleep(retry * 60)
+                n_read += len(works)
+                n_total += len(works)
+                n_uncommited += len(works)
 
-                total += len(works)
+                progress.set_description_str(f'POST ({pi:,} | {n_read:,} | {n_posted:,})')
 
-        if commit_buffer > commit_interval:
-            if force_commit:
-                commit(config.OPENALEX)
-            commit_buffer = 0
+                for post_works in batched(works, batch_size=post_batchsize):
+                    for retry in range(max_retry):
+                        res = httpx.post(
+                            f'{config.OPENALEX.SOLR_ENDPOINT}/api/collections/{config.OPENALEX.SOLR_COLLECTION}/update/json?overwrite=true',
+                            data=b'\n'.join(works).decode(),
+                            auth=config.OPENALEX.auth,
+                            timeout=240,
+                            headers={'Content-Type': 'application/json'},
+                        )
+                        try:
+                            res.raise_for_status()
+                            n_posted += len(post_works)
+                            progress.set_description_str(f'POST ({pi:,} | {n_read:,} | {n_posted:,})')
+                        except Exception as e:
+                            if retry < (max_retry - 1):
+                                logging.error(e)
+                                logging.warning(f'Will try again in {retry * 60} seconds...')
+                                sleep(retry * 60)
+                            else:
+                                n_failed += len(works)
+                                # raise e
+
+                progress.set_description_str(f'READ ({pi:,} | {n_read:,} | {n_posted:,})')
+
+        if (commit_interval > 0) and (n_uncommited >= commit_interval):
+            commit(config.OPENALEX)
+            n_uncommited = 0
 
         progress.update()
 
