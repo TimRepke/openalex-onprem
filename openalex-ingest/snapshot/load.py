@@ -96,8 +96,8 @@ def update_solr(
                 for post_works in batched(works, batch_size=post_batchsize):
                     for retry in range(max_retry):
                         res = httpx.post(
-                            f'{config.OPENALEX.SOLR_ENDPOINT}/api/collections/{config.OPENALEX.SOLR_COLLECTION}/update/json?overwrite=true',
-                            data=b'\n'.join(works).decode(),
+                            f'{config.OPENALEX.SOLR_ENDPOINT}/api/collections/{config.OPENALEX.SOLR_COLLECTION}/update/json',  # ?overwrite=true',
+                            data=b'\n'.join(post_works).decode(),
                             auth=config.OPENALEX.auth,
                             timeout=240,
                             headers={'Content-Type': 'application/json'},
@@ -112,7 +112,7 @@ def update_solr(
                                 logging.warning(f'Will try again in {retry * 60} seconds...')
                                 sleep(retry * 60)
                             else:
-                                n_failed += len(works)
+                                n_failed += len(post_works)
                                 # raise e
 
                     if (commit_interval > 0) and (n_uncommited >= commit_interval):
@@ -120,7 +120,6 @@ def update_solr(
                         n_uncommited = 0
 
                 progress.set_description_str(f'READ ({pi:,} | {n_read:,} | {n_posted:,})')
-
 
         progress.update()
 
