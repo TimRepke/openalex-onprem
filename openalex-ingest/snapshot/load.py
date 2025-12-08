@@ -86,7 +86,16 @@ def update_solr(
 
             for bi, batch in enumerate(batched(f_in, batch_size=read_batchsize)):
 
-                works = [json.dumps(translate_work_to_solr(WorksSchema.model_validate(json.loads(line)))) for line in batch]
+                works = [
+                    json.dumps(
+                        translate_work_to_solr(
+                            WorksSchema.model_validate(json.loads(line)),
+                            source='OpenAlex',
+                            authorship_limit=25,
+                        ),
+                    )
+                    for line in batch
+                ]
                 n_read += len(works)
                 n_total += len(works)
                 n_uncommited += len(works)
