@@ -91,7 +91,7 @@ def update_solr(
                         translate_work_to_solr(
                             WorksSchema.model_validate(json.loads(line)),
                             source='OpenAlex',
-                            authorship_limit=25,
+                            authorship_limit=50,
                         ),
                     )
                     for line in batch
