@@ -95,19 +95,19 @@ def update_solr(
 
                 for post_works in batched(works, batch_size=post_batchsize):
                     for retry in range(max_retry):
-                        res = httpx.post(
-                            f'{config.OPENALEX.SOLR_ENDPOINT}/api/collections/{config.OPENALEX.SOLR_COLLECTION}/update/json',  # ?overwrite=true',
-                            data=b'\n'.join(post_works).decode(),
-                            auth=config.OPENALEX.auth,
-                            timeout=240,
-                            headers={'Content-Type': 'application/json'},
-                        )
                         try:
+                            res = httpx.post(
+                                f'{config.OPENALEX.SOLR_ENDPOINT}/api/collections/{config.OPENALEX.SOLR_COLLECTION}/update/json',  # ?overwrite=true',
+                                data=b'\n'.join(post_works).decode(),
+                                auth=config.OPENALEX.auth,
+                                timeout=240,
+                                headers={'Content-Type': 'application/json'},
+                            )
                             res.raise_for_status()
                             n_posted += len(post_works)
                             progress.set_description_str(f'POST ({pi:,} | {n_read:,} | {n_posted:,})')
                             break
-                        except Exception as e:
+                        except (Exception, httpx.WriteTimeout, httpx.ReadTimeout, httpx.HTTPError, httpx.HTTPStatusError) as e:
                             if retry < (max_retry - 1):
                                 logging.error(e)
                                 logging.warning(f'Will try again in {retry * 60} seconds...')
