@@ -7,7 +7,6 @@ import tqdm
 import httpx
 import typer
 import orjson as json
-from httpx import Client
 from nacsos_data.models.openalex import WorksSchema
 from nacsos_data.util import batched
 from typing_extensions import Annotated
