@@ -106,7 +106,8 @@ def update_solr(api_key: Annotated[str, typer.Option(help='OpenAlex premium API 
                 'https://api.openalex.org/works',
                 timeout=120,
                 params={
-                    'filter': f'from_created_date:{created_since}',
+                    'filter': f'from_created_date:{created_since},'
+                              f'to_created_date:{created_since}',
                     'select': ','.join(FIELDS_TO_FETCH),
                     'cursor': cursor,
                     'per-page': oa_page_size

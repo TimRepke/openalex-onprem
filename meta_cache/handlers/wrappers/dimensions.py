@@ -27,7 +27,7 @@ class DimensionsWrapper(AbstractWrapper):
     FIELDS = [
         'title', 'type', 'abstract', 'authors_count', 'date',
         'year', 'authors', 'journal',  # 'journal.title',
-        'document_type', 'doi', 'id',
+        'document_type', 'doi', 'id', 'pmid',
         # 'linkout',
         'publisher',
         'research_org_country_names', 'research_org_names',

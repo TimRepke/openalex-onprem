@@ -5,7 +5,7 @@ from typing import Any, Generator, Literal
 import httpx
 
 from meta_cache.handlers.db import DatabaseEngine
-from meta_cache.handlers.models import Reference, Record
+from meta_cache.handlers.models import Reference
 from meta_cache.handlers.util import get, RequestClient
 from meta_cache.handlers.wrappers.base import AbstractWrapper
 from meta_cache.handlers.schema import ApiKey
@@ -82,7 +82,7 @@ class WebOfScienceWrapper(AbstractWrapper):
     def fetch(cls,
               db_engine: DatabaseEngine,
               references: list[Reference],
-              auth_key: str) -> Generator[Record, None, None]:
+              auth_key: str) -> Generator[Any, None, None]:
 
         DOIs = ' '.join([reference.doi for reference in references if reference.doi])
         PMIDs = ' '.join([reference.pubmed_id for reference in references if reference.pubmed_id])
@@ -107,13 +107,13 @@ class WebOfScienceWrapper(AbstractWrapper):
             key = cls.get_api_keys(db_engine=db_engine, auth_key=auth_key)[0]
             next_page += 1
             page = httpx.get(
-                'https://api.clarivate.com/apis/wos-starter/v1/documents',
+                'https://api.clarivate.com/api/wos',
                 params={
                     # https://webofscience.help.clarivate.com/en-us/Content/wos-core-collection/woscc-search-field-tags.htm
-                    'q': advanced_query,
-                    'detail': 'full',
-                    'page': next_page,
-
+                    'usrQuery': 'TS=("school uniforms")',  # advanced_query,
+                    # 'optionView': 'FR',
+                    # 'page': next_page,
+                    'count': 10,
                     # WOS - Web of Science Core collection
                     # BIOABS - Biological Abstracts
                     # BCI - BIOSIS Citation Index
@@ -125,13 +125,14 @@ class WebOfScienceWrapper(AbstractWrapper):
                     # ZOOREC - Zoological Records
                     # PPRN - Preprint Citation Index
                     # WOK - All databases
-                    'db': 'WOK',
+                    'databaseId': 'WOS',
 
+                    'firstRecord': 1
                     # limit of records on the page (1-50)
-                    'limit': 50,
+                    # 'limit': 50,
                 },
                 headers={
-                    'Accept': 'application/json',
+                    # 'Accept': 'application/json',
                     "X-ApiKey": key.api_key,
                 },
                 proxy=key.proxy,
@@ -180,18 +181,40 @@ class WebOfScienceWrapper(AbstractWrapper):
             logger.debug(f'Found {n_records:,} records after processing page {n_pages}')
 
 
+def bare_test(api_key: str):
+    page = httpx.get(
+        'https://api.clarivate.com/api/wos',
+        params={
+            'usrQuery': 'ts=(cadmium)',
+            'count': 2,
+            'databaseId': 'WOS',
+            'optionView': 'FR',
+            'firstRecord': 1,
+        },
+        headers={
+            "X-ApiKey": api_key,
+        },
+        timeout=120,
+    )
+    print(page.status_code)
+    print(page.json())
+    print('.')
+
+
 if __name__ == '__main__':
     from meta_cache.server.db import db_engine as engine
     import os
 
-    for ri, record in enumerate(WebOfScienceWrapper.fetch(
-            db_engine=engine,
-            references=[Reference(doi='10.4103/ija.ija_382_20', openalex_id='W3095414299'),
-                        Reference(doi='10.1111/jfr3.12673', openalex_id='W3095428461'),
-                        Reference(doi='10.18517/ijaseit.10.5.10817', openalex_id='W3095407431'),
-                        Reference(doi='10.1080/00141844.2020.1839527', openalex_id='W3095413630')],
-            auth_key=os.getenv('AUTH_KEY'))):
-        print(record)
-        if ri > 100:
-            break
-    print('Force stopped')
+    bare_test('')
+    #
+    # for ri, record in enumerate(WebOfScienceWrapper.fetch(
+    #         db_engine=engine,
+    #         references=[Reference(doi='10.4103/ija.ija_382_20', openalex_id='W3095414299'),
+    #                     Reference(doi='10.1111/jfr3.12673', openalex_id='W3095428461'),
+    #                     Reference(doi='10.18517/ijaseit.10.5.10817', openalex_id='W3095407431'),
+    #                     Reference(doi='10.1080/00141844.2020.1839527', openalex_id='W3095413630')],
+    #         auth_key=os.getenv('AUTH_KEY'))):
+    #     print(record)
+    #     if ri > 100:
+    #         break
+    # print('Force stopped')

@@ -10,7 +10,7 @@ import httpx
 from meta_cache.handlers.db import get_engine
 from meta_cache.handlers.models import Reference
 from meta_cache.handlers.util import update_solr_abstracts
-from meta_cache.handlers.wrappers import DimensionsWrapper, ScopusWrapper
+from meta_cache.handlers.wrappers import get_wrappers
 from meta_cache.scripts.config import db_engine_cache
 from shared.util import rate_limit, batched
 
@@ -125,42 +125,37 @@ def request_ids(solr_host: Annotated[str, typer.Option(prompt='solr host')],
                 continue
 
             logger.info(f'Missing abstract for {len(res['response']['docs']):,} / {len(batch)} entries')
-
             references = [
                 Reference(openalex_id=doc['id'], doi=doc['doi'][16:])
                 for doc in res['response']['docs']
                 if doc.get('doi') is not None
             ]
             if len(references) == 0:
-                logger.debug('Batch has no DOIs.')
+                logging.info('  > Batch has no DOIs.')
                 continue
-            logger.info(f'  > {len(references)} references with missing abstract have a DOI')
 
-            # request dimensions
-            cache_response = DimensionsWrapper.run(db_engine=db_engine_cache,
-                                                   references=references,
-                                                   auth_key=auth_key,
-                                                   skip_existing=True)
+            logging.info(f'  > {len(references)} references with missing abstract have a DOI')
 
-            # with remaining request scopus
-            remaining = [ref for ref in cache_response.references if ref.missed or not ref.abstract]
-            if len(remaining) > 0:
-                logger.info(f'{len(remaining):,} references remaining for scopus')
-                cache_response = ScopusWrapper.run(db_engine=db_engine_cache,
-                                                   references=[Reference(openalex_id=doc.openalex_id, doi=doc.doi)
-                                                               for doc in remaining],
-                                                   auth_key=auth_key,
-                                                   skip_existing=True)
+            remaining = references
+            for wrapper_cls in get_wrappers():
+                logging.debug(f'  > Using {wrapper_cls.name} on {len(remaining):,}/{len(references):,} references')
+                try:
+                    cache_response = wrapper_cls.run(db_engine=db_engine_cache,
+                                                     references=remaining,
+                                                     auth_key=auth_key,
+                                                     skip_existing=True)
+                    remaining = [
+                        Reference(openalex_id=ref.openalex_id, doi=ref.doi)
+                        for ref in cache_response.references
+                        if ref.missed or not ref.abstract
+                    ]
+                except Exception as e:
+                    logging.exception(e)
+                    logging.warning(f'Ignoring {e} and continuing...')
 
-            # with remaining request wos
-            remaining = [ref for ref in cache_response.references if ref.missed or not ref.abstract]
-            if len(remaining) > 0:
-                logger.info(f'{len(remaining):,} references remaining for the Web of Science')
-                # TODO
-                logger.warning('Not implemented, not investigating further...')
-
-            # with remaining request s2
-            # TODO
+                if len(remaining) == 0:
+                    logging.info('No references remaining')
+                    break
 
 
 @app.command()
