@@ -23,7 +23,7 @@ bin/
 /nbdist/
 /.nb-gradle/
 
-__pycache__
+__pycache__/
 tmp.py
 *.env
 solr/
@@ -31,6 +31,8 @@ solr/
 .idea/
 pg_users_secret.sql
 cyth/
+!cyth/setup.py
+!cyth/*.pyx
 data/
 config/
 
@@ -39,5 +41,8 @@ config/
 
 ### Mac OS ###
 .DS_Store
+
+*.error
+*.access
 
 uv.lock

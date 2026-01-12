@@ -1,0 +1,33 @@
+[project]
+name = "openalex-ingest"
+version = "2.0.0"
+requires-python = ">=3.13"
+
+dependencies = [
+    "nacsos_data[utils,scripts]",
+    "orjson>=3.11.5",
+    "tqdm==4.67.1",
+]
+
+[project.optional-dependencies]
+server = [
+    "fastapi==0.128.0",
+    "httpx[http2,socks]==0.28.1",
+    "hypercorn==0.18.0",
+    "pandas==2.3.3",
+    "psycopg2-binary==2.9.11",
+    "psycopg[binary]==3.3.2",
+    "pydantic==2.12.5",
+    "pydantic-settings==2.12.0",
+    "python-dotenv==1.2.1",
+    "rq-dashboard-fast==0.5.12",
+    "sqlmodel==0.0.31",
+    "toml==0.10.2",
+    "tqdm==4.67.1",
+]
+evaluation = [
+    "notebook>=7.5.1",
+]
+
+[tool.uv.sources]
+nacsos_data = { git = "git+ssh://git@gitlab.pik-potsdam.de/mcc-apsis/nacsos/nacsos-data.git", tag = "v0.24.8" }

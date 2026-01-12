@@ -84,7 +84,8 @@ $with_sudo /usr/bin/systemctl stop solr.service
 echo "Copying solr-home folders"
 $with_sudo chown -R "$USR_SELF:$USR_SELF" "$OA_SOLR_HOME_PROD"
 $with_sudo chown -R "$USR_SELF:$USR_SELF" "$OA_SOLR_HOME_TMP"
-rm -r "$OA_SOLR_HOME_PROD"/* || echo "solr home at '$OA_SOLR_HOME_PROD' already cleared."
+#rm -r "$OA_SOLR_HOME_PROD"/* || echo "solr home at '$OA_SOLR_HOME_PROD' already cleared."
+mv "$OA_SOLR_HOME_PROD" "${OA_SOLR_HOME_PROD}_bak"
 cp -r "$OA_SOLR_HOME_TMP"/* "$OA_SOLR_HOME_PROD"
 $with_sudo chown -R "$USR_SOLR:$USR_SOLR" "$OA_SOLR_HOME_PROD"
 

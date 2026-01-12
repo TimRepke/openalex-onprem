@@ -2,7 +2,11 @@
 * `openalex-ingest` hosts code to fetch, translate, and load the snapshot into solr and postgres
 * `meta-cache` hosts a small service to cache external data for internal use that had to be removed from the public openalex snapshot
 
+## solr / ingest
 
+Show min/max created_date and updated_date (params: stats=true, stats.field=updated_date)
+ * http://10.10.12.41:8983/solr/#/openalex/query?q=*:*&q.op=AND&indent=true&fl=created_date&stats.field=created_date&stats=true&useParams=
+ * http://10.10.12.41:8983/solr/#/openalex/query?q=*:*&q.op=AND&indent=true&fl=created_date&stats.field=updated_date&stats=true&useParams=
 
 ## OpenAlex meta-cache
 

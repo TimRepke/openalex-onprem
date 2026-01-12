@@ -1,8 +1,10 @@
 import logging
 from pathlib import Path
 from typing import Annotated
+
 import httpx
 import typer
+
 from nacsos_data.models.openalex import WorksSchema
 from nacsos_data.util.academic.apis.openalex import OpenAlexAPI
 from nacsos_data.util.conf import load_settings
@@ -11,7 +13,7 @@ from nacsos_data.util import batched
 from .util import date_check
 
 
-def update_solr(
+def update_solr_from_api(
         config: Annotated[Path, typer.Option(help='OpenAlex premium API key')],
         date: Annotated[str, typer.Option(callback=date_check, help='Get works created or updated on this day')],
         solr_buffer_size: int = 200,
@@ -32,7 +34,7 @@ def update_solr(
     config = load_settings(config)
     logger.info(f'Will use solr collection at: {config.OPENALEX.solr_url}')
 
-    for fltr in ['created','updated']:
+    for fltr in ['created', 'updated']:
         for batch in batched(
                 OpenAlexAPI(
                     api_key=config.OPENALEX.API_KEY,
@@ -48,15 +50,25 @@ def update_solr(
                 batch_size=solr_buffer_size,
         ):
             try:
+                works = [WorksSchema.model_validate(record) for record in batch]
                 res = httpx.post(
                     url=f'{config.OPENALEX.solr_url}/update/json?commit=true',
                     timeout=240,
                     headers={'Content-Type': 'application/json'},
-                    data='\n'.join([WorksSchema.model_validate(record).model_dump_json() for record in batch]),
+                    data='\n'.join([w.model_dump_json() for w in works]),
                 )
                 res.raise_for_status()
+
+                # remember all Works without abstract and with DOI
+                works = [w for w in works if w.id is not None and w.doi is not None and w.abstract is None]
+
+
             except httpx.HTTPError as e:
                 logging.error(f'Failed to submit: {e}')
                 logging.exception(e)
 
     logging.info('Solr collection is up to date.')
+
+
+if __name__ == '__main__':
+    typer.run(update_solr_from_api)
