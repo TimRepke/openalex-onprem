@@ -1,49 +1,43 @@
-# OS generated files #
-######################
-**/.DS_Store
-**/.DS_Store?
-**/._*
-**/.ipynb_checkpoints
-**/__pycache__/**
-*.pyc
+### IntelliJ IDEA ###
+out/
+!**/src/main/**/out/
+!**/src/test/**/out/
+.kotlin
 
-*.so
-*.c
-*.env
+### Eclipse ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+bin/
+!**/src/main/**/bin/
+!**/src/test/**/bin/
 
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+__pycache__
 tmp.py
-tmp.md
-# Local Directories #
-#####################
-
-local/
-.idea/
-venv/
-scripts/
-data/
-build/
-configset/
+*.env
 solr/
+
+.idea/
 pg_users_secret.sql
+cyth/
+data/
+config/
+
+### VS Code ###
+.vscode/
+
+### Mac OS ###
+.DS_Store
 
 uv.lock
-
-hypercorn.access
-hypercorn.error
-
-openalex-guts
-
-!ingest_v1/processors/solr/
-
-meta_cache/config/
-!meta_cache/data/
-!meta_cache/config/logging.toml
-!meta_cache/config/default.env
-!meta_cache/config/hypercorn.toml
-!meta_cache/scripts/
-!openalex-ingest/snapshot/scripts/
-!openalex-ingest/snapshot/solr/
-!openalex-ingest/daily/scripts/
-!conf/default.env
-!conf/default-prod.env
-!conf/default-temp.env

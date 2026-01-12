@@ -1,0 +1,11 @@
+[project]
+name = "openalex-eval"
+version = "0.6.3"
+requires-python = ">=3.13"
+
+dependencies = [
+    "orjson>=3.11.4",
+    "typer==0.20.0",
+    "tqdm==4.67.1",
+    "httpx==0.28.1",
+]
