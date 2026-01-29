@@ -8,8 +8,12 @@ curl 'http://10.10.12.41:8983/solr/openalex/select?_=1769714129541&fl=updated_da
   -H 'Referer: http://10.10.12.41:8983/solr/' | jq '.stats'
 
 cd /var/www/nacsos-academic
+uv sync --extra server
 cd openalex-ingest
-PYTHONPATH=. python daily/pull_api_update.py bulk --config=../conf/server-prod.env --from-date 2025-11-11 --to-date 2026-01-29
+PYTHONPATH=. python daily/pull_api_update.py bulk --config=../conf/secret-prod.env --from-date 2025-11-11 --to-date 2026-01-29
+
+# if needed, forward postgres port from VM to current machine
+ssh -N -L 5000:localhost:5432 se164
 ```
 
 
