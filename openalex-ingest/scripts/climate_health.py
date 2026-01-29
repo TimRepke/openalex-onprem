@@ -33,14 +33,14 @@ if FILE.exists():
 # TODO: verify drought*
 # TODO: verify flood*
 # TODO: verify storm*
-q1 = '''
+q1 = """
 climate OR "global warming" OR "greenhouse effect" OR "greenhouse gas" OR "greenhouse emission" OR
 GHG OR temperature OR precipitation OR rainfall OR "heat index" OR "heat indices" OR 
 "extreme heat event" OR "heat wave" OR heatwave OR "extreme cold" OR "cold index" OR "cold indices" OR
 humidity OR drought OR hydroclimate OR hydroclimatic OR hydroclimatology OR hydroclimatological OR
 monsoon OR "el nino" OR ENSO OR "sea surface temperature" OR SST OR snowmelt OR flood OR storm OR cyclone OR 
 hurricane OR typhoon OR "sea level" OR wildfire OR "wild fire" OR "forest fire"
-'''
+"""
 
 # health OR wellbeing OR "well-being" OR ill OR illness OR disease* OR syndrome* OR infect* OR
 # medical* OR mortality OR DALY OR morbidity OR injur* OR death* OR hospital* OR acciden* OR
@@ -67,7 +67,7 @@ hurricane OR typhoon OR "sea level" OR wildfire OR "wild fire" OR "forest fire"
 # TODO: check parasit*
 # TODO: check bronchi*
 # TODO: check psycho*
-q2 = '''
+q2 = """
 health OR wellbeing OR "well being" OR ill OR illness OR disease OR syndrome OR infect OR infection OR infectious OR
 medical OR mortality OR DALY OR morbidity OR injury OR death OR hospital OR hospitalization OR hospitalisation OR
 accident OR accidental OR emergency OR emergent OR doctor OR GP OR obesity OR obese OR overweight OR "over weight" OR
@@ -90,9 +90,9 @@ protozoa OR protozoan OR protozoal OR lyme OR "tick borne" OR salmonella OR giar
 lung OR asthma OR asthmatic OR bronchial OR bronchitis OR pulmonary OR COPD OR rhinitis OR wheezing OR wheeze OR 
 mental OR depression OR depressive OR depressed OR anxiety OR PTSD OR psychological OR psychosocial OR psychometric OR
 psychotic OR suicide OR "pre trauma" OR pretrauma OR "post trauma" OR posttrauma OR (CVD NOT (vapor OR vapour))
-'''
+"""
 
-query = f'''
+query = f"""
 (
     {q1}
     OR
@@ -124,7 +124,7 @@ AND
         NOT cattle
     )
 )
-'''.replace('\n', ' ')
+""".replace('\n', ' ')
 
 cursor = '*'
 ids = 0
@@ -148,14 +148,14 @@ with open(FILE, 'w') as f:
                     ),
                     'select': 'id',
                     'cursor': cursor,
-                    'per-page': 200
+                    'per-page': 200,
                 },
                 headers={'api_key': os.getenv('API_KEY')},
                 timeout=None,
             )
             page = res.json()
             cursor = page['meta']['next_cursor']
-            logging.info(f'Retrieved {ids:,}/{page['meta']['count']:,}; currently on page {page_i}')
+            logging.info(f'Retrieved {ids:,}/{page["meta"]["count"]:,}; currently on page {page_i}')
 
             # print(res.status_code)
             # print(json.dumps(dict(res.headers), indent=2))

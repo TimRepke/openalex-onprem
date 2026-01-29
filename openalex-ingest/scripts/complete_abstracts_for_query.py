@@ -22,11 +22,13 @@ app = typer.Typer()
 
 
 @app.command()
-def openalex_ids(query: Annotated[str, typer.Option(help='query for openalex')],
-                 file_ids: Path = Path('../../data/ids.txt'),
-                 only_non_oa: bool = False,
-                 use_stemming: bool = True,
-                 search_fulltext: bool = False):
+def openalex_ids(
+    query: Annotated[str, typer.Option(help='query for openalex')],
+    file_ids: Path = Path('../../data/ids.txt'),
+    only_non_oa: bool = False,
+    use_stemming: bool = True,
+    search_fulltext: bool = False,
+):
     if file_ids.exists():
         logger.warning('Data already exists, not downloading again')
         return
@@ -54,18 +56,13 @@ def openalex_ids(query: Annotated[str, typer.Option(help='query for openalex')],
             with rate_limit(min_time_ms=100) as t:
                 res = httpx.get(
                     'https://api.openalex.org/works',
-                    params={
-                        'filter': ','.join(fltr),
-                        'select': 'id',
-                        'cursor': cursor,
-                        'per-page': 200
-                    },
+                    params={'filter': ','.join(fltr), 'select': 'id', 'cursor': cursor, 'per-page': 200},
                     headers={'api_key': os.getenv('API_KEY')},
                     timeout=None,
                 )
                 page = res.json()
                 cursor = page['meta']['next_cursor']
-                logger.info(f'Retrieved {ids:,}/{page['meta']['count']:,}; currently on page {page_i}')
+                logger.info(f'Retrieved {ids:,}/{page["meta"]["count"]:,}; currently on page {page_i}')
 
                 page_ids = [raw_work['id'][21:] for raw_work in page['results']]
                 ids += len(page_ids)
@@ -73,14 +70,15 @@ def openalex_ids(query: Annotated[str, typer.Option(help='query for openalex')],
 
 
 @app.command()
-def request_ids(solr_host: Annotated[str, typer.Option(prompt='solr host')],
-                solr_collection: Annotated[str, typer.Option(prompt='solr collection')],
-                auth_key: Annotated[str, typer.Option(prompt='meta-cache key')],
-                file_ids: Annotated[Path, typer.Option(prompt='path to file with ids to check')] = Path(
-                    '../../data/ids.txt'),
-                skip_until_id: str | None = None,
-                skip_batches: int = 0,
-                batch_size: int = 500):
+def request_ids(
+    solr_host: Annotated[str, typer.Option(prompt='solr host')],
+    solr_collection: Annotated[str, typer.Option(prompt='solr collection')],
+    auth_key: Annotated[str, typer.Option(prompt='meta-cache key')],
+    file_ids: Annotated[Path, typer.Option(prompt='path to file with ids to check')] = Path('../../data/ids.txt'),
+    skip_until_id: str | None = None,
+    skip_batches: int = 0,
+    batch_size: int = 500,
+):
     if not file_ids.exists():
         logger.error(f'Data does not exists: {file_ids}')
         return
@@ -109,27 +107,25 @@ def request_ids(solr_host: Annotated[str, typer.Option(prompt='solr host')],
                     continue
                 found_starting_point = True
 
-            res = client.get(f'{solr_host}/api/collections/{solr_collection}/select',
-                             params={
-                                 'q': '-abstract:*',  # -abstract:[* TO ""]
-                                 'fq': f'id:({' OR '.join([bi.strip() for bi in batch])})',
-                                 'fl': 'id,doi',
-                                 'q.op': 'AND',
-                                 'rows': batch_size,
-                                 'useParams': '',
-                                 'defType': 'lucene'
-                             }).json()
+            res = client.get(
+                f'{solr_host}/api/collections/{solr_collection}/select',
+                params={
+                    'q': '-abstract:*',  # -abstract:[* TO ""]
+                    'fq': f'id:({" OR ".join([bi.strip() for bi in batch])})',
+                    'fl': 'id,doi',
+                    'q.op': 'AND',
+                    'rows': batch_size,
+                    'useParams': '',
+                    'defType': 'lucene',
+                },
+            ).json()
 
             if len(res['response']['docs']) == 0:
                 logger.debug('Batch has no missing abstracts in solr.')
                 continue
 
-            logger.info(f'Missing abstract for {len(res['response']['docs']):,} / {len(batch)} entries')
-            references = [
-                Reference(openalex_id=doc['id'], doi=doc['doi'][16:])
-                for doc in res['response']['docs']
-                if doc.get('doi') is not None
-            ]
+            logger.info(f'Missing abstract for {len(res["response"]["docs"]):,} / {len(batch)} entries')
+            references = [Reference(openalex_id=doc['id'], doi=doc['doi'][16:]) for doc in res['response']['docs'] if doc.get('doi') is not None]
             if len(references) == 0:
                 logging.info('  > Batch has no DOIs.')
                 continue
@@ -140,15 +136,8 @@ def request_ids(solr_host: Annotated[str, typer.Option(prompt='solr host')],
             for wrapper_cls in get_wrappers():
                 logging.debug(f'  > Using {wrapper_cls.name} on {len(remaining):,}/{len(references):,} references')
                 try:
-                    cache_response = wrapper_cls.run(db_engine=db_engine_cache,
-                                                     references=remaining,
-                                                     auth_key=auth_key,
-                                                     skip_existing=True)
-                    remaining = [
-                        Reference(openalex_id=ref.openalex_id, doi=ref.doi)
-                        for ref in cache_response.references
-                        if ref.missed or not ref.abstract
-                    ]
+                    cache_response = wrapper_cls.run(db_engine=db_engine_cache, references=remaining, auth_key=auth_key, skip_existing=True)
+                    remaining = [Reference(openalex_id=ref.openalex_id, doi=ref.doi) for ref in cache_response.references if ref.missed or not ref.abstract]
                 except Exception as e:
                     logging.exception(e)
                     logging.warning(f'Ignoring {e} and continuing...')
@@ -159,11 +148,13 @@ def request_ids(solr_host: Annotated[str, typer.Option(prompt='solr host')],
 
 
 @app.command()
-def push_cache(solr_host: Annotated[str, typer.Option(help='Solr base url')],
-               solr_collection: Annotated[str, typer.Option(help='Name of the Solr collection')],
-               conf_file: Annotated[str, typer.Option(help='Path to configuration .env file')],
-               created_since: Annotated[str | None, typer.Option(help='Get works created on or after')] = None,
-               batch_size: int = 200):
+def push_cache(
+    solr_host: Annotated[str, typer.Option(help='Solr base url')],
+    solr_collection: Annotated[str, typer.Option(help='Name of the Solr collection')],
+    conf_file: Annotated[str, typer.Option(help='Path to configuration .env file')],
+    created_since: Annotated[str | None, typer.Option(help='Get works created on or after')] = None,
+    batch_size: int = 200,
+):
     logger.info(f'Connecting to database.')
     db_engine = get_engine(conf_file=conf_file)
 
@@ -178,29 +169,32 @@ def push_cache(solr_host: Annotated[str, typer.Option(help='Solr base url')],
 
 
 @app.command()
-def complete_abstracts(query: Annotated[str, typer.Option(help='query for openalex')],
-                       solr_host: Annotated[str, typer.Option(help='Solr base url')],
-                       solr_collection: Annotated[str, typer.Option(help='Name of the Solr collection')],
-                       conf_file: Annotated[str, typer.Option(help='Path to configuration .env file')],
-                       auth_key: Annotated[str, typer.Option(prompt='meta-cache key')],
-                       skip_until_id: str | None = None,
-                       skip_batches: int = 0,
-                       file_ids: Path = Path('../../data/ids.txt'),
-                       only_non_oa: bool = False,
-                       use_stemming: bool = True,
-                       search_fulltext: bool = False,
-                       created_since: Annotated[str | None, typer.Option(help='Get works created on or after')] = None,
-                       batch_size: int = 200):
-    openalex_ids(query=query,
-                 file_ids=file_ids,
-                 only_non_oa=only_non_oa,
-                 use_stemming=use_stemming,
-                 search_fulltext=search_fulltext)
-    request_ids(solr_host=solr_host, solr_collection=solr_collection,
-                auth_key=auth_key, file_ids=file_ids, skip_batches=skip_batches,
-                skip_until_id=skip_until_id, batch_size=batch_size)
-    push_cache(solr_host=solr_host, solr_collection=solr_collection,
-               conf_file=conf_file, created_since=created_since, batch_size=batch_size)
+def complete_abstracts(
+    query: Annotated[str, typer.Option(help='query for openalex')],
+    solr_host: Annotated[str, typer.Option(help='Solr base url')],
+    solr_collection: Annotated[str, typer.Option(help='Name of the Solr collection')],
+    conf_file: Annotated[str, typer.Option(help='Path to configuration .env file')],
+    auth_key: Annotated[str, typer.Option(prompt='meta-cache key')],
+    skip_until_id: str | None = None,
+    skip_batches: int = 0,
+    file_ids: Path = Path('../../data/ids.txt'),
+    only_non_oa: bool = False,
+    use_stemming: bool = True,
+    search_fulltext: bool = False,
+    created_since: Annotated[str | None, typer.Option(help='Get works created on or after')] = None,
+    batch_size: int = 200,
+):
+    openalex_ids(query=query, file_ids=file_ids, only_non_oa=only_non_oa, use_stemming=use_stemming, search_fulltext=search_fulltext)
+    request_ids(
+        solr_host=solr_host,
+        solr_collection=solr_collection,
+        auth_key=auth_key,
+        file_ids=file_ids,
+        skip_batches=skip_batches,
+        skip_until_id=skip_until_id,
+        batch_size=batch_size,
+    )
+    push_cache(solr_host=solr_host, solr_collection=solr_collection, conf_file=conf_file, created_since=created_since, batch_size=batch_size)
 
 
 if __name__ == '__main__':

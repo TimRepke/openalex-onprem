@@ -1,4 +1,3 @@
-import os
 import json
 import logging
 from pathlib import Path
@@ -10,10 +9,11 @@ from sqlalchemy import URL
 from contextlib import contextmanager
 from datetime import datetime
 from sqlmodel import create_engine, Session, SQLModel
+from nacsos_data.util.conf import DatabaseConfig
+from .config import load_settings
 
 # unused import required so the engine sees the models!
 from . import schema  # noqa F401
-from .. import setup as config
 
 logger = logging.getLogger('nacsos_data.engine')
 
@@ -41,8 +41,15 @@ class DatabaseEngine:
     It handles the connection, engine, and session.
     """
 
-    def __init__(self, host: str, port: int, user: str, password: str,
-                 database: str = 'nacsos_core', debug: bool = False):
+    def __init__(
+        self,
+        host: str,
+        port: int,
+        user: str,
+        password: str,
+        database: str = 'meta_cache',
+        debug: bool = False,
+    ):
         self._host = host
         self._port = port
         self._user = user
@@ -58,8 +65,12 @@ class DatabaseEngine:
             database=self._database,
         )
 
-        self.engine = create_engine(self._connection_str, echo=debug, future=True,
-                                    json_serializer=DictLikeEncoder().encode)
+        self.engine = create_engine(
+            self._connection_str,
+            echo=debug,
+            future=True,
+            json_serializer=DictLikeEncoder().encode,
+        )
 
     def startup(self) -> None:
         """
@@ -84,22 +95,21 @@ class DatabaseEngine:
             session.close()
 
 
-def _get_settings(conf_file: str | None = None) -> config.Settings:
-    if conf_file is None:
-        conf_file = os.environ.get('OACACHE_CONFIG', 'config/default.env')
-    if not Path(conf_file).is_file():
-        raise FileNotFoundError(f'Configuration file not found: {conf_file}')
-    return config.Settings(_env_file=conf_file, _env_file_encoding='utf-8')  # type: ignore[call-arg]
-
-
-def get_engine(conf_file: str | None = None,
-               settings: config.Settings | None = None,
-               debug: bool = False) -> DatabaseEngine:
+def get_engine(
+    conf_file: str | None = None,
+    settings: DatabaseConfig | None = None,
+    debug: bool = False,
+) -> DatabaseEngine:
     if settings is None:
         if conf_file is None:
             raise AssertionError('Neither `settings` not `conf_file` specified.')
-        settings = _get_settings(conf_file)
+        settings = load_settings(conf_file=conf_file)
 
-    return DatabaseEngine(host=settings.DB_HOST, port=settings.DB_PORT,
-                          user=settings.DB_USER, password=settings.DB_PASSWORD,
-                          database=settings.DB_DATABASE, debug=debug)
+    return DatabaseEngine(
+        host=settings.DB_HOST,
+        port=settings.DB_PORT,
+        user=settings.DB_USER,
+        password=settings.DB_PASSWORD,
+        database=settings.DB_DATABASE,
+        debug=debug,
+    )

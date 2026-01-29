@@ -38,7 +38,7 @@ app = FastAPI(
     openapi_prefix=settings.OPENAPI_PREFIX,
     root_path=settings.ROOT_PATH,
     separate_input_output_schemas=False,
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 logger.debug('Setting up server and middlewares')
@@ -49,11 +49,13 @@ if settings.HEADER_TRUSTED_HOST:
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.CORS_ORIGINS)
     logger.info(f'TrustedHostMiddleware allows the following hosts: {settings.CORS_ORIGINS}')
 if settings.HEADER_CORS:
-    app.add_middleware(CORSMiddleware,
-                       allow_origins=settings.CORS_ORIGINS,
-                       allow_methods=['GET', 'POST', 'DELETE', 'POST', 'PUT', 'OPTIONS'],
-                       allow_headers=['*'],
-                       allow_credentials=True)
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.CORS_ORIGINS,
+        allow_methods=['GET', 'POST', 'DELETE', 'POST', 'PUT', 'OPTIONS'],
+        allow_headers=['*'],
+        allow_credentials=True,
+    )
     logger.info(f'CORSMiddleware will accept the following origins: {settings.CORS_ORIGINS}')
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 app.add_middleware(TimingMiddleware)

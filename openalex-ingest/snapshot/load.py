@@ -28,15 +28,15 @@ def commit(conf: OpenAlexConfig):
 
 
 def update_solr(
-        snapshot: Annotated[Path, typer.Option(help='Path to openalex snapshot from S3')],
-        config_file: Annotated[Path, typer.Option(help='Path to config file')],
-        skip_n_partitions: int = 0,
-        filter_since: str = '2000-01-01',
-        post_batchsize: int = 1000,
-        read_batchsize: int = 50000,
-        commit_interval: int = -1,
-        max_retry: int = 10,
-        loglevel: str = 'INFO',
+    snapshot: Annotated[Path, typer.Option(help='Path to openalex snapshot from S3')],
+    config_file: Annotated[Path, typer.Option(help='Path to config file')],
+    skip_n_partitions: int = 0,
+    filter_since: str = '2000-01-01',
+    post_batchsize: int = 1000,
+    read_batchsize: int = 50000,
+    commit_interval: int = -1,
+    max_retry: int = 10,
+    loglevel: str = 'INFO',
 ) -> None:
     logging.basicConfig(format='%(asctime)s [%(levelname)s] %(name)s (%(process)d): %(message)s', level=loglevel)
     logging.getLogger('matplotlib').setLevel(logging.WARNING)
@@ -52,8 +52,7 @@ def update_solr(
     logging.info(f'Will use solr collection at: {config.OPENALEX.solr_url}')
 
     logging.info(
-        'Please ensure you synced the snapshot via\n'
-        '   $  aws s3 sync "s3://openalex/data" "data" --no-sign-request --delete',
+        'Please ensure you synced the snapshot via\n   $  aws s3 sync "s3://openalex/data" "data" --no-sign-request --delete',
     )
 
     partitions = list(sorted(snapshot.glob(f'data/works/**/*.gz')))
@@ -76,7 +75,7 @@ def update_solr(
             f'total={n_total:,}, '
             f'failed={n_failed:,}, '
             f'filesize={partition.stat().st_size / 1024 / 1024 / 1024:,.2f}GB, '
-            f'partition={'/'.join(partition.parts[-2:])}',
+            f'partition={"/".join(partition.parts[-2:])}',
         )
 
         with gzip.open(partition, 'rb') as f_in:
@@ -85,7 +84,6 @@ def update_solr(
             progress.set_description_str(f'READ ({pi:,} | -- | --)')
 
             for bi, batch in enumerate(batched(f_in, batch_size=read_batchsize)):
-
                 works = [
                     json.dumps(
                         translate_work_to_solr(
@@ -138,5 +136,5 @@ def update_solr(
     logging.info('Finished loading partitions!')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     typer.run(update_solr)

@@ -4,30 +4,84 @@ version = "2.0.0"
 requires-python = ">=3.13"
 
 dependencies = [
-    "nacsos_data[utils,scripts]",
-    "orjson>=3.11.5",
     "tqdm==4.67.1",
+    "orjson>=3.11.6",
+    "sqlmodel==0.0.31",
+    "nacsos_data[utils,scripts]",
 ]
 
 [project.optional-dependencies]
 server = [
     "fastapi==0.128.0",
-    "httpx[http2,socks]==0.28.1",
     "hypercorn==0.18.0",
-    "pandas==2.3.3",
-    "psycopg2-binary==2.9.11",
-    "psycopg[binary]==3.3.2",
-    "pydantic==2.12.5",
-    "pydantic-settings==2.12.0",
-    "python-dotenv==1.2.1",
     "rq-dashboard-fast==0.5.12",
-    "sqlmodel==0.0.31",
-    "toml==0.10.2",
-    "tqdm==4.67.1",
 ]
 evaluation = [
     "notebook>=7.5.1",
 ]
 
 [tool.uv.sources]
-nacsos_data = { git = "git+ssh://git@gitlab.pik-potsdam.de/mcc-apsis/nacsos/nacsos-data.git", tag = "v0.24.8" }
+nacsos_data = { git = "git+ssh://git@gitlab.pik-potsdam.de/mcc-apsis/nacsos/nacsos-data.git", tag = "v0.24.13" }
+#[tool.uv.sources]
+#nacsos_data = { path = "../nacsos_data", editable = true }
+
+[project.scripts]
+update = "openalex-ingest.daily.pull_api_update:main"
+cache2solr = "openalex-ingest.scripts.cache2solr:run"
+
+[dependency-groups]
+dev = [
+    "ruff>=0.14.11",
+]
+
+[tool.ruff]
+line-length = 160
+indent-width = 4
+target-version = "py313"
+include = ["pyproject.toml", "openalex-ingest/**/*.py"]
+exclude = []
+
+[tool.ruff.lint]
+select = ["C", "E", "F", "W", "B", "B9"]
+ignore = ["E203", "E501", "E712", "E741", "B010", "B009", "B904", "B008"]  # , "E126", "W503",
+
+# Allow fix for all enabled rules (when `--fix`) is provided.
+fixable = ["ALL"]
+unfixable = []
+
+# Allow unused variables when underscore-prefixed.
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+[tool.ruff.lint.mccabe]
+# Flag errors (`C901`) whenever the complexity level exceeds 5.
+max-complexity = 12
+
+[tool.ruff.format]
+# Like Black, use double quotes for strings.
+quote-style = "single"
+
+# Like Black, indent with spaces, rather than tabs.
+indent-style = "space"
+
+# Like Black, respect magic trailing commas.
+skip-magic-trailing-comma = false
+
+# Like Black, automatically detect the appropriate line ending.
+line-ending = "auto"
+
+# Enable auto-formatting of code examples in docstrings. Markdown,
+# reStructuredText code/literal blocks and doctests are all supported.
+#
+# This is currently disabled by default, but it is planned for this
+# to be opt-out in the future.
+docstring-code-format = false
+
+# Set the line length limit used when formatting code snippets in
+# docstrings.
+#
+# This only has an effect when the `docstring-code-format` setting is
+# enabled.
+docstring-code-line-length = "dynamic"
+
+[tool.ruff.lint.flake8-quotes]
+docstring-quotes = "double"

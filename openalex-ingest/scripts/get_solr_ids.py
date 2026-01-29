@@ -6,7 +6,7 @@ import httpx
 import typer
 import csv
 
-query = '''
+query = """
 (
   (climat* OR "global warming" OR "greenhouse effect" OR "greenhouse effects" OR "greenhouse gas" OR "greenhouse gases" OR "greenhouse gas emissions" OR "greenhouse emissions" OR "GHG emissions" OR "GHGE" OR temperature* OR precipitat* OR rainfall OR "heat index" OR "heat indices" OR "extreme heat event" OR "extreme heat events" OR "heat-wave" OR heatwave OR "extreme-cold*" OR "cold index" OR "cold indices" OR humidity OR drought* OR hydroclim* OR monsoon OR "el nino" OR ENSO OR "sea surface temperature" OR "sea surface temperatures" OR SST OR snowmelt* OR flood* OR storm* OR cyclone* OR hurricane* OR typhoon* OR "sea-level" OR "sea level" OR wildfire* OR "wild-fire" OR "forest-fire" OR "forest fire" OR "forest fires")
   OR
@@ -24,17 +24,19 @@ AND
   ({!surround v="(heat) 3N (stress OR fatigue OR burn OR burns OR stroke OR exhaustion OR cramp)"} NOT cattle
   )
 )
-'''
+"""
 
 BATCH_SIZE = 500
 
 logger = logging.getLogger('copy')
 
 
-def main(solr_host: Annotated[str, typer.Option(prompt='host')],
-         solr_collection: Annotated[str, typer.Option(prompt='solr collection')],
-         ids_file: Annotated[Path, typer.Option(prompt='path to file where to write IDs')],
-         loglevel: str = 'DEBUG'):
+def main(
+    solr_host: Annotated[str, typer.Option(prompt='host')],
+    solr_collection: Annotated[str, typer.Option(prompt='solr collection')],
+    ids_file: Annotated[Path, typer.Option(prompt='path to file where to write IDs')],
+    loglevel: str = 'DEBUG',
+):
     logging.basicConfig(format='%(asctime)s [%(levelname)s] %(name)s (%(process)d): %(message)s', level=loglevel)
 
     params = {
@@ -47,7 +49,7 @@ def main(solr_host: Annotated[str, typer.Option(prompt='host')],
         'sort': 'id desc',
         'cursorMark': '*',
         'defType': 'lucene',
-        'useParams': ''
+        'useParams': '',
     }
 
     with httpx.Client() as client, open(ids_file, 'w', newline='') as f_out:
@@ -59,9 +61,7 @@ def main(solr_host: Annotated[str, typer.Option(prompt='host')],
             logger.info(f'----------- Processing batch {bi} -----------')
             bi += 1
 
-            res = client.post(f'{solr_host}/api/collections/{solr_collection}/select',
-                              data=params,
-                              timeout=60).json()
+            res = client.post(f'{solr_host}/api/collections/{solr_collection}/select', data=params, timeout=60).json()
 
             next_curser = res.get('nextCursorMark')
             params['cursorMark'] = next_curser
@@ -71,8 +71,7 @@ def main(solr_host: Annotated[str, typer.Option(prompt='host')],
             num_docs_cum += n_docs_batch
 
             if n_docs_total > 0:
-                logger.debug(f'Current progress: {num_docs_cum:,}/{n_docs_total:,}'
-                             f'={num_docs_cum / n_docs_total:.2%} docs')
+                logger.debug(f'Current progress: {num_docs_cum:,}/{n_docs_total:,}={num_docs_cum / n_docs_total:.2%} docs')
 
             if len(batch_docs) == 0:
                 logger.info('No documents in this batch, assuming to be done!')
@@ -80,12 +79,14 @@ def main(solr_host: Annotated[str, typer.Option(prompt='host')],
 
             logger.debug('Appending IDs...')
             for doc in batch_docs:
-                writer.writerow([
-                    doc['id'],
-                    doc.get('doi', ''),
-                    1 if doc.get('abstract') else 0,
-                    1 if doc.get('external_abstract') else 0,
-                ])
+                writer.writerow(
+                    [
+                        doc['id'],
+                        doc.get('doi', ''),
+                        1 if doc.get('abstract') else 0,
+                        1 if doc.get('external_abstract') else 0,
+                    ]
+                )
 
             if next_curser is None:
                 logger.info('Did not receive a `nextCursorMark`, assuming to be done!')

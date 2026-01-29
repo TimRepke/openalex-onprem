@@ -12,7 +12,7 @@ from meta_cache.handlers.schema import Record
 from meta_cache.handlers.util import get_ors
 from meta_cache.scripts.config import db_engine_cache
 
-logging.getLogger("sqlalchemy.engine").setLevel(logging.WARNING)
+logging.getLogger('sqlalchemy.engine').setLevel(logging.WARNING)
 logger = logging.getLogger('copy')
 
 
@@ -48,5 +48,5 @@ def main(directory: Path = Path('data/')):
             session.commit()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     typer.run(main)

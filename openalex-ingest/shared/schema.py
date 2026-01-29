@@ -2,10 +2,13 @@ import uuid
 from datetime import datetime
 from typing import Any
 
+from nacsos_data.util.academic.apis import APIEnum
 from sqlalchemy import DateTime, func, Column
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy_json import mutable_json_type
 from sqlmodel import Field, SQLModel, Relationship
+
+from .models import SourcePriority, OnConflict
 
 
 class Request(SQLModel, table=True):
@@ -13,8 +16,7 @@ class Request(SQLModel, table=True):
     record_id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True, index=True, unique=True, nullable=False)
 
     wrapper: str = Field(nullable=False, unique=False, index=True)
-    api_key_id: uuid.UUID | None = Field(default=None, nullable=True, foreign_key="api_key.api_key_id")
-    queue_id: int | None = Field(default=None, nullable=True, foreign_key="queue.queue_id")
+    api_key_id: uuid.UUID | None = Field(default=None, nullable=True, foreign_key='api_key.api_key_id')
 
     openalex_id: str | None = Field(default=None, nullable=True, unique=False, index=True)
     doi: str | None = Field(default=None, nullable=True, unique=False, index=True)
@@ -24,12 +26,13 @@ class Request(SQLModel, table=True):
     scopus_id: str | None = Field(default=None, nullable=True, unique=False, index=True)
     wos_id: str | None = Field(default=None, nullable=True, unique=False, index=True)
     dimensions_id: str | None = Field(default=None, nullable=True, unique=False, index=True)
+    nacsos_id: str | None = Field(default=None, nullable=True, unique=False, index=True)
 
     title: str | None = None
     abstract: str | None = None
 
     time_created: datetime = Field(
-        sa_column=Column(DateTime(timezone=True), server_default=func.now(), index=True),
+        sa_column=Column(DateTime(timezone=True), server_default=func.now(), index=False),
         default_factory=datetime.now,
     )
 
@@ -40,22 +43,37 @@ class Request(SQLModel, table=True):
                 dbtype=JSONB(none_as_null=True),
                 nested=True,
             ),
-        ), default=None,
+        ),
+        default=None,
     )
 
 
 class Queue(SQLModel, table=True):
     __tablename__ = 'queue'
     queue_id: int | None = Field(default=None, primary_key=True)
-    openalex_id: str | None = Field(default=None, nullable=True, unique=True, index=True)
-    doi: str | None = Field(default=None, nullable=True, unique=True, index=True)
-    requests: list['Request'] = Relationship(back_populates='queue')
+
+    doi: str | None = Field(default=None, nullable=False, unique=False, index=False)
+    openalex_id: str | None = Field(default=None, nullable=True, unique=False, index=False)
+    pubmed_id: str | None = Field(default=None, nullable=True, unique=False, index=False)
+    s2_id: str | None = Field(default=None, nullable=True, unique=False, index=False)
+    scopus_id: str | None = Field(default=None, nullable=True, unique=False, index=False)
+    wos_id: str | None = Field(default=None, nullable=True, unique=False, index=False)
+    dimensions_id: str | None = Field(default=None, nullable=True, unique=False, index=False)
+    nacsos_id: uuid.UUID | None = Field(default=None, nullable=True, unique=False, index=False)
+
+    sources: list[tuple[APIEnum, SourcePriority]] = Field(default=None, nullable=True, unique=False, index=False)
+    on_conflict: OnConflict = Field(default=OnConflict.DO_NOTHING, nullable=False, unique=False, index=False)
+
+    time_created: datetime = Field(
+        sa_column=Column(DateTime(timezone=True), server_default=func.now(), index=False),
+        default_factory=datetime.now,
+    )
 
 
 class AuthApiKeyLink(SQLModel, table=True):
     __tablename__ = 'm2m_auth_api_key'
-    api_key_id: uuid.UUID | None = Field(default=None, foreign_key="api_key.api_key_id", primary_key=True)
-    auth_key_id: uuid.UUID | None = Field(default=None, foreign_key="auth_key.auth_key_id", primary_key=True)
+    api_key_id: uuid.UUID | None = Field(default=None, foreign_key='api_key.api_key_id', primary_key=True)
+    auth_key_id: uuid.UUID | None = Field(default=None, foreign_key='auth_key.auth_key_id', primary_key=True)
 
 
 class ApiKey(SQLModel, table=True):
@@ -84,7 +102,10 @@ class AuthKey(SQLModel, table=True):
     __tablename__ = 'auth_key'
     auth_key_id: uuid.UUID = Field(
         default_factory=uuid.uuid4,
-        primary_key=True, index=True, unique=True, nullable=False,
+        primary_key=True,
+        index=True,
+        unique=True,
+        nullable=False,
     )
 
     note: str
