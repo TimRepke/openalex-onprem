@@ -10,6 +10,7 @@ from contextlib import contextmanager
 from datetime import datetime
 from sqlmodel import create_engine, Session, SQLModel
 from nacsos_data.util.conf import DatabaseConfig
+
 from .config import load_settings
 
 # unused import required so the engine sees the models!
@@ -106,10 +107,10 @@ def get_engine(
         settings = load_settings(conf_file=conf_file)
 
     return DatabaseEngine(
-        host=settings.DB_HOST,
-        port=settings.DB_PORT,
-        user=settings.DB_USER,
-        password=settings.DB_PASSWORD,
-        database=settings.DB_DATABASE,
+        host=settings.CACHE_DB.HOST,
+        port=settings.CACHE_DB.PORT,
+        user=settings.CACHE_DB.USER,
+        password=settings.CACHE_DB.PASSWORD,
+        database=settings.CACHE_DB.DATABASE,
         debug=debug,
     )
