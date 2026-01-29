@@ -55,13 +55,15 @@ def load_updated_records_from_api(
             try:
                 works = [WorksSchema.model_validate(record) for record in batch]
                 logger.debug(f'Got {len(works):,} works entries from API for "{fltr}", POSTing to solr...')
+
                 res = httpx.post(
-                    url=f'{settings.OPENALEX.solr_url}/update/json?commit=true',
+                    url=f'{settings.OPENALEX.SOLR_ENDPOINT}/api/collections/{settings.OPENALEX.SOLR_COLLECTION}/update/json?commit=true',
                     timeout=240,
                     headers={'Content-Type': 'application/json'},
                     data='\n'.join([w.model_dump_json() for w in works]),
                 )
                 res.raise_for_status()
+
                 # remember all Works without abstract and with DOI
                 queue = [Queue(doi=w.doi, openalex_id=w.id) for w in works if w.id is not None and w.doi is not None and w.abstract is None]
                 queue_requests(db_engine=db_engine, entries=queue)

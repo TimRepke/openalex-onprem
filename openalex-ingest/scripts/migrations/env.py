@@ -28,15 +28,18 @@ if config.config_file_name is not None:
 
 # unused import required so the engine sees the models!
 from shared import schema  # noqa F401
+
 target_metadata = schema.metadata
 
 
 def get_url(fallback=True):
-    env = [os.getenv('NACSOS_DB__USER'),
-           os.getenv('NACSOS_DB__PASSWORD'),
-           os.getenv('NACSOS_DB__HOST'),
-           os.getenv('NACSOS_DB__PORT'),
-           os.getenv('NACSOS_DB__DATABASE')]
+    env = [
+        os.getenv('NACSOS_DB__USER'),
+        os.getenv('NACSOS_DB__PASSWORD'),
+        os.getenv('NACSOS_DB__HOST'),
+        os.getenv('NACSOS_DB__PORT'),
+        os.getenv('NACSOS_DB__DATABASE'),
+    ]
 
     if all(env):
         url = URL.create(
@@ -50,7 +53,7 @@ def get_url(fallback=True):
         print(f'Using URL from env vars: {url}')
         return url
     if fallback:
-        url = config.get_main_option("sqlalchemy.url")
+        url = config.get_main_option('sqlalchemy.url')
         print(f'Using URL from config: {url}')
         return url
     print('Returning without fallback for URL.')
@@ -73,7 +76,7 @@ def run_migrations_offline() -> None:
         url=get_url(),
         target_metadata=target_metadata,
         literal_binds=True,
-        dialect_opts={"paramstyle": "named"},
+        dialect_opts={'paramstyle': 'named'},
     )
 
     with context.begin_transaction():
@@ -96,13 +99,14 @@ def run_migrations_online():
 
     connectable = engine_from_config(
         conf_section,
-        prefix="sqlalchemy.",
+        prefix='sqlalchemy.',
         poolclass=pool.NullPool,
     )
 
     with connectable.connect() as connection:
         context.configure(
-            connection=connection, target_metadata=target_metadata,
+            connection=connection,
+            target_metadata=target_metadata,
         )
 
         with context.begin_transaction():
