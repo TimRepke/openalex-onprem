@@ -60,7 +60,7 @@ def load_updated_records_from_api(
                     url=f'{settings.OPENALEX.SOLR_ENDPOINT}/api/collections/{settings.OPENALEX.SOLR_COLLECTION}/update/json?commit=true',
                     timeout=240,
                     headers={'Content-Type': 'application/json'},
-                    data='\n'.join([w.model_dump_json() for w in works]),
+                    data='\n'.join([w.model_dump_json(exclude=['primary_location']) for w in works]),
                 )
                 res.raise_for_status()
 
