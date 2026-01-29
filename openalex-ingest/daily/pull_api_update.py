@@ -33,7 +33,7 @@ def load_updated_records_from_api(
     settings = load_settings(config)
 
     logger.info('Connecting to database...')
-    db_engine = get_engine(settings=settings.DB)
+    db_engine = get_engine(settings=settings.CACHE_DB)
 
     logger.info(f'Will use solr collection at: {settings.OPENALEX.solr_url}')
 
