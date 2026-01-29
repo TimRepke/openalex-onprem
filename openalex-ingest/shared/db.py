@@ -58,7 +58,7 @@ class DatabaseEngine:
         self._database = database
 
         self._connection_str = URL.create(
-            drivername='postgresql+psycopg',
+            drivername='postgresql+psycopg2',
             username=self._user,
             password=self._password,
             host=self._host,
