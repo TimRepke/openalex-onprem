@@ -35,5 +35,5 @@ def read_complete_records(
 
 def queue_requests(db_engine: DatabaseEngine, entries: list[Queue]):
     with db_engine.engine.connect() as connection:
-        connection.execute(insert(Queue), entries)
+        connection.execute(insert(Queue), [entry.model_dump() for entry in entries])
         connection.commit()
