@@ -99,18 +99,23 @@ class DatabaseEngine:
 def get_engine(
     conf_file: str | None = None,
     settings: DatabaseConfig | None = None,
+    use_nacsos: bool = False,
     debug: bool = False,
 ) -> DatabaseEngine:
     if settings is None:
         if conf_file is None:
             raise AssertionError('Neither `settings` not `conf_file` specified.')
-        settings = load_settings(conf_file=conf_file)
+        _settings = load_settings(conf_file=conf_file)
+        if use_nacsos:
+            settings = _settings.DB
+        else:
+            settings = _settings.CACHE_DB
 
     return DatabaseEngine(
-        host=settings.CACHE_DB.HOST,
-        port=settings.CACHE_DB.PORT,
-        user=settings.CACHE_DB.USER,
-        password=settings.CACHE_DB.PASSWORD,
-        database=settings.CACHE_DB.DATABASE,
+        host=settings.HOST,
+        port=settings.PORT,
+        user=settings.USER,
+        password=settings.PASSWORD,
+        database=settings.DATABASE,
         debug=debug,
     )
