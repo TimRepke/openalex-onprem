@@ -12,7 +12,8 @@ from nacsos_data.models.openalex import WorksSchema
 from nacsos_data.util import batched
 from typing_extensions import Annotated
 from nacsos_data.util.academic.apis.openalex import translate_work_to_solr
-from nacsos_data.util.conf import load_settings, OpenAlexConfig
+from nacsos_data.util.conf import OpenAlexConfig
+from shared.config import load_settings
 
 
 def name_part(partition: Path):

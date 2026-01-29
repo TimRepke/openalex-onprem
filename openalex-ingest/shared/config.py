@@ -38,10 +38,10 @@ class ServerSettings(BaseModel):
 
 
 class Settings(BaseSettings):
-    CACHE_API = ServerSettings  # fastapi server settings
-    CACHE_DB = DatabaseConfig  # meta-cache database
-    DB = DatabaseConfig  # NACSOS-core database
-    OPENALEX = OpenAlexConfig  # OpenAlex (solr/api) config
+    SERVER: ServerSettings = ServerSettings()  # fastapi server settings
+    CACHE_DB: DatabaseConfig = DatabaseConfig()  # meta-cache database
+    DB: DatabaseConfig = DatabaseConfig()  # NACSOS-core database
+    OPENALEX: OpenAlexConfig = OpenAlexConfig()  # OpenAlex (solr/api) config
 
     REDIS_URL: str = 'redis://localhost:6379'
     RESULT_LIMIT: int = 100
@@ -59,7 +59,7 @@ class Settings(BaseSettings):
     )
 
 
-def load_settings(conf_file: str | None = None) -> Settings:
+def load_settings(conf_file: Path | str | None = None) -> Settings:
     if conf_file is None:
         conf_file = os.environ.get('OACACHE_CONFIG', 'config/default.env')
     if not Path(conf_file).is_file():

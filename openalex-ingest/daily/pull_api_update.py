@@ -7,13 +7,13 @@ import typer
 
 from nacsos_data.models.openalex import WorksSchema
 from nacsos_data.util.academic.apis.openalex import OpenAlexAPI
-from nacsos_data.util.conf import load_settings
 from nacsos_data.util import batched
 
 from shared.crud import queue_requests
 from shared.db import get_engine
 from shared.schema import Queue
 from shared.util import get_logger
+from shared.config import load_settings
 
 app = typer.Typer()
 
