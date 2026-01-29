@@ -51,6 +51,7 @@ def load_updated_records_from_api(
             ),
             batch_size=solr_buffer_size,
         ):
+            res: httpx.Response | None = None
             try:
                 works = [WorksSchema.model_validate(record) for record in batch]
                 logger.debug(f'Got {len(works):,} works entries from API for "{fltr}", POSTing to solr...')
@@ -60,7 +61,6 @@ def load_updated_records_from_api(
                     headers={'Content-Type': 'application/json'},
                     data='\n'.join([w.model_dump_json() for w in works]),
                 )
-                res.raise_for_status()
 
                 # remember all Works without abstract and with DOI
                 queue = [Queue(doi=w.doi, openalex_id=w.id) for w in works if w.id is not None and w.doi is not None and w.abstract is None]
@@ -69,6 +69,8 @@ def load_updated_records_from_api(
                 logger.debug(f'Wrote {len(queue):,} entries to into the meta-cache queue')
 
             except httpx.HTTPError as e:
+                if res:
+                    logger.error(res.text)
                 logger.error(f'Failed to submit: {e}')
                 logger.exception(e)
 
