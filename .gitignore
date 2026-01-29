@@ -44,5 +44,7 @@ config/
 
 *.error
 *.access
-
+builds
 uv.lock
+
+alembic.secret.ini

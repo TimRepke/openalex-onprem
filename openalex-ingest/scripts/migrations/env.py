@@ -1,7 +1,7 @@
 import os
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config
+from sqlalchemy import engine_from_config, URL
 from sqlalchemy import pool
 
 from alembic import context
@@ -19,12 +19,16 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-target_metadata = None
+
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
+
+# unused import required so the engine sees the models!
+from shared import schema  # noqa F401
+target_metadata = schema.metadata
 
 
 def get_url(fallback=True):
@@ -35,12 +39,14 @@ def get_url(fallback=True):
            os.getenv('NACSOS_DB__DATABASE')]
 
     if all(env):
-        url = URL.create(drivername='postgresql+psycopg',
-                          username=env[0],
-                          password=env[1],
-                          host=env[2],
-                          port=env[3],
-                          database=env[4])
+        url = URL.create(
+            drivername='postgresql+psycopg',
+            username=env[0],
+            password=env[1],
+            host=env[2],
+            port=env[3],
+            database=env[4],
+        )
         print(f'Using URL from env vars: {url}')
         return url
     if fallback:
@@ -48,6 +54,7 @@ def get_url(fallback=True):
         print(f'Using URL from config: {url}')
         return url
     print('Returning without fallback for URL.')
+
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
@@ -61,9 +68,9 @@ def run_migrations_offline() -> None:
     script output.
 
     """
-    url = config.get_main_option("sqlalchemy.url")
+    print('Running offline migrations.')
     context.configure(
-        url=url,
+        url=get_url(),
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
@@ -73,22 +80,29 @@ def run_migrations_offline() -> None:
         context.run_migrations()
 
 
-def run_migrations_online() -> None:
+def run_migrations_online():
     """Run migrations in 'online' mode.
 
     In this scenario we need to create an Engine
     and associate a connection with the context.
 
     """
+    print('Running online migrations.')
+    conf_section = config.get_section(config.config_ini_section)
+
+    url = get_url(fallback=False)
+    if url is not None:
+        conf_section['sqlalchemy.url'] = url
+
     connectable = engine_from_config(
-        config.get_section(config.config_ini_section, {}),
+        conf_section,
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )
 
     with connectable.connect() as connection:
         context.configure(
-            connection=connection, target_metadata=target_metadata
+            connection=connection, target_metadata=target_metadata,
         )
 
         with context.begin_transaction():

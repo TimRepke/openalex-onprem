@@ -10,6 +10,17 @@ from sqlmodel import Field, SQLModel, Relationship
 
 from .models import SourcePriority, OnConflict
 
+NAMING_CONVENTION = {
+    'ix': 'ix_%(column_0_label)s',
+    'uq': 'uq_%(table_name)s_%(column_0_name)s',
+    'ck': 'ck_%(table_name)s_%(constraint_name)s',
+    'fk': 'fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s',
+    'pk': 'pk_%(table_name)s',
+}
+
+metadata = SQLModel.metadata
+metadata.naming_convention = NAMING_CONVENTION
+
 
 class Request(SQLModel, table=True):
     __tablename__ = 'request'
@@ -26,7 +37,7 @@ class Request(SQLModel, table=True):
     scopus_id: str | None = Field(default=None, nullable=True, unique=False, index=True)
     wos_id: str | None = Field(default=None, nullable=True, unique=False, index=True)
     dimensions_id: str | None = Field(default=None, nullable=True, unique=False, index=True)
-    nacsos_id: str | None = Field(default=None, nullable=True, unique=False, index=True)
+    nacsos_id: uuid.UUID | None = Field(default=None, nullable=True, unique=False, index=True)
 
     title: str | None = None
     abstract: str | None = None
@@ -37,15 +48,7 @@ class Request(SQLModel, table=True):
     )
 
     # found: bool = GENERATED ALWAYS AS (raw IS NOT NULL) STORED
-    raw: dict[str, Any] | None = Field(
-        sa_column=Column(
-            mutable_json_type(
-                dbtype=JSONB(none_as_null=True),
-                nested=True,
-            ),
-        ),
-        default=None,
-    )
+    raw: dict[str, Any] | None = Field(sa_column=Column(mutable_json_type(dbtype=JSONB(none_as_null=True), nested=True)), default=None)
 
 
 class Queue(SQLModel, table=True):
@@ -61,7 +64,7 @@ class Queue(SQLModel, table=True):
     dimensions_id: str | None = Field(default=None, nullable=True, unique=False, index=False)
     nacsos_id: uuid.UUID | None = Field(default=None, nullable=True, unique=False, index=False)
 
-    sources: list[tuple[APIEnum, SourcePriority]] = Field(default=None, nullable=True, unique=False, index=False)
+    sources: list[tuple[APIEnum, SourcePriority]] = Field(sa_column=Column(mutable_json_type(dbtype=JSONB(none_as_null=True), nested=True)), default=None)
     on_conflict: OnConflict = Field(default=OnConflict.DO_NOTHING, nullable=False, unique=False, index=False)
 
     time_created: datetime = Field(
