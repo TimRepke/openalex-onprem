@@ -987,6 +987,7 @@
     <field name="locations" type="oa_nested"/>
     <field name="grants" type="oa_nested"/>
     <field name="awards" type="oa_nested"/>
+    <field name="funders" type="oa_nested"/>
     <field name="referenced_works" type="oa_nested"/>
 
     <field name="has_content" type="oa_nested"/>
