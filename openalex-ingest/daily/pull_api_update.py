@@ -26,7 +26,7 @@ def load_updated_records_from_api(
         solr_buffer_size: int = 200,
         loglevel: str = 'INFO',
 ):
-    logger = get_logger('openalex-ingest', loglevel=loglevel)
+    logger = get_logger('openalex-ingest', loglevel=loglevel, run_init=True)
 
     logger.info(f'Loading config from {config.resolve()}...')
     if not config.exists():
@@ -42,7 +42,7 @@ def load_updated_records_from_api(
         for batch in batched(
                 OpenAlexAPI(
                     api_key=settings.OPENALEX.API_KEY,
-                    logger=logger,
+                    logger=get_logger(f'ingest-{fltr}-{date.strftime("%Y-%m-%d")}', loglevel=loglevel),
                 ).fetch_raw(
                     query='',
                     params={
@@ -61,7 +61,7 @@ def load_updated_records_from_api(
                     url=f'{settings.OPENALEX.SOLR_ENDPOINT}/api/collections/{settings.OPENALEX.SOLR_COLLECTION}/update/json?commit=true',
                     timeout=240,
                     headers={'Content-Type': 'application/json'},
-                    data=b'\n'.join([json.dumps(translate_work_to_solr(w, source='OpenAlex', authorship_limit=50)) for w in works], ).decode(),
+                    data=b'\n'.join([json.dumps(translate_work_to_solr(w, source='OpenAlex', authorship_limit=50)) for w in works]).decode(),
                 )
                 res.raise_for_status()
 

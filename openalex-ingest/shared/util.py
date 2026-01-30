@@ -42,12 +42,13 @@ class rate_limit(ContextDecorator):
             sleep(self.min_time - self.time)
 
 
-def get_logger(name: str, loglevel: str = 'INFO') -> logging.Logger:
-    logging.basicConfig(format='%(asctime)s [%(levelname)s] %(name)s (%(process)d): %(message)s', level=loglevel)
-    logging.getLogger('urllib3').setLevel(logging.WARNING)
-    logging.getLogger('httpcore').setLevel(logging.WARNING)
-    logging.getLogger('httpx').setLevel(logging.WARNING)
-    logging.getLogger('root').setLevel(loglevel)
+def get_logger(name: str, loglevel: str = 'INFO', run_init: bool = False) -> logging.Logger:
+    if run_init:
+        logging.basicConfig(format='%(asctime)s [%(levelname)s] %(name)s (%(process)d): %(message)s', level=loglevel)
+        logging.getLogger('urllib3').setLevel(logging.WARNING)
+        logging.getLogger('httpcore').setLevel(logging.WARNING)
+        logging.getLogger('httpx').setLevel(logging.WARNING)
+        logging.getLogger('root').setLevel(loglevel)
 
     logger = logging.getLogger(name)
     logger.setLevel(loglevel)

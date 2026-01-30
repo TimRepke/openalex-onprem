@@ -3,10 +3,19 @@ from datetime import datetime
 from typing import Generator
 
 from sqlmodel import select, insert
+from sqlalchemy.sql._typing import _ColumnExpressionArgument
+
 from .schema import Request, Queue
 from .db import DatabaseEngine
 
 logger = logging.getLogger('openalex.shared.crud')
+
+
+def get_ors(reference: Request) -> list[_ColumnExpressionArgument[bool]]:
+    return [
+        getattr(Request, field) == value
+        for field, value in Request.ids(reference)
+    ]
 
 
 def read_complete_records(

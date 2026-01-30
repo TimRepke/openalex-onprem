@@ -55,7 +55,7 @@ class Queue(SQLModel, table=True):
     __tablename__ = 'queue'
     queue_id: int | None = Field(default=None, primary_key=True)
 
-    doi: str | None = Field(default=None, nullable=False, unique=False, index=False)
+    doi: str | None = Field(default=None, nullable=True, unique=False, index=False)
     openalex_id: str | None = Field(default=None, nullable=True, unique=False, index=False)
     pubmed_id: str | None = Field(default=None, nullable=True, unique=False, index=False)
     s2_id: str | None = Field(default=None, nullable=True, unique=False, index=False)
