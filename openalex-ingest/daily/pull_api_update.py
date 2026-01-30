@@ -4,9 +4,10 @@ from typing import Annotated
 
 import httpx
 import typer
+import orjson as json
 
 from nacsos_data.models.openalex import WorksSchema
-from nacsos_data.util.academic.apis.openalex import OpenAlexAPI
+from nacsos_data.util.academic.apis.openalex import OpenAlexAPI, translate_work_to_solr
 from nacsos_data.util import batched
 
 from shared.crud import queue_requests
@@ -20,10 +21,10 @@ app = typer.Typer()
 
 @app.command('day')
 def load_updated_records_from_api(
-    config: Annotated[Path, typer.Option(help='Path to config file')],
-    date: Annotated[datetime, typer.Option(help='Get works created or updated on this day')],
-    solr_buffer_size: int = 200,
-    loglevel: str = 'INFO',
+        config: Annotated[Path, typer.Option(help='Path to config file')],
+        date: Annotated[datetime, typer.Option(help='Get works created or updated on this day')],
+        solr_buffer_size: int = 200,
+        loglevel: str = 'INFO',
 ):
     logger = get_logger('openalex-ingest', loglevel=loglevel)
 
@@ -39,17 +40,17 @@ def load_updated_records_from_api(
 
     for fltr in ['created', 'updated']:
         for batch in batched(
-            OpenAlexAPI(
-                api_key=settings.OPENALEX.API_KEY,
-                logger=logger,
-            ).fetch_raw(
-                query='',
-                params={
-                    'filter': f'from_{fltr}_date:{date.strftime("%Y-%m-%d")},to_{fltr}_date:{date.strftime("%Y-%m-%d")},',
-                    'include_xpac': 'true',
-                },
-            ),
-            batch_size=solr_buffer_size,
+                OpenAlexAPI(
+                    api_key=settings.OPENALEX.API_KEY,
+                    logger=logger,
+                ).fetch_raw(
+                    query='',
+                    params={
+                        'filter': f'from_{fltr}_date:{date.strftime("%Y-%m-%d")},to_{fltr}_date:{date.strftime("%Y-%m-%d")},',
+                        'include_xpac': 'true',
+                    },
+                ),
+                batch_size=solr_buffer_size,
         ):
             res: httpx.Response | None = None
             try:
@@ -60,7 +61,7 @@ def load_updated_records_from_api(
                     url=f'{settings.OPENALEX.SOLR_ENDPOINT}/api/collections/{settings.OPENALEX.SOLR_COLLECTION}/update/json?commit=true',
                     timeout=240,
                     headers={'Content-Type': 'application/json'},
-                    data='\n'.join([w.model_dump_json(exclude=['primary_location']) for w in works]),
+                    data=b'\n'.join([json.dumps(translate_work_to_solr(w, source='OpenAlex', authorship_limit=50)) for w in works], ).decode(),
                 )
                 res.raise_for_status()
 
@@ -81,11 +82,11 @@ def load_updated_records_from_api(
 
 @app.command('bulk')
 def bulk_api_pull(
-    config: Annotated[Path, typer.Option(help='Path to config file')],
-    from_date: Annotated[datetime, typer.Option(help='First day to start pulling updates from')],
-    to_date: Annotated[datetime, typer.Option(help='Last day to include updates from')],
-    solr_buffer_size: int = 200,
-    loglevel: str = 'INFO',
+        config: Annotated[Path, typer.Option(help='Path to config file')],
+        from_date: Annotated[datetime, typer.Option(help='First day to start pulling updates from')],
+        to_date: Annotated[datetime, typer.Option(help='Last day to include updates from')],
+        solr_buffer_size: int = 200,
+        loglevel: str = 'INFO',
 ):
     logger = get_logger('BULK', loglevel=loglevel)
     if from_date > to_date:

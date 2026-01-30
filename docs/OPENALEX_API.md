@@ -15,12 +15,3 @@ PYTHONPATH=. python daily/pull_api_update.py bulk --config=../conf/secret-prod.e
 # if needed, forward postgres port from VM to current machine
 ssh -N -L 5000:localhost:5432 se164
 ```
-
-
-bulk')
-def bulk_api_pull(
-    config: Annotated[Path, typer.Option(help='Path to config file')],
-    from_date: Annotated[datetime, typer.Option(help='First day to start pulling updates from')],
-    to_date: Annotated[datetime, typer.Option(help='Last day to include updates from')],
-    solr_buffer_size: int = 200,
-    loglevel: str = 'INFO',
