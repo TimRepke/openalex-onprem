@@ -35,7 +35,7 @@ def get_entries_with_missing_abstracts(
 
     client = OpenAlexSolrAPI(openalex_conf=config)
     if openalex_ids is not None and len(openalex_ids) > 0:
-        logger.debug(f'Asking solr for which IDs are missing abstracts.')
+        logger.debug('Asking solr for which IDs are missing abstracts.')
         it = client.fetch_raw(
             query='-abstract:*',  # -abstract:[* TO ""],
             params={
@@ -63,9 +63,9 @@ def get_entries_with_missing_abstracts(
     else:
         raise AttributeError('At least one of `openalex_ids` or `created_since` must be specified!')
 
-    yield from map(lambda record: (record['id'], record['doi']), it_limit(it, limit=limit))
+    yield from ((record['id'], record['doi']) for record in it_limit(it, limit=limit))
 
-    logger.info(f'Finished iterating records with missing abstracts.')
+    logger.info('Finished iterating records with missing abstracts.')
 
 
 def write_cache_records_to_solr(
@@ -76,16 +76,16 @@ def write_cache_records_to_solr(
 ) -> tuple[int, int]:
     n_total = 0
     n_skipped = 0
-    for batch in batched(records, batch_size):
+    for batch in batched(records, batch_size, strict=False):
         batch_records = list(batch)
         n_total += len(batch_records)
         needs_update: set[str] | None = None
         if not force:
             openalex_ids = [record.openalex_id for record in records]
-            needs_update = set([oa_id for oa_id, _ in get_entries_with_missing_abstracts(config=config, openalex_ids=openalex_ids)])
+            needs_update = {oa_id for oa_id, _ in get_entries_with_missing_abstracts(config=config, openalex_ids=openalex_ids)}
             n_skipped += len(batch_records) - len(needs_update)
             if len(needs_update) <= 0:
-                logger.info(f'Partition skipped, seems complete')
+                logger.info('Partition skipped, seems complete')
                 continue
 
         buffer = ''

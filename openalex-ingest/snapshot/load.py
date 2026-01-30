@@ -56,7 +56,7 @@ def update_solr(
         'Please ensure you synced the snapshot via\n   $  aws s3 sync "s3://openalex/data" "data" --no-sign-request --delete',
     )
 
-    partitions = list(sorted(snapshot.glob(f'data/works/**/*.gz')))
+    partitions = sorted(snapshot.glob('data/works/**/*.gz'))
     logging.info(f'Looks like there are {len(partitions):,} partitions.')
     partitions = [p for p in partitions if p.parent.name >= f'updated_date={filter_since}']
     logging.info(f'Looks like there are {len(partitions):,} partitions after filtering for update >= {filter_since}.')
@@ -84,7 +84,7 @@ def update_solr(
             n_posted = 0
             progress.set_description_str(f'READ ({pi:,} | -- | --)')
 
-            for bi, batch in enumerate(batched(f_in, batch_size=read_batchsize)):
+            for _bi, batch in enumerate(batched(f_in, batch_size=read_batchsize)):
                 works = [
                     json.dumps(
                         translate_work_to_solr(

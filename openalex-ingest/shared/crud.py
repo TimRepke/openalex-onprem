@@ -19,9 +19,9 @@ def read_complete_records(
             select(Request)
             .distinct(Request.openalex_id)
             .where(
-                Request.openalex_id != None,
-                Request.abstract != None,
-                Request.title != None,
+                Request.openalex_id != None,  # noqa: E711
+                Request.abstract != None,  # noqa: E711
+                Request.title != None,  # noqa: E711
             )
         )
         if from_time is not None:
