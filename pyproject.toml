@@ -26,10 +26,10 @@ evaluation = [
 #requires = ["uv-build>=0.9.10,<0.10.0"]
 #build-backend = "uv_build"
 
-#[tool.uv.sources]
-#nacsos_data = { git = "git+ssh://git@gitlab.pik-potsdam.de/mcc-apsis/nacsos/nacsos-data.git", tag = "v0.24.17" }
 [tool.uv.sources]
-nacsos_data = { path = "../nacsos_data", editable = true }
+nacsos_data = { git = "git+ssh://git@gitlab.pik-potsdam.de/mcc-apsis/nacsos/nacsos-data.git", tag = "v0.24.18" }
+#[tool.uv.sources]
+#nacsos_data = { path = "../nacsos_data", editable = true }
 
 #[project.scripts]
 #update = "openalex-ingest.daily.pull_api_update:main"
