@@ -1,11 +1,13 @@
 import uuid
 from datetime import datetime
-from typing import Any
+from typing import Any, Iterable
 
+import pydantic
 from nacsos_data.util.academic.apis import APIEnum
+from pydantic import ConfigDict, BaseModel
 from sqlalchemy import DateTime, func, Column
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy_json import mutable_json_type
+from sqlalchemy.ext.mutable import MutableDict
 from sqlmodel import Field, SQLModel, Relationship
 
 from .models import SourcePriority, OnConflict
@@ -20,6 +22,17 @@ NAMING_CONVENTION = {
 
 metadata = SQLModel.metadata
 metadata.naming_convention = NAMING_CONVENTION
+
+
+def sqlmodel2pydantic(name: str, models: Iterable[BaseModel]) -> BaseModel:
+    """Merge Pydantic or sqlmodel models
+    https://github.com/fastapi/sqlmodel/discussions/850#discussioncomment-15023544
+    """
+    fields = {}
+    for model in models:
+        f = {k: (v.annotation, v) for k, v in model.model_fields.items()}
+        fields.update(f)
+    return pydantic.create_model(name, **fields)
 
 
 class Request(SQLModel, table=True):
@@ -48,7 +61,7 @@ class Request(SQLModel, table=True):
     )
 
     # found: bool = GENERATED ALWAYS AS (raw IS NOT NULL) STORED
-    raw: dict[str, Any] | None = Field(sa_column=Column(mutable_json_type(dbtype=JSONB(none_as_null=True), nested=True)), default=None)
+    raw: dict[str, Any] | None = Field(sa_column=Column(MutableDict.as_mutable(JSONB(none_as_null=True))), default=None)
 
 
 class Queue(SQLModel, table=True):
@@ -64,7 +77,7 @@ class Queue(SQLModel, table=True):
     dimensions_id: str | None = Field(default=None, nullable=True, unique=False, index=False)
     nacsos_id: uuid.UUID | None = Field(default=None, nullable=True, unique=False, index=False)
 
-    sources: list[tuple[APIEnum, SourcePriority]] = Field(sa_column=Column(mutable_json_type(dbtype=JSONB(none_as_null=True), nested=True)), default=None)
+    sources: list[tuple[APIEnum, SourcePriority]] | None = Field(sa_column=Column(MutableDict.as_mutable(JSONB(none_as_null=True))), default=None)
     on_conflict: OnConflict = Field(default=OnConflict.DO_NOTHING, nullable=False, unique=False, index=False)
 
     time_created: datetime = Field(
@@ -73,7 +86,7 @@ class Queue(SQLModel, table=True):
     )
 
 
-class QueueRequests(Queue, table=False):
+class QueueRequests(sqlmodel2pydantic("QueueRequests", [Queue])):
     source: APIEnum
     priority: SourcePriority
     num_has_request: int

@@ -102,53 +102,54 @@ def get_queued_requested_for_source(
 ) -> Generator[QueueRequests, None, None]:
     with db_engine.engine.connect() as connection:
         yield from (
-            connection.execute(
-                text(
-                    """
-                    SELECT q.sources[0] ->> 0                                                       AS source,
-                           q.sources[0] ->> 1                                                       AS priority,
-                           count(1) FILTER ( WHERE r.record_id IS NOT NULL)                         AS num_has_request,
-                           count(1) FILTER ( WHERE r.abstract IS NOT NULL)                          AS num_has_abstract,
-                           count(1) FILTER ( WHERE r.title IS NOT NULL)                             AS num_has_title,
-                           count(1) FILTER ( WHERE r.raw IS NOT NULL)                               AS num_has_raw,
-                           count(1) FILTER ( WHERE r.record_id IS NOT NULL AND r.wrapper = :source) AS num_has_source_request,
-                           count(1) FILTER ( WHERE r.abstract IS NOT NULL AND r.wrapper = :source)  AS num_has_source_abstract,
-                           count(1) FILTER ( WHERE r.title IS NOT NULL AND r.wrapper = :source)     AS num_has_source_title,
-                           count(1) FILTER ( WHERE r.raw IS NOT NULL AND r.wrapper = :source)       AS num_has_source_raw,
-                           q.queue_id,
-                           q.doi,
-                           q.openalex_id,
-                           q.pubmed_id,
-                           q.s2_id,
-                           q.scopus_id,
-                           q.wos_id,
-                           q.dimensions_id,
-                           q.nacsos_id,
-                           q.sources,
-                           q.on_conflict,
-                           q.time_created
-                    FROM queue q
-                         LEFT OUTER JOIN request r ON
-                        (q.doi IS NOT NULL AND q.doi = r.doi)
-                            OR (q.openalex_id IS NOT NULL AND q.openalex_id = r.openalex_id)
-                            OR (q.pubmed_id IS NOT NULL AND q.pubmed_id = r.pubmed_id)
-                            OR (q.s2_id IS NOT NULL AND q.s2_id = q.s2_id)
-                            OR (q.scopus_id IS NOT NULL AND q.scopus_id = r.scopus_id)
-                            OR (q.wos_id IS NOT NULL AND q.wos_id = r.wos_id)
-                            OR (q.dimensions_id IS NOT NULL AND q.dimensions_id = r.dimensions_id)
-                            OR (q.nacsos_id IS NOT NULL AND q.nacsos_id = r.nacsos_id)
-                    WHERE sources IS NOT NULL
-                      AND sources[0] ->> 0 = :source
-                    GROUP BY source, priority, q.queue_id, q.doi, q.openalex_id, q.pubmed_id, q.s2_id, q.scopus_id, q.wos_id,
-                             q.dimensions_id, q.nacsos_id, q.sources, q.on_conflict, q.time_created
-                    LIMIT :limit;
-                    """,
-                ),
-                parameters={'limit': limit, 'source': source},
-            )
-            .scalars()
-            .all()
-        )
+            QueueRequests(row) for row in (
+                connection.execute(
+                    text(
+                        """
+                        SELECT q.sources[0] ->> 0                                                       AS source,
+                               q.sources[0] ->> 1                                                       AS priority,
+                               count(1) FILTER ( WHERE r.record_id IS NOT NULL)                         AS num_has_request,
+                               count(1) FILTER ( WHERE r.abstract IS NOT NULL)                          AS num_has_abstract,
+                               count(1) FILTER ( WHERE r.title IS NOT NULL)                             AS num_has_title,
+                               count(1) FILTER ( WHERE r.raw IS NOT NULL)                               AS num_has_raw,
+                               count(1) FILTER ( WHERE r.record_id IS NOT NULL AND r.wrapper = :source) AS num_has_source_request,
+                               count(1) FILTER ( WHERE r.abstract IS NOT NULL AND r.wrapper = :source)  AS num_has_source_abstract,
+                               count(1) FILTER ( WHERE r.title IS NOT NULL AND r.wrapper = :source)     AS num_has_source_title,
+                               count(1) FILTER ( WHERE r.raw IS NOT NULL AND r.wrapper = :source)       AS num_has_source_raw,
+                               q.queue_id,
+                               q.doi,
+                               q.openalex_id,
+                               q.pubmed_id,
+                               q.s2_id,
+                               q.scopus_id,
+                               q.wos_id,
+                               q.dimensions_id,
+                               q.nacsos_id,
+                               q.sources,
+                               q.on_conflict,
+                               q.time_created
+                        FROM queue q
+                             LEFT OUTER JOIN request r ON
+                            (q.doi IS NOT NULL AND q.doi = r.doi)
+                                OR (q.openalex_id IS NOT NULL AND q.openalex_id = r.openalex_id)
+                                OR (q.pubmed_id IS NOT NULL AND q.pubmed_id = r.pubmed_id)
+                                OR (q.s2_id IS NOT NULL AND q.s2_id = q.s2_id)
+                                OR (q.scopus_id IS NOT NULL AND q.scopus_id = r.scopus_id)
+                                OR (q.wos_id IS NOT NULL AND q.wos_id = r.wos_id)
+                                OR (q.dimensions_id IS NOT NULL AND q.dimensions_id = r.dimensions_id)
+                                OR (q.nacsos_id IS NOT NULL AND q.nacsos_id = r.nacsos_id)
+                        WHERE sources IS NOT NULL
+                          AND sources[0] ->> 0 = :source
+                        GROUP BY source, priority, q.queue_id, q.doi, q.openalex_id, q.pubmed_id, q.s2_id, q.scopus_id, q.wos_id,
+                                 q.dimensions_id, q.nacsos_id, q.sources, q.on_conflict, q.time_created
+                        LIMIT :limit;
+                        """,
+                    ),
+                    parameters={'limit': limit, 'source': source},
+                )
+                .mappings()
+                .all()
+            ))
 
 
 def drop_source_from_queued(
