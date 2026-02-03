@@ -73,6 +73,26 @@ class Queue(SQLModel, table=True):
     )
 
 
+class QueueRequests(Queue, table=False):
+    source: APIEnum
+    priority: SourcePriority
+    num_has_request: int
+    num_has_abstract: int
+    num_has_title: int
+    num_has_raw: int
+    num_has_source_request: int
+    num_has_source_abstract: int
+    num_has_source_title: int
+    num_has_source_raw: int
+
+    @property
+    def info_str(self) -> str:
+        return ', '.join(
+            [f'on-conflict: {self.on_conflict}']
+            + [f'{key}: {getattr(self, key)}' for key in sorted(set(QueueRequests.model_fields.keys()) - set(Queue.model_fields.keys()))],
+        )
+
+
 class AuthApiKeyLink(SQLModel, table=True):
     __tablename__ = 'm2m_auth_api_key'
     api_key_id: uuid.UUID | None = Field(default=None, foreign_key='api_key.api_key_id', primary_key=True)

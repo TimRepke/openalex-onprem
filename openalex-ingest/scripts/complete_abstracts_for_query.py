@@ -53,7 +53,7 @@ def openalex_ids(
     with open(file_ids, 'w') as f:
         while cursor is not None:
             page_i += 1
-            with rate_limit(min_time_ms=100) as t:
+            with rate_limit(min_time_ms=100) as _t:
                 res = httpx.get(
                     'https://api.openalex.org/works',
                     params={'filter': ','.join(fltr), 'select': 'id', 'cursor': cursor, 'per-page': 200},
@@ -84,7 +84,7 @@ def request_ids(
         return
 
     with open(file_ids) as f:
-        oa_ids = list(set([oai_id.strip() for oai_id in f.readlines() if len(oai_id.strip()) > 0]))
+        oa_ids = {oai_id.strip() for oai_id in f.readlines() if len(oai_id.strip()) > 0}
 
     oa_ids = sorted(oa_ids)
 
@@ -155,10 +155,10 @@ def push_cache(
     created_since: Annotated[str | None, typer.Option(help='Get works created on or after')] = None,
     batch_size: int = 200,
 ):
-    logger.info(f'Connecting to database.')
+    logger.info('Connecting to database.')
     db_engine = get_engine(conf_file=conf_file)
 
-    logger.info(f'Starting backfill of abstracts.')
+    logger.info('Starting backfill of abstracts.')
     update_solr_abstracts(
         db_engine=db_engine,
         solr_host=solr_host,

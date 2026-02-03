@@ -17,20 +17,20 @@ def nacsos_items(project_id: str, batch_size: int = 100) -> Generator[Record, No
     stmt = sa.text("""
        SELECT i.text as abstract, ai.title,
              ai.doi, ai.wos_id, ai.scopus_id, ai.openalex_id, ai.s2_id, ai.pubmed_id, ai.dimensions_id,
-             ai.meta as raw_other 
+             ai.meta as raw_other
        FROM item i
        LEFT JOIN academic_item ai ON ai.item_id = i.item_id
-       WHERE i.project_id = :pid 
+       WHERE i.project_id = :pid
               AND
-                  i.text IS NOT NULL 
+                  i.text IS NOT NULL
               AND
-           (     ai.dimensions_id IS NOT NULL 
+           (     ai.dimensions_id IS NOT NULL
               OR ai.openalex_id IS NOT NULL
-              OR ai.doi IS NOT NULL 
-              OR ai.pubmed_id IS NOT NULL 
+              OR ai.doi IS NOT NULL
+              OR ai.pubmed_id IS NOT NULL
               OR ai.scopus_id IS NOT NULL
-              OR ai.s2_id IS NOT NULL 
-              OR ai.wos_id IS NOT NULL 
+              OR ai.s2_id IS NOT NULL
+              OR ai.wos_id IS NOT NULL
               OR ai.scopus_id IS NOT NULL)
        """)
     with db_engine_nacsos.engine.connect() as connection:
