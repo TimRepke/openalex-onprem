@@ -4,8 +4,9 @@ from typing import Annotated
 
 import typer
 
-from nacsos_data.util.academic.apis import APIEnum
+from nacsos_data.util.academic.apis import APIEnum, APIMap
 
+from shared.apis import APIWrapper
 from shared.crud import (
     update_default_sources,
     get_queued_requested_for_source,
@@ -25,9 +26,11 @@ class MaxRuntimeException(Exception):
 
 def main(
     config: Annotated[Path, typer.Option(help='Path to config file')],
+    auth_key: Annotated[str, typer.Option(help='Auth key to select which set of AI keys to use')],
     max_runtime: Annotated[int, typer.Option(help='Number of seconds for this script to run before stopping')] = 5 * 60,
     sources: Annotated[list[str] | None, typer.Option(help='Sources to include')] = None,
     batch_size: Annotated[int, typer.Option(help='Number of queue entries per source per loop')] = 25,
+    min_abstract_len: Annotated[int, typer.Option(help='Minimum length before we accept something to be an abstract')] = 25,
     loglevel: Annotated[str, typer.Option(help='Log verbosity')] = 'INFO',
 ):
     logger = get_logger('queue-worker', loglevel=loglevel, run_init=True)
@@ -48,9 +51,11 @@ def main(
     logger.info('Replace empty source fields with default order...')
     update_default_sources(db_engine=db_engine)
     n_loops = 0
+    queue_empty = False
     try:
-        while True:
+        while not queue_empty:
             n_loops += 1
+            queue_empty = True
             try:
                 for source in sources:
                     time_passed = datetime.now() - start_time
@@ -61,8 +66,12 @@ def main(
 
                     queued = list(get_queued_requested_for_source(db_engine=db_engine, source=source, limit=batch_size))
 
-                    ids_found_abstract = []
-                    ids_missing_abstract = []
+                    if len(queued) == 0:
+                        continue
+
+                    queue_empty = False
+
+                    ids_found_abstract = set()
                     for entry in queued:
                         logger.debug(entry.info_str)
                         if (
@@ -77,15 +86,27 @@ def main(
                             # when we already asked for this DOI anywhere, don't try again
                             or (entry.on_conflict == OnConflict.DO_NOTHING.value and entry.num_has_source_request == 0)
                         ):
-                            pass
-                            # use wrapper to check for abstract
-                            # insert into request table
-                            # append queue_id in one of the two lists
+                            # 1) Query API wrapper
+                            # 2) Insert into request table
+                            # 3) append queue_id in one of the two lists
+                            wrapper = APIWrapper(wrapper=source, db_engine=db_engine, auth_key=auth_key, logger=logger)
 
-                    logger.info('Dropping all unforced sources from current queue entries where we found an abstract...')
+                            with db_engine.session() as session:
+                                for request in wrapper.fetch(queries=queued):
+                                    if len(request.abstract or '') < min_abstract_len:
+                                        request.abstract = None
+                                    if request.abstract is not None:
+                                        ids_found_abstract.add(request.queue_id)
+                                    session.add(request)
+                                session.commit()
+
+                    ids_missing_abstract = list(set(q.queue_id for q in queued) - ids_found_abstract)
+                    ids_found_abstract = list(ids_found_abstract)
+
+                    logger.info(f'Dropping all unforced sources from current queue entries where we found an abstract: {ids_found_abstract}')
                     drop_unforced_sources_from_queued(db_engine=db_engine, queue_ids=ids_found_abstract)
 
-                    logger.info(f'Dropping {source} from current queue entries where we did not find an abstract...')
+                    logger.info(f'Dropping {source} from current queue entries where we did not find an abstract: {ids_missing_abstract}')
                     drop_source_from_queued(db_engine=db_engine, source=source, queue_ids=ids_missing_abstract)
 
                     logger.info('Dropping finished queue entries...')

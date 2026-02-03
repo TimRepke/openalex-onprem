@@ -1,14 +1,14 @@
+import re
 import uuid
+from typing import Any, Annotated
 from datetime import datetime
-from typing import Any, Iterable
 
-import pydantic
-from nacsos_data.util.academic.apis import APIEnum
-from pydantic import ConfigDict, BaseModel
+from pydantic import BaseModel, AfterValidator
+from sqlmodel import Field, SQLModel, Relationship
 from sqlalchemy import DateTime, func, Column
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.mutable import MutableDict
-from sqlmodel import Field, SQLModel, Relationship
+from nacsos_data.util.academic.apis import APIEnum
 
 from .models import SourcePriority, OnConflict
 
@@ -23,16 +23,19 @@ NAMING_CONVENTION = {
 metadata = SQLModel.metadata
 metadata.naming_convention = NAMING_CONVENTION
 
+URLS = re.compile(
+    r'(https://openalex.org/'
+    r'|https://orcid.org/'
+    r'|https://doi.org/'
+    r'|https://www.wikidata.org/wiki/'
+    r'|https://ror.org/)',
+)
 
-def sqlmodel2pydantic(name: str, models: Iterable[BaseModel]) -> BaseModel:
-    """Merge Pydantic or sqlmodel models
-    https://github.com/fastapi/sqlmodel/discussions/850#discussioncomment-15023544
-    """
-    fields = {}
-    for model in models:
-        f = {k: (v.annotation, v) for k, v in model.model_fields.items()}
-        fields.update(f)
-    return pydantic.create_model(name, **fields)
+
+def strip_url(url: str | None) -> str | None:
+    if url is None:
+        return None
+    return URLS.sub('', url)
 
 
 class Request(SQLModel, table=True):
@@ -42,8 +45,8 @@ class Request(SQLModel, table=True):
     wrapper: str = Field(nullable=False, unique=False, index=True)
     api_key_id: uuid.UUID | None = Field(default=None, nullable=True, foreign_key='api_key.api_key_id')
 
-    openalex_id: str | None = Field(default=None, nullable=True, unique=False, index=True)
-    doi: str | None = Field(default=None, nullable=True, unique=False, index=True)
+    openalex_id: Annotated[str | None, AfterValidator(strip_url)] = Field(default=None, nullable=True, unique=False, index=True)
+    doi: Annotated[str | None, AfterValidator(strip_url)] = Field(default=None, nullable=True, unique=False, index=True)
 
     pubmed_id: str | None = Field(default=None, nullable=True, unique=False, index=True)
     s2_id: str | None = Field(default=None, nullable=True, unique=False, index=True)
@@ -51,6 +54,7 @@ class Request(SQLModel, table=True):
     wos_id: str | None = Field(default=None, nullable=True, unique=False, index=True)
     dimensions_id: str | None = Field(default=None, nullable=True, unique=False, index=True)
     nacsos_id: uuid.UUID | None = Field(default=None, nullable=True, unique=False, index=True)
+    queue_id: int | None = Field(default=None, nullable=True, unique=False, index=False)  # Reference to Queue.queue_id
 
     title: str | None = None
     abstract: str | None = None
@@ -68,8 +72,8 @@ class Queue(SQLModel, table=True):
     __tablename__ = 'queue'
     queue_id: int | None = Field(default=None, primary_key=True)
 
-    doi: str | None = Field(default=None, nullable=True, unique=False, index=False)
-    openalex_id: str | None = Field(default=None, nullable=True, unique=False, index=False)
+    doi: Annotated[str | None, AfterValidator(strip_url)] = Field(default=None, nullable=True, unique=False, index=False)
+    openalex_id: Annotated[str | None, AfterValidator(strip_url)] = Field(default=None, nullable=True, unique=False, index=False)
     pubmed_id: str | None = Field(default=None, nullable=True, unique=False, index=False)
     s2_id: str | None = Field(default=None, nullable=True, unique=False, index=False)
     scopus_id: str | None = Field(default=None, nullable=True, unique=False, index=False)
@@ -86,8 +90,26 @@ class Queue(SQLModel, table=True):
     )
 
 
-class QueueRequests(sqlmodel2pydantic("QueueRequests", [Queue])):
+class QueueRequests(BaseModel):  # FIXME: class QueueRequests(Queue, table=False) throws type error
+    # begin inheritance hack
+    queue_id: int | None = None
+
+    doi: Annotated[str | None, AfterValidator(strip_url)] = None
+    openalex_id: Annotated[str | None, AfterValidator(strip_url)] = None
+    pubmed_id: str | None = None
+    s2_id: str | None = None
+    scopus_id: str | None = None
+    wos_id: str | None = None
+    dimensions_id: str | None = None
+    nacsos_id: uuid.UUID | None = None
+
+    sources: list[tuple[APIEnum, SourcePriority]] | None = None
+    on_conflict: OnConflict = OnConflict.DO_NOTHING
+
+    time_created: datetime
     source: APIEnum
+    #  end hack
+
     priority: SourcePriority
     num_has_request: int
     num_has_abstract: int
@@ -120,16 +142,10 @@ class ApiKey(SQLModel, table=True):
     wrapper: str | None = None
     api_key: str | None = None
     proxy: str | None = None
+    active: bool = True
 
     last_used: datetime | None = Field(sa_column=Column(DateTime(timezone=True), onupdate=func.now()), default=None)
-
-    scopus_requests_limit: int | None = None
-    scopus_requests_remaining: int | None = None
-    scopus_requests_reset: str | None = None
-
-    dimensions_jwt: str | None = None
-
-    active: bool = True
+    api_feedback: dict[str, Any] | None = Field(sa_column=Column(MutableDict.as_mutable(JSONB(none_as_null=True))), default=None)
 
     auth_keys: list['AuthKey'] = Relationship(back_populates='api_keys', link_model=AuthApiKeyLink)
 
