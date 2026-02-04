@@ -4,7 +4,7 @@ from typing import Annotated
 
 import typer
 
-from nacsos_data.util.academic.apis import APIEnum, APIMap
+from nacsos_data.util.academic.apis import APIEnum
 
 from shared.apis import APIWrapper
 from shared.crud import (

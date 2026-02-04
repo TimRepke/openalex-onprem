@@ -1,3 +1,5 @@
+raise DeprecationWarning('Outdated, not migrated yet.')
+
 import os
 import logging
 from datetime import datetime

@@ -1,3 +1,5 @@
+raise DeprecationWarning('Outdated, not migrated yet.')
+
 import logging
 from datetime import datetime
 from typing import Generator
