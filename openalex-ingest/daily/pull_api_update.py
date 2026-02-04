@@ -1,19 +1,18 @@
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Annotated
+from itertools import batched
 
-import httpx
 import typer
-import orjson as json
 from json.decoder import JSONDecodeError
 
 from nacsos_data.models.openalex import WorksSchema
-from nacsos_data.util.academic.apis.openalex import OpenAlexAPI, translate_work_to_solr
-from nacsos_data.util import batched
+from nacsos_data.util.academic.apis.openalex import OpenAlexAPI
 
 from shared.crud import queue_requests
 from shared.db import get_engine
 from shared.schema import Queue
+from shared.solr import write_api_update_to_solr
 from shared.util import get_logger
 from shared.config import load_settings
 
@@ -52,32 +51,18 @@ def load_updated_records_from_api(
                     'include_xpac': 'true',
                 },
             ),
-            batch_size=solr_buffer_size,
+            solr_buffer_size,
+            strict=False,
         ):
-            res: httpx.Response | None = None
-            try:
-                works = [WorksSchema.model_validate(record) for record in batch]
-                logger.debug(f'Got {len(works):,} works entries from API for "{fltr}", POSTing to solr...')
+            works = [WorksSchema.model_validate(record) for record in batch]
+            logger.debug(f'Got {len(works):,} works entries from API for "{fltr}", POSTing to solr...')
+            write_api_update_to_solr(config=settings.OPENALEX, works=works)
 
-                res = httpx.post(
-                    url=f'{settings.OPENALEX.SOLR_ENDPOINT}/api/collections/{settings.OPENALEX.SOLR_COLLECTION}/update/json?commit=true',
-                    timeout=240,
-                    headers={'Content-Type': 'application/json'},
-                    data=b'\n'.join([json.dumps(translate_work_to_solr(w, source='OpenAlex', authorship_limit=50)) for w in works]).decode(),
-                )
-                res.raise_for_status()
+            # remember all Works without abstract and with DOI
+            queue = [Queue(doi=w.doi, openalex_id=w.id) for w in works if w.id is not None and w.doi is not None and w.abstract is None]
+            queue_requests(db_engine=db_engine, entries=queue)
 
-                # remember all Works without abstract and with DOI
-                queue = [Queue(doi=w.doi, openalex_id=w.id) for w in works if w.id is not None and w.doi is not None and w.abstract is None]
-                queue_requests(db_engine=db_engine, entries=queue)
-
-                logger.debug(f'Wrote {len(queue):,} entries to into the meta-cache queue')
-
-            except httpx.HTTPError as e:
-                if res:
-                    logger.error(res.text)
-                logger.error(f'Failed to submit: {e}')
-                logger.exception(e)
+            logger.debug(f'Wrote {len(queue):,} entries to into the meta-cache queue')
 
     logger.info('Solr collection is up to date.')
 

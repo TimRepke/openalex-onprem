@@ -24,7 +24,7 @@ class MaxRuntimeException(Exception):
     pass
 
 
-def main(
+def main(  # noqa: C901
     config: Annotated[Path, typer.Option(help='Path to config file')],
     auth_key: Annotated[str, typer.Option(help='Auth key to select which set of AI keys to use')],
     max_runtime: Annotated[int, typer.Option(help='Number of seconds for this script to run before stopping')] = 5 * 60,
@@ -100,7 +100,7 @@ def main(
                                     session.add(request)
                                 session.commit()
 
-                    ids_missing_abstract = list(set(q.queue_id for q in queued) - ids_found_abstract)
+                    ids_missing_abstract = list({q.queue_id for q in queued} - ids_found_abstract)
                     ids_found_abstract = list(ids_found_abstract)
 
                     logger.info(f'Dropping all unforced sources from current queue entries where we found an abstract: {ids_found_abstract}')

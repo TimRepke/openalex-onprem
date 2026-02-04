@@ -102,7 +102,8 @@ def get_queued_requested_for_source(
 ) -> Generator[QueueRequests, None, None]:
     with db_engine.engine.connect() as connection:
         yield from (
-            QueueRequests(row) for row in (
+            QueueRequests(row)
+            for row in (
                 connection.execute(
                     text(
                         """
@@ -149,7 +150,8 @@ def get_queued_requested_for_source(
                 )
                 .mappings()
                 .all()
-            ))
+            )
+        )
 
 
 def drop_source_from_queued(

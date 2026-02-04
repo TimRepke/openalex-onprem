@@ -59,6 +59,7 @@ class Request(SQLModel, table=True):
     title: str | None = None
     abstract: str | None = None
 
+    solarized: bool | None = Field(default=None, nullable=True, unique=False, index=False)
     time_created: datetime = Field(
         sa_column=Column(DateTime(timezone=True), server_default=func.now(), index=False),
         default_factory=datetime.now,

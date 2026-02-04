@@ -11,15 +11,12 @@ from nacsos_data.util.academic.apis.dimensions import FIELDS as DIMENSIONS_FIELD
 from shared.db import DatabaseEngine
 from shared.schema import ApiKey, Request, Queue, QueueRequests
 
-ID_KEYS = ['doi', 'openalex_id', 'nacsos_id', 'pubmed_id', 's2_id', 'scopus_id', 'wos_id', 'dimensions_id','queue_id']
+ID_KEYS = ['doi', 'openalex_id', 'nacsos_id', 'pubmed_id', 's2_id', 'scopus_id', 'wos_id', 'dimensions_id', 'queue_id']
 
 
 def get_reference_df(queries: list[Queue]) -> pd.DataFrame:
     return pd.DataFrame(
-        [
-            {k: getattr(ref, k) for k in ID_KEYS}
-            for ref in queries
-        ],
+        [{k: getattr(ref, k) for k in ID_KEYS} for ref in queries],
     )
 
 
@@ -59,16 +56,16 @@ def queries_to_scopus_str(queries: list[Queue]) -> str:
 
 
 def queries_to_wos_str(queries: list[Queue]) -> str:
-    wosids = set([query.wos_id for query in queries if query.wos_id])
-    dois = set([query.doi for query in queries if query.doi])
-    pmids = set([query.pubmed_id for query in queries if query.pubmed_id])
-    parts = []
+    wosids: set[str] = {query.wos_id for query in queries if query.wos_id}
+    dois: set[str] = {query.doi for query in queries if query.doi}
+    pmids: set[str] = {query.pubmed_id for query in queries if query.pubmed_id}
+    parts: list[str] = []
     if len(dois) > 0:
-        parts.append(f'DO=({' '.join(dois)})')
+        parts.append(f'DO=({" ".join(dois)})')
     if len(pmids) > 0:
-        parts.append(f'PMID=({' '.join(pmids)})')
+        parts.append(f'PMID=({" ".join(pmids)})')
     if len(wosids) > 0:
-        parts.append(f'UT=({' '.join(wosids)})')
+        parts.append(f'UT=({" ".join(wosids)})')
 
     if len(parts) == 0:
         raise ValueError('Found no pubmed ids, wos ids, or DOIs to query the web of science')
@@ -81,18 +78,18 @@ def queries_to_dimensions_str(queries: list[Queue]) -> str:
     where = []
     if len(ids.get('doi', [])) > 0:
         dois = [f'"{doi}"' for doi in ids['doi']]
-        where.append(f'doi in [{','.join(dois)}]')
+        where.append(f'doi in [{",".join(dois)}]')
     if len(ids.get('dimensions_id', [])) > 0:
         dids = [f'"{did}"' for did in ids['dimensions_id']]
-        where.append(f'id in [{','.join(dids)}]')
+        where.append(f'id in [{",".join(dids)}]')
     if len(ids.get('dimensions_id', [])) > 0:
         pmids = [f'"{pmid}"' for pmid in ids['pubmed_id']]
-        where.append(f'pmid in [{','.join(pmids)}]')
+        where.append(f'pmid in [{",".join(pmids)}]')
 
     if len(where) == 0:
         raise ValueError('Found no pmids, dimensions ids or DOIs to query dimensions')
 
-    return f'search publications where {' or '.join(where)} return publications[{'+'.join(DIMENSIONS_FIELDS)}]'
+    return f'search publications where {" or ".join(where)} return publications[{"+".join(DIMENSIONS_FIELDS)}]'
 
 
 def queries_to_pubmed_str(queries: list[Queue]) -> str:
@@ -147,23 +144,26 @@ class APIWrapper:
         key.api_feedback = api.api_feedback
         self._log_api_key_use(key)
 
-        requests = (Request(
-            record_id=uuid.uuid4(),
-            wrapper=self.wrapper,
-            api_key_id=key.api_key_id,
-            openalex_id=res_t.openalex_id,
-            nacsos_id=None,  # explicit none because we never query nacsos for this
-            doi=res_t.doi,
-            s2_id=res_t.s2_id,
-            scopus_id=res_t.scopus_id,
-            wos_id=res_t.wos_id,
-            dimensions_id=res_t.dimensions_id,
-            pubmed_id=res_t.pubmed_id,
-            title=res_t.title,
-            abstract=res_t.text,
-            time_created=datetime.now(),
-            raw=res_r,
-        ) for res_t, res_r in zip(results_trans, results_raw))
+        requests = (
+            Request(
+                record_id=uuid.uuid4(),
+                wrapper=self.wrapper,
+                api_key_id=key.api_key_id,
+                openalex_id=res_t.openalex_id,
+                nacsos_id=None,  # explicit none because we never query nacsos for this
+                doi=res_t.doi,
+                s2_id=res_t.s2_id,
+                scopus_id=res_t.scopus_id,
+                wos_id=res_t.wos_id,
+                dimensions_id=res_t.dimensions_id,
+                pubmed_id=res_t.pubmed_id,
+                title=res_t.title,
+                abstract=res_t.text,
+                time_created=datetime.now(),
+                raw=res_r,
+            )
+            for res_t, res_r in zip(results_trans, results_raw, strict=False)
+        )
 
         df_ids = get_reference_df(queries)
         yield from (complete_ids(req, df_ids) for req in requests)
@@ -199,7 +199,7 @@ class APIWrapper:
         with self.db_engine.session() as session:
             keys = session.exec(
                 text(
-                    '''
+                    """
                     SELECT api_key.*
                     FROM api_key
                          JOIN m2m_auth_api_key ON api_key.api_key_id = m2m_auth_api_key.api_key_id
@@ -209,8 +209,9 @@ class APIWrapper:
                       AND api_key.active IS TRUE
                       AND api_key.wrapper = :wrapper
                     ORDER BY last_used
-                    LIMIT 1;''',
-                ), params={
+                    LIMIT 1;""",
+                ),
+                params={
                     'wrapper': self.wrapper,
                     'auth_key': self.auth_key,
                 },

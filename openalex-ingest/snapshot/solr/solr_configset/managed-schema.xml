@@ -958,6 +958,7 @@
     <field name="publication_year" type="oa_int"/>
     <field name="created_date" type="oa_date"/>
     <field name="updated_date" type="oa_date"/>
+    <field name="abstract_date" type="oa_date"/>
 
     <field name="is_published" type="oa_bool"/>
     <field name="is_accepted" type="oa_bool"/>

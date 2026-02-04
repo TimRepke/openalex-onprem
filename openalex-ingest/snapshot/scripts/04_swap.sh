@@ -95,3 +95,4 @@ $with_sudo /usr/bin/systemctl start solr.service
 echo "NOTE: not deleting the temporary solr-home at ${OA_SOLR_HOME_TMP}"
 
 # TODO: fix auth?
+# TODO: after swap, reset solarized flag in meta-cache
