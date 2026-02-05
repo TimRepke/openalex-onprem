@@ -11,9 +11,12 @@ variables:
     description: "Path to conf/secret-temp.env"
   OA_PROD_CONF:
     description: "Path to conf/secret-prod.env"
-  OA_LAG:
-    description: "Number of days to look back when pulling updates from OpenAlex"
+  OA_API_LAG:
+    description: "Number of days to look back when pulling updates from OpenAlex API"
     value: "28"
+  OA_WORKER_RUNTIME:
+    description: "Time in seconds to run a queue worker for"
+    value: "300"
 
 cache:
   - key:
@@ -47,7 +50,7 @@ before_script:
     - which python
     - which pip
     - pip install uv
-    - uv sync --active
+    - uv sync --active --no-sources
     - uv pip freeze
 
 ResetSnapshot:
@@ -72,25 +75,54 @@ ResetSnapshot:
 #  - OA_DAILY_ABSTRACTS
 #  - OA_DAILY_BACKFILL
 
-#DailyAPIFetch:
-#  rules:
-#    - if: $CI_PIPELINE_SOURCE == "schedule" && $OA_DAILY_API == "true"
-#  tags:
-#    - rechner-bare
-#  allow_failure: false
-#  extends: .env
-#  script:
-#    - cd $OA_REPO_DIR
-#    - cd openalex-ingest/daily/
-#    - ls -lisah
-#    - export TODAY="$(date +"%Y-%m-%dT%H-%M-%S")"
-#    - export DATE="$(date -d "$TODAY $OA_LAG days ago" +%Y-%m-%d)"
-#    - echo $OA_LAG
-#    - echo $TODAY
-#    - echo $DATE
-#    - python api_update.py --config="${OA_PROD_CONF}" --date="${DATE}" --loglevel="INFO"
+SchedulePULL:
+  # to be scheduled once a day
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule" && $OA_JOB == "pull-api-update"
+  tags:
+    - rechner-bare
+  allow_failure: false
+  extends: .env
+  script:
+    - cd $OA_REPO_DIR
+    - source .venv/bin/activate
+    - uv sync --active --no-sources
+    - cd openalex-ingest
+    - ls -lisah
+    - export TODAY="$(date +"%Y-%m-%dT%H-%M-%S")"
+    - export DATE="$(date -d "$TODAY $OA_API_LAG days ago" +%Y-%m-%d)"
+    - echo $OA_LAG
+    - echo $TODAY
+    - echo $DATE
+    - PYTHONPATH=. python daily/pull_api_update.py day --config="${OA_PROD_CONF}" --date="${DATE}" --loglevel="INFO" --solr-buffer-size=200
 
-# TODO fetch daily
-# TODO queue records (delayed)
-# TODO transfer abstracts (hourly?)
-# TODO queue worker (10 min?)
+ScheduleTRANSFER:
+  # to be scheduled every few hours
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule" && $OA_JOB == "transfer-abstracts"
+  tags:
+    - rechner-bare
+  allow_failure: false
+  extends: .env
+  script:
+    - cd $OA_REPO_DIR
+    - cd openalex-ingest/
+    - ls -lisah
+    - PYTHONPATH=. python daily/fix_abstracts.py transfer --config="${OA_PROD_CONF}" --no-force-overwrite --loglevel="INFO" --batch-size=200
+
+ScheduleWORKER:
+  # to be scheduled assuming runtime 5min (300 sec), schedule every 6min "*/6 * * * *"
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule" && $OA_JOB == "queue-work"
+  tags:
+    - rechner-bare
+  allow_failure: false
+  extends: .env
+  parallel:
+    matrix:
+      - SOURCE: [SCOPUS DIMENSIONS WOS PUBMED]
+  script:
+    - cd $OA_REPO_DIR
+    - cd openalex-ingest/
+    - ls -lisah
+    - PYTHONPATH=. python worker/main.py transfer --config="${OA_PROD_CONF}" --loglevel="INFO" --batch-size=200 --max-runtime=$OA_WORKER_RUNTIME --sources=$SOURCE --min-abstract-len=50
