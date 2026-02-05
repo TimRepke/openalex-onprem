@@ -1,4 +1,4 @@
-import json
+import orjson as json
 import logging
 from datetime import datetime
 from typing import Annotated, Generator, Iterator
@@ -87,7 +87,7 @@ def write_cache_records_to_solr(
                 logger.info('Partition skipped, seems complete')
                 continue
 
-        buffer = ''
+        buffer = b''
         timestamp = datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
         for record in batch_records:
             if needs_update is not None and record.openalex_id not in needs_update:
@@ -101,12 +101,12 @@ def write_cache_records_to_solr(
                 'abstract_source': {'set': record.wrapper},
                 'abstract_date': {'set': timestamp},
             }
-            buffer += json.dumps(rec) + '\n'
+            buffer += json.dumps(rec) + b'\n'
 
         res = httpx.post(
             f'{config.solr_url}/update/json?commit=true',
             headers={'Content-Type': 'application/json'},
-            data=buffer,
+            content=buffer.decode(),
             timeout=120,
         )
 
@@ -164,7 +164,7 @@ def write_api_update_to_solr(
             url=f'{config.solr_collections_url}/update/json?commit=true',
             timeout=240,
             headers={'Content-Type': 'application/json'},
-            data=b'\n'.join([json.dumps(w) for w in solr_works.values()]).decode(),
+            content=b'\n'.join([json.dumps(w) for w in solr_works.values()]).decode(),
         )
         res.raise_for_status()
     except httpx.HTTPError as e:
