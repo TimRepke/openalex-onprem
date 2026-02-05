@@ -1,10 +1,14 @@
 import re
 import logging
 from contextlib import ContextDecorator
+from pathlib import Path
 from time import perf_counter, sleep
 from typing import TypeVar, Iterable
 
 import typer
+
+from shared.config import load_settings, Settings
+from shared.db import get_engine, DatabaseEngine
 
 logger = logging.getLogger('openalex.shared.util')
 
@@ -42,14 +46,27 @@ class rate_limit(ContextDecorator):
             sleep(self.min_time - self.time)
 
 
-def get_logger(name: str, loglevel: str = 'INFO', run_init: bool = False) -> logging.Logger:
-    if run_init:
+def get_logger(logger_name: str, run_log_init=True, loglevel: str = 'INFO') -> logging.Logger:
+    if run_log_init:
         logging.basicConfig(format='%(asctime)s [%(levelname)s] %(name)s (%(process)d): %(message)s', level=loglevel)
         logging.getLogger('urllib3').setLevel(logging.WARNING)
         logging.getLogger('httpcore').setLevel(logging.WARNING)
         logging.getLogger('httpx').setLevel(logging.WARNING)
         logging.getLogger('root').setLevel(loglevel)
 
-    logger = logging.getLogger(name)
+    logger = logging.getLogger(logger_name)
     logger.setLevel(loglevel)
     return logger
+
+
+def prepare_runner(config: Path, logger_name: str, run_log_init=True, loglevel: str = 'INFO') -> tuple[logging.Logger, Settings, DatabaseEngine]:
+    logger = get_logger(logger_name=logger_name, run_log_init=run_log_init, loglevel=loglevel)
+
+    logger.info(f'Loading config from {config.resolve()}...')
+    if not config.exists():
+        raise AssertionError(f'Config file does not exist at {config.resolve()}!')
+    settings = load_settings(config)
+
+    logger.info('Connecting to database...')
+    db_engine = get_engine(settings=settings.CACHE_DB)
+    return logger, settings, db_engine

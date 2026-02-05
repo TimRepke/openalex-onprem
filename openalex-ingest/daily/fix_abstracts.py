@@ -7,12 +7,10 @@ import typer
 from nacsos_data.util.academic.apis import APIEnum
 from sqlalchemy import text
 
-from shared.config import load_settings
-from shared.db import get_engine
 from shared.models import OnConflict, SourcePriority
 from shared.schema import Request, Queue
 from shared.solr import write_cache_records_to_solr, get_entries_with_missing_abstracts
-from shared.util import get_logger
+from shared.util import prepare_runner
 
 app = typer.Typer()
 
@@ -31,14 +29,7 @@ def transfer_abstracts(
     3) Submit to solr
     4) Update solarized flag on success
     """
-    logger = get_logger('abstract-transfer', loglevel=loglevel, run_init=True)
-    logger.info(f'Loading config from {config.resolve()}...')
-    if not config.exists():
-        raise AssertionError(f'Config file does not exist at {config.resolve()}!')
-    settings = load_settings(config)
-
-    logger.info('Connecting to database...')
-    db_engine = get_engine(settings=settings.CACHE_DB)
+    logger, settings, db_engine = prepare_runner(config=config, loglevel=loglevel, logger_name='abstract-transfer', run_log_init=True)
 
     logger.info(f'Will use solr collection at: {settings.OPENALEX.solr_url}')
     with db_engine.session() as session:
@@ -94,14 +85,7 @@ def queue_missing_abstracts(
     if limit > 100000:
         raise ValueError(f'Limit must be <= 100000, but got {limit}')
 
-    logger = get_logger('abstract-queueing', loglevel=loglevel, run_init=True)
-    logger.info(f'Loading config from {config.resolve()}...')
-    if not config.exists():
-        raise AssertionError(f'Config file does not exist at {config.resolve()}!')
-    settings = load_settings(config)
-
-    logger.info('Connecting to database...')
-    db_engine = get_engine(settings=settings.CACHE_DB)
+    logger, settings, db_engine = prepare_runner(config=config, loglevel=loglevel, logger_name='abstract-queueing', run_log_init=True)
 
     logger.info(f'Will use solr collection at: {settings.OPENALEX.solr_url}')
     with db_engine.session() as session:

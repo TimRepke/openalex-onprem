@@ -10,11 +10,9 @@ from nacsos_data.models.openalex import WorksSchema
 from nacsos_data.util.academic.apis.openalex import OpenAlexAPI
 
 from shared.crud import queue_requests
-from shared.db import get_engine
 from shared.schema import Queue
 from shared.solr import write_api_update_to_solr
-from shared.util import get_logger
-from shared.config import load_settings
+from shared.util import prepare_runner, get_logger
 
 app = typer.Typer()
 
@@ -26,15 +24,7 @@ def load_updated_records_from_api(
     solr_buffer_size: int = 200,
     loglevel: str = 'INFO',
 ):
-    logger = get_logger('openalex-ingest', loglevel=loglevel, run_init=True)
-
-    logger.info(f'Loading config from {config.resolve()}...')
-    if not config.exists():
-        raise AssertionError(f'Config file does not exist at {config.resolve()}!')
-    settings = load_settings(config)
-
-    logger.info('Connecting to database...')
-    db_engine = get_engine(settings=settings.CACHE_DB)
+    logger, settings, db_engine = prepare_runner(config=config, loglevel=loglevel, logger_name='openalex-ingest', run_log_init=True)
 
     logger.info(f'Will use solr collection at: {settings.OPENALEX.solr_url}')
 
@@ -42,7 +32,7 @@ def load_updated_records_from_api(
         for batch in batched(
             OpenAlexAPI(
                 api_key=settings.OPENALEX.API_KEY,
-                logger=get_logger(f'ingest-{fltr}-{date.strftime("%Y-%m-%d")}', loglevel=loglevel),
+                logger=logger.getChild(f'ingest-{fltr}-{date.strftime("%Y-%m-%d")}'),
                 split_larger=500000,
                 ignored_exceptions=[JSONDecodeError],
             ).fetch_raw(

@@ -65,6 +65,7 @@ def get_queued_for_source(
     source: str,  # APIEnum,
     limit: int = 25,
 ) -> Generator[Queue, None, None]:
+    """Return the oldest `limit` queued entries for `source`."""
     with db_engine.engine.connect() as connection:
         yield from (
             connection.execute(
@@ -85,6 +86,7 @@ def get_queued_for_source(
                     FROM queue
                     WHERE sources IS NOT NULL
                       AND sources[0] ->> 0 = :source
+                    ORDER BY time_created
                     LIMIT :limit;
                     """,
                 ),
@@ -100,9 +102,10 @@ def get_queued_requested_for_source(
     source: str,  # APIEnum,
     limit: int = 25,
 ) -> Generator[QueueRequests, None, None]:
+    """Return the oldest `limit` queued entries for `source` (same as get_queued_for_source, but including counts for matching entries in the request table)."""
     with db_engine.engine.connect() as connection:
         yield from (
-            QueueRequests(row)
+            QueueRequests(**row)
             for row in (
                 connection.execute(
                     text(
@@ -143,6 +146,7 @@ def get_queued_requested_for_source(
                           AND sources[0] ->> 0 = :source
                         GROUP BY source, priority, q.queue_id, q.doi, q.openalex_id, q.pubmed_id, q.s2_id, q.scopus_id, q.wos_id,
                                  q.dimensions_id, q.nacsos_id, q.sources, q.on_conflict, q.time_created
+                        ORDER BY q.time_created
                         LIMIT :limit;
                         """,
                     ),

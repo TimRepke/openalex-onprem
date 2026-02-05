@@ -46,6 +46,8 @@ class Settings(BaseSettings):
     REDIS_URL: str = 'redis://localhost:6379'
     RESULT_LIMIT: int = 100
 
+    CACHE_AUTH_KEY: str = ''
+
     QUEUE_RUNTIME_LIMIT: int = 4 * 60  # queue worker is called every 5 min, let it work for 4 minutes in between
 
     LOG_CONF_FILE: str = 'config/logging.toml'
