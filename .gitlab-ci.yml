@@ -72,38 +72,25 @@ ResetSnapshot:
 #  - OA_DAILY_ABSTRACTS
 #  - OA_DAILY_BACKFILL
 
-DailyAPIFetch:
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "schedule" && $OA_DAILY_API == "true"
-  tags:
-    - rechner-bare
-  allow_failure: false
-  extends: .env
-  script:
-    - cd $OA_REPO_DIR
-    - cd openalex-ingest/daily/
-    - ls -lisah
-    - export TODAY="$(date +"%Y-%m-%dT%H-%M-%S")"
-    - export DATE="$(date -d "$TODAY $OA_LAG days ago" +%Y-%m-%d)"
-    - echo $OA_LAG
-    - echo $TODAY
-    - echo $DATE
-    - python api_update.py --config="${OA_PROD_CONF}" --date="${DATE}" --loglevel="INFO"
+#DailyAPIFetch:
+#  rules:
+#    - if: $CI_PIPELINE_SOURCE == "schedule" && $OA_DAILY_API == "true"
+#  tags:
+#    - rechner-bare
+#  allow_failure: false
+#  extends: .env
+#  script:
+#    - cd $OA_REPO_DIR
+#    - cd openalex-ingest/daily/
+#    - ls -lisah
+#    - export TODAY="$(date +"%Y-%m-%dT%H-%M-%S")"
+#    - export DATE="$(date -d "$TODAY $OA_LAG days ago" +%Y-%m-%d)"
+#    - echo $OA_LAG
+#    - echo $TODAY
+#    - echo $DATE
+#    - python api_update.py --config="${OA_PROD_CONF}" --date="${DATE}" --loglevel="INFO"
 
-QueueWorker:
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "schedule" && $OA_DAILY_API == "true"
-  tags:
-    - rechner-bare
-  allow_failure: false
-  extends: .env
-  script:
-    - cd $OA_REPO_DIR
-    - cd openalex-ingest/daily/
-    - ls -lisah
-    - export TODAY="$(date +"%Y-%m-%dT%H-%M-%S")"
-    - export DATE="$(date -d "$TODAY $OA_LAG days ago" +%Y-%m-%d)"
-    - echo $OA_LAG
-    - echo $TODAY
-    - echo $DATE
-    - python api_update.py --config="${OA_PROD_CONF}" --date="${DATE}" --loglevel="INFO"
+# TODO fetch daily
+# TODO queue records (delayed)
+# TODO transfer abstracts (hourly?)
+# TODO queue worker (10 min?)

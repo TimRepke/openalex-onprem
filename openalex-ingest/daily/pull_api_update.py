@@ -43,6 +43,7 @@ def load_updated_records_from_api(
             OpenAlexAPI(
                 api_key=settings.OPENALEX.API_KEY,
                 logger=get_logger(f'ingest-{fltr}-{date.strftime("%Y-%m-%d")}', loglevel=loglevel),
+                split_larger=500000,
                 ignored_exceptions=[JSONDecodeError],
             ).fetch_raw(
                 query='',
