@@ -24,10 +24,12 @@ def get_entries_with_missing_abstracts(
     created_since: Annotated[datetime | None, typer.Option(help='Get works created on or after')] = None,
     created_until: Annotated[datetime | None, typer.Option(help='Get works created on or after')] = None,
     limit: int = 1000,
+    logger_: logging.Logger | None = None,
 ) -> Generator[tuple[str, str, str], None, None]:
-    client = OpenAlexSolrAPI(openalex_conf=config)
+    logger_ = logger_ or logger
+    client = OpenAlexSolrAPI(openalex_conf=config, logger=logger_)
     if openalex_ids is not None and len(openalex_ids) > 0:
-        logger.debug('Asking solr for which IDs are missing abstracts.')
+        logger_.debug('Asking solr for which IDs are missing abstracts.')
         it = client.fetch_raw(
             query='-abstract:*',  # -abstract:[* TO ""],
             params={
@@ -38,11 +40,11 @@ def get_entries_with_missing_abstracts(
                 'defType': 'lucene',
             },
         )
-        logger.info(f'Requested {len(openalex_ids):,} of which {client.num_found:,} (will limit to {limit:,}) have no abstract in solr.')
+        logger_.info(f'Requested {len(openalex_ids):,} of which {client.num_found} (will limit to {limit:,}) have no abstract in solr.')
     elif created_since is not None:
         created_since_ = created_since.strftime('%Y-%m-%dT23:58:58Z')
         created_until_ = (created_since or datetime.now()).strftime('%Y-%m-%dT00:00:00Z')
-        logger.debug(f'Asking solr for records with missing abstracts from {created_since_} TO {created_until_}.')
+        logger_.debug(f'Asking solr for records with missing abstracts from {created_since_} TO {created_until_}.')
 
         it = client.fetch_raw(
             query=f"""
@@ -58,13 +60,13 @@ def get_entries_with_missing_abstracts(
                 'defType': 'lucene',
             },
         )
-        logger.info(f'Requested records with missing abstract from {created_since} TO {created_until}; Found {client.num_found:,} and limiting to {limit:,}.')
+        logger_.info(f'Requested records with missing abstract from {created_since} TO {created_until}; Found {client.num_found:,} and limiting to {limit:,}.')
     else:
         raise AttributeError('At least one of `openalex_ids` or `created_since` must be specified!')
 
-    yield from ((record['id'], record['doi'], record['id_pmid']) for record in it_limit(it, limit=limit))
+    yield from ((record['id'], record.get('doi'), record.get('id_pmid')) for record in it_limit(it, limit=limit))
 
-    logger.info('Finished iterating records with missing abstracts.')
+    logger_.info('Finished iterating records with missing abstracts.')
 
 
 def write_cache_records_to_solr(
@@ -72,7 +74,11 @@ def write_cache_records_to_solr(
     records: list[Request],
     force: bool = False,
     batch_size: int = 200,
+    logger_: logging.Logger | None = None,
 ) -> tuple[int, int]:
+    logger_ = logger_ or logger
+    sl = logger_.getChild('solr')
+    sl.setLevel(logging.WARNING)
     n_total = 0
     n_skipped = 0
     for batch in batched(records, batch_size, strict=False):
@@ -81,10 +87,10 @@ def write_cache_records_to_solr(
         needs_update: set[str] | None = None
         if not force:
             openalex_ids = [record.openalex_id for record in records]
-            needs_update = {oa_id for oa_id, _ in get_entries_with_missing_abstracts(config=config, openalex_ids=openalex_ids)}
+            needs_update = {oa_id for oa_id, _doi, _pmid in get_entries_with_missing_abstracts(config=config, openalex_ids=openalex_ids, logger_=sl)}
             n_skipped += len(batch_records) - len(needs_update)
             if len(needs_update) <= 0:
-                logger.info('Partition skipped, seems complete')
+                logger_.info('Partition skipped, seems complete')
                 continue
 
         buffer = b''
@@ -101,16 +107,22 @@ def write_cache_records_to_solr(
                 'abstract_source': {'set': record.wrapper},
                 'abstract_date': {'set': timestamp},
             }
-            buffer += json.dumps(rec) + b'\n'
+            buffer += json.dumps(rec) + b',\n'
 
-        res = httpx.post(
-            f'{config.solr_url}/update/json?commit=true',
-            headers={'Content-Type': 'application/json'},
-            content=buffer.decode(),
-            timeout=120,
-        )
+        try:
+            res = httpx.post(
+                f'{config.solr_url}/update/json?commit=true',
+                headers={'Content-Type': 'application/json'},
+                content=f'[{buffer.decode()}]',
+                timeout=120,
+            )
+            res.raise_for_status()
+        except Exception as e:
+            logger_.error(f'Failed to write to solr: {e}')
+            logger_.error(res.text)
+            raise e
 
-        logger.info(f'Partition posted to solr via {res}')
+        logger_.info(f'Partition posted to solr via {res}')
 
     return n_total, n_skipped
 

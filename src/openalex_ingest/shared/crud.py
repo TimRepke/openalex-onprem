@@ -110,9 +110,9 @@ def get_queued_requested_for_source(
     with db_engine.engine.connect() as connection:
         creation_filter = ''
         if created_before is not None:
-            creation_filter += ' AND time_created >= :created_before'
+            creation_filter += ' AND time_created <= :created_before'
         if created_after is not None:
-            creation_filter += ' AND time_created <= :created_after'
+            creation_filter += ' AND time_created >= :created_after'
         yield from (
             QueueRequests(**row)
             for row in (

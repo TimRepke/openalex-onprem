@@ -21,7 +21,7 @@ app = typer.Typer()
 def transfer_abstracts(
     config: Annotated[Path, typer.Option(help='Path to config file')],
     batch_size: Annotated[int, typer.Option(help='Batch size')] = 200,
-    force_overwrite: Annotated[int, typer.Option(help="Use this flag to overwrite existing abstracts in solr, otherwise we'll check first")] = False,
+    force_overwrite: Annotated[bool, typer.Option(help="Use this flag to overwrite existing abstracts in solr, otherwise we'll check first")] = False,
     created_after: Annotated[datetime | None, typer.Option(help='Filter queue to entries added after this date')] = None,
     created_before: Annotated[datetime | None, typer.Option(help='Filter queue to entries added before this date')] = None,
     loglevel: Annotated[str, typer.Option(help='Log level')] = 'INFO',
@@ -37,34 +37,38 @@ def transfer_abstracts(
 
     creation_filter = ''
     if created_before is not None:
-        creation_filter += ' AND time_created >= :created_before'
+        creation_filter += ' AND time_created <= :created_before'
     if created_after is not None:
-        creation_filter += ' AND time_created <= :created_after'
+        creation_filter += ' AND time_created >= :created_after'
 
     logger.info(f'Will use solr collection at: {settings.OPENALEX.solr_url}')
     with db_engine.session() as session:
-        for partition in (
-            session.execute(
+        while True:
+            partition = session.execute(
                 text(
                     f"""
                     SELECT DISTINCT ON (openalex_id) openalex_id, upper(wrapper) as abstract_source, abstract, title
                     FROM request
-                    WHERE (solarized = False OR solarized IS NULL)
+                    WHERE (solarized = FALSE OR solarized IS NULL)
                       AND abstract IS NOT NULL
                       AND openalex_id IS NOT NULL {creation_filter}
-                    ORDER BY openalex_id, time_created DESC;
+                    ORDER BY openalex_id, time_created DESC
+                    LIMIT :batch_size;
                     """,
                 ),
-                execution_options={'yield_per': batch_size, 'created_before': created_before, 'created_after': created_after},
-            )
-            .mappings()
-            .partitions(batch_size)
-        ):
+                params={'created_before': created_before, 'created_after': created_after, 'batch_size': batch_size},
+            ).mappings().all()
+
+            if len(partition) == 0:
+                logger.info(f'No more un-solarised entries with abstract found in meta-cache')
+                break
+
             # Prepare minimal `Request` info
             records = [Request(openalex_id=r['openalex_id'], wrapper=r['abstract_source'], title=r['title'], abstract=r['abstract']) for r in partition]
+            logger.info(f'Fetched {len(records):,} records to transfer to solr')
 
             # Submit to solr (this handles setting the correct fields and skipping existing abstracts if in non-force mode)
-            write_cache_records_to_solr(config=settings.OPENALEX, records=records, batch_size=batch_size, force=force_overwrite)
+            write_cache_records_to_solr(config=settings.OPENALEX, records=records, batch_size=batch_size, force=force_overwrite, logger_=logger)
 
             # Set solarized flag for all records with the openalex_ids we just processed
             # Note, we don't limit this to the request.record_id that we processed on purpose.
