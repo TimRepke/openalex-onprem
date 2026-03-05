@@ -44,9 +44,10 @@ def transfer_abstracts(
     logger.info(f'Will use solr collection at: {settings.OPENALEX.solr_url}')
     with db_engine.session() as session:
         while True:
-            partition = session.execute(
-                text(
-                    f"""
+            partition = (
+                session.execute(
+                    text(
+                        f"""
                     SELECT DISTINCT ON (openalex_id) openalex_id, upper(wrapper) as abstract_source, abstract, title
                     FROM request
                     WHERE (solarized = FALSE OR solarized IS NULL)
@@ -55,12 +56,15 @@ def transfer_abstracts(
                     ORDER BY openalex_id, time_created DESC
                     LIMIT :batch_size;
                     """,
-                ),
-                params={'created_before': created_before, 'created_after': created_after, 'batch_size': batch_size},
-            ).mappings().all()
+                    ),
+                    params={'created_before': created_before, 'created_after': created_after, 'batch_size': batch_size},
+                )
+                .mappings()
+                .all()
+            )
 
             if len(partition) == 0:
-                logger.info(f'No more un-solarised entries with abstract found in meta-cache')
+                logger.info('No more un-solarised entries with abstract found in meta-cache')
                 break
 
             # Prepare minimal `Request` info
