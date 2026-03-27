@@ -40,11 +40,11 @@ def read_partitions(snapshot: Path, logger: logging.Logger, seen_file: Path) -> 
     works_files = set(snapshot.glob(f'works/**/*.gz'))
     if seen_file is not None and seen_file.exists():
         with open(seen_file, 'r') as seen_f:
-            seen_files = set([line.strip() for line in seen_f])
+            seen_files = set([Path(line.strip()) for line in seen_f])
         works_files -= seen_files
 
     logging.info(f'Found there are {len(works_files)} works partitions.')
-    with open(seen_file, 'w') as seen_f:
+    with open(seen_file, 'a') as seen_f:
         for fi, work_file in enumerate(sorted(works_files)):
             logger.info(f'Reading {fi:,}/{len(works_files):,} works partition: {work_file}')
             yield from read_partition(work_file, logger)
