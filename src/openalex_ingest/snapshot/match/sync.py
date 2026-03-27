@@ -47,7 +47,9 @@ def main(
             works = {openalex_id: abstract for openalex_id, abstract in batch if abstract is not None}
             num_works += len(batch)
             num_works_with_abstract += len(works)
-            logger.info(f'Processed {num_works:,} so far of which {num_works_with_abstract:,} had an abstract of which {num_updated:,} were not in solr')
+
+            if (num_works % 1000000) == 0:
+                logger.info(f'Processed {num_works:,} so far of which {num_works_with_abstract:,} had an abstract of which {num_updated:,} were not in solr')
 
             if len(works) == 0:
                 continue
@@ -97,8 +99,5 @@ def main(
                 ],
             )
             session.commit()
-
-            if (num_works % 1000000) == 0:
-                logger.info(f'Processed {num_works:,} so far of which {num_works_with_abstract:,} had an abstract of which {num_updated:,} were not in solr')
 
     logger.info(f'Done after processing {num_works:,}  of which {num_works_with_abstract:,} had an abstract of which {num_updated:,} were not in solr')
