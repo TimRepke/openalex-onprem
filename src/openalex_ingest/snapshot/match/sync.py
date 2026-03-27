@@ -34,7 +34,7 @@ def main(
     snapshot: Annotated[Path, typer.Option(help='Path to snapshot')],
     processed_partitions: Annotated[Path, typer.Option(help='Path to memory file to keep track of which partitions are already processed')],
     config: Annotated[Path, typer.Option(help='Path to config file')],
-    batch_size: int = 200,
+    batch_size: int = 500,
     loglevel: str = 'INFO',
 ):
     logger, settings, db_engine = prepare_runner(config=config, loglevel=loglevel, logger_name='openalex-backup', run_log_init=True)
@@ -95,5 +95,6 @@ def main(
                     for openalex_id in ids_missing_abstract.keys()
                 ],
             )
-            session.flush()
-        session.commit()
+            session.commit()
+
+            logger.info(f'Processed {num_works:,} so far of which {num_works_with_abstract:,} had an abstract of which {num_updated:,} were not in solr')
