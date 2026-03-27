@@ -48,8 +48,14 @@ def main(
             num_works += len(batch)
             num_works_with_abstract += len(works)
 
+            if len(works) == 0:
+                continue
+
             ids_missing_abstract = check_openalex_ids(settings.OPENALEX, list(works.keys()))
             num_updated += len(ids_missing_abstract)
+
+            if len(ids_missing_abstract) == 0:
+                continue
 
             timestamp = datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
             updates = [
