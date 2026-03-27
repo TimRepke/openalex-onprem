@@ -43,8 +43,9 @@ def main(
     num_works_with_abstract = 0
     num_updated = 0
     with db_engine.session() as session:
-        for batch in batched(read_partitions(snapshot=snapshot, logger=logger, seen_file=processed_partitions), batch_size, strict=False):
+        for batch in batched(read_partitions(snapshot=snapshot, logger=logger, seen_file=processed_partitions), n=batch_size, strict=False):
             works = {openalex_id: abstract for openalex_id, abstract in batch if abstract is not None}
+
             num_works += len(batch)
             num_works_with_abstract += len(works)
 

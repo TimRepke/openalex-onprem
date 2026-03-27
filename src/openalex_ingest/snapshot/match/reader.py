@@ -20,8 +20,8 @@ def read_partition(in_file: str | Path, logger: logging.Logger) -> Generator[tup
             try:
                 work = decoder_work.decode(line)
             except Exception as e:
-                print(line)
-                raise e
+                logger.warning(line)
+                logger.exception(e)
             openalex_id = strip_url(work.id)
 
             abstract = None
