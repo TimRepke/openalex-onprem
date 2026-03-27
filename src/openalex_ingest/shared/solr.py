@@ -6,7 +6,7 @@ from itertools import batched
 
 import httpx
 import typer
-from nacsos_data.models.openalex import WorksSchema
+from nacsos_data.models.openalex import WorksSchema, title_abstract
 from nacsos_data.util.academic.apis.openalex import translate_work_to_solr
 
 from nacsos_data.util.conf import OpenAlexConfig
@@ -103,7 +103,7 @@ def write_cache_records_to_solr(
                 'id': record.openalex_id,
                 'title': {'set': record.title},
                 'abstract': {'set': record.abstract},
-                'title_abstract': {'set': f'{record.title} {record.abstract}'},
+                'title_abstract': {'set': title_abstract(record.title, record.abstract)},
                 'abstract_source': {'set': record.wrapper},
                 'abstract_date': {'set': timestamp},
             }
