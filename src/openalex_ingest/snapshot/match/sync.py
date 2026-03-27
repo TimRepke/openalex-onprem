@@ -43,10 +43,11 @@ def main(
     num_works_with_abstract = 0
     num_updated = 0
     with db_engine.session() as session:
-        for batch in batched(read_partitions(snapshot=snapshot, logger=logger, seen_file=processed_partitions), batch_size):
+        for batch in batched(read_partitions(snapshot=snapshot, logger=logger, seen_file=processed_partitions), batch_size, strict=False):
             works = {openalex_id: abstract for openalex_id, abstract in batch if abstract is not None}
             num_works += len(batch)
             num_works_with_abstract += len(works)
+            logger.info(f'Processed {num_works:,} so far of which {num_works_with_abstract:,} had an abstract of which {num_updated:,} were not in solr')
 
             if len(works) == 0:
                 continue
@@ -97,4 +98,7 @@ def main(
             )
             session.commit()
 
-            logger.info(f'Processed {num_works:,} so far of which {num_works_with_abstract:,} had an abstract of which {num_updated:,} were not in solr')
+            if (num_works % 1000000) == 0:
+                logger.info(f'Processed {num_works:,} so far of which {num_works_with_abstract:,} had an abstract of which {num_updated:,} were not in solr')
+
+    logger.info(f'Done after processing {num_works:,}  of which {num_works_with_abstract:,} had an abstract of which {num_updated:,} were not in solr')
