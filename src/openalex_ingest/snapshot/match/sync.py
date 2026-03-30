@@ -14,18 +14,22 @@ from openalex_ingest.shared.util import prepare_runner
 from openalex_ingest.snapshot.match.reader import read_partitions
 
 
-def check_openalex_ids(config: OpenAlexConfig, reference_ids: list[str]) -> dict[str, str]:
+def check_openalex_ids(config: OpenAlexConfig, reference_ids: list[str], check_abstract: bool = True) -> dict[str, str]:
+    fq = [f'id:({" OR ".join(reference_ids)})']
+    if check_abstract:
+        fq.append('-abstract:*')
     res = httpx.post(
         f'{config.solr_url}/select',
         data={
-            'fq': ['abstract:*', f'id:({" OR ".join(reference_ids)})'],
+            'q': '*:*',
+            'fq': fq,
             'fl': 'id,title',
             'rows': len(reference_ids),
         },
         timeout=60,
     )
     return {
-        doc['id']: doc['title']
+        doc['id']: doc.get('title')
         for doc in res.json()['response']['docs']
     }
 
@@ -41,6 +45,7 @@ def main(
 
     num_works = 0
     num_works_with_abstract = 0
+    num_matched_ids = 0
     num_updated = 0
     with db_engine.session() as session:
         for batch in batched(read_partitions(snapshot=snapshot, logger=logger, seen_file=processed_partitions), n=batch_size, strict=False):
@@ -49,11 +54,15 @@ def main(
             num_works += len(batch)
             num_works_with_abstract += len(works)
 
-            if (num_works % 1000000) == 0:
-                logger.info(f'Processed {num_works:,} so far of which {num_works_with_abstract:,} had an abstract of which {num_updated:,} were not in solr')
+            if (num_works % 250000) == 0:
+                logger.info(f'Processed {num_works:,} so far of which {num_works_with_abstract:,} had an abstract '
+                            f'of which {num_matched_ids:,} were found by ID in solr of which {num_updated:,} did not have an abstract in solr')
 
             if len(works) == 0:
                 continue
+
+            ids_matched = check_openalex_ids(settings.OPENALEX, list(works.keys()), check_abstract=False)
+            num_matched_ids += len(ids_matched)
 
             ids_missing_abstract = check_openalex_ids(settings.OPENALEX, list(works.keys()))
             num_updated += len(ids_missing_abstract)
