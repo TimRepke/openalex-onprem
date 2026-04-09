@@ -14,6 +14,7 @@ def main(
     batch_size: Annotated[int, typer.Option(help='Batch size for processing')] = 5000,
     target_size: Annotated[int, typer.Option(help='Batch size for processing')] = 10000,
     seed: Annotated[int, typer.Option(help='Batch size for processing')] = 4243,
+    include_xpac: Annotated[bool, typer.Option('--include-xpac/--exclude-xpac', help='Include XPAC records in sample')] = False,
     loglevel: Annotated[str, typer.Option(help='Path to config file')] = 'INFO',
 ):
     logger = get_logger(logger_name='random-sample', run_log_init=True, loglevel=loglevel)
@@ -22,6 +23,7 @@ def main(
     if not config.exists():
         raise AssertionError(f'Config file does not exist at {config.resolve()}!')
     settings = load_settings(config)
+    logger.info(f'Excluding xpac records: {not include_xpac}')
 
     sample_ids = set()
     it = 0
@@ -32,7 +34,8 @@ def main(
                 return_fields='id',
                 sample_size=min(batch_size, target_size - len(sample_ids)),
                 config=settings.OPENALEX,
-                check_abstract=False,
+                ensure_abstract=False,
+                include_xpac=include_xpac,
                 seed=seed + it,
             )
         }

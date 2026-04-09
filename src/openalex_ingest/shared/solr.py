@@ -207,15 +207,21 @@ def check_openalex_ids(config: OpenAlexConfig, reference_ids: list[str], check_a
 def random_sample(
     config: OpenAlexConfig,
     return_fields: str = 'id',
-    check_abstract: bool = True,
+    ensure_abstract: bool = False,
+    include_xpac: bool = False,
     seed: int | str = 4243,
     sample_size: int = 1000,
     params: dict[str, str | int] | None = None,
 ) -> list[dict[str, Any]]:
     """Get a random sample from OpenAlex."""
+    fq=[]
+    if ensure_abstract:
+        fq.append('abstract:*')
+    if not include_xpac:
+        fq.append('is_xpac:false')  #  OR -is_xpac:*
     res = httpx.post(
         f'{config.solr_url}/select',
-        data={'q': '*:*', 'fq': ['-abstract:*'] if check_abstract else [], 'fl': return_fields, 'rows': sample_size, 'sort': f'random_{seed} asc'}
+        data={'q': '*:*', 'fq': fq, 'fl': return_fields, 'rows': sample_size, 'sort': f'random_{seed} asc'}
         | (params or {}),
         timeout=60,
     )

@@ -154,7 +154,7 @@ def get_queued_requested_for_source(
                             (q.doi IS NOT NULL AND q.doi = r.doi)
                                 OR (q.openalex_id IS NOT NULL AND q.openalex_id = r.openalex_id)
                                 OR (q.pubmed_id IS NOT NULL AND q.pubmed_id = r.pubmed_id)
-                                OR (q.s2_id IS NOT NULL AND q.s2_id = q.s2_id)
+                                OR (q.s2_id IS NOT NULL AND q.s2_id = r.s2_id)
                                 OR (q.scopus_id IS NOT NULL AND q.scopus_id = r.scopus_id)
                                 OR (q.wos_id IS NOT NULL AND q.wos_id = r.wos_id)
                                 OR (q.dimensions_id IS NOT NULL AND q.dimensions_id = r.dimensions_id)

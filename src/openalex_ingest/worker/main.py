@@ -79,7 +79,7 @@ def source_worker(
             for request in wrapper.fetch(queries=filtered_queue):
                 if len(request.abstract or '') < min_abstract_len:
                     request.abstract = None
-                if request.abstract is not None:
+                if request.abstract is not None and request.queue_id is not None:
                     ids_found_abstract.add(request.queue_id)
                 session.add(request)
             session.commit()

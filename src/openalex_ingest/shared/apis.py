@@ -96,9 +96,9 @@ def queries_to_pubmed_str(queries: list[Queue]) -> str:
     parts = set()
     for query in queries:
         if query.pubmed_id:
-            parts.add(f'{query.pubmed_id}[PMID]')
+            parts.add(f'"{query.pubmed_id}"[PMID]')
         if query.doi:
-            parts.add(f'{query.doi}[DOI]')
+            parts.add(f'"{query.doi}"[DOI]')
 
     if len(parts) == 0:
         raise ValueError('Found no pubmed ids or DOIs to query pubmed')
