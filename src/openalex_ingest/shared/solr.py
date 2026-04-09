@@ -1,7 +1,7 @@
 import orjson as json
 import logging
 from datetime import datetime
-from typing import Annotated, Generator, Iterator
+from typing import Annotated, Generator, Iterator, Any
 from itertools import batched
 
 import httpx
@@ -184,3 +184,39 @@ def write_api_update_to_solr(
             logger.error(res.text)
         logger.error(f'Failed to submit: {e}')
         logger.exception(e)
+
+
+def check_openalex_ids(config: OpenAlexConfig, reference_ids: list[str], check_abstract: bool = True, return_fields: str = 'id,title') -> list[dict[str, Any]]:
+    """Check if IDs are in solr and optionally if those have an abstract."""
+    fq = [f'id:({" OR ".join(reference_ids)})']
+    if check_abstract:
+        fq.append('-abstract:*')
+    res = httpx.post(
+        f'{config.solr_url}/select',
+        data={
+            'q': '*:*',
+            'fq': fq,
+            'fl': return_fields,
+            'rows': len(reference_ids),
+        },
+        timeout=60,
+    )
+    return res.json()['response'].get('docs', [])
+
+
+def random_sample(
+    config: OpenAlexConfig,
+    return_fields: str = 'id',
+    check_abstract: bool = True,
+    seed: int | str = 4243,
+    sample_size: int = 1000,
+    params: dict[str, str | int] | None = None,
+) -> list[dict[str, Any]]:
+    """Get a random sample from OpenAlex."""
+    res = httpx.post(
+        f'{config.solr_url}/select',
+        data={'q': '*:*', 'fq': ['-abstract:*'] if check_abstract else [], 'fl': return_fields, 'rows': sample_size, 'sort': f'random_{seed} asc'}
+        | (params or {}),
+        timeout=60,
+    )
+    return res.json()['response'].get('docs', [])

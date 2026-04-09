@@ -38,7 +38,7 @@ openalex_ingest = "openalex_ingest:main"
 
 [dependency-groups]
 dev = [
-    "ruff>=0.15.8",
+    "ruff>=0.15.9",
 ]
 
 [tool.ruff]

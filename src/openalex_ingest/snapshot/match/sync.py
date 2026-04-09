@@ -7,31 +7,11 @@ from typing import Annotated
 import httpx
 import typer
 from nacsos_data.models.openalex import title_abstract
-from nacsos_data.util.conf import OpenAlexConfig
 
 from openalex_ingest.shared.schema import Request
+from openalex_ingest.shared.solr import check_openalex_ids
 from openalex_ingest.shared.util import prepare_runner
 from openalex_ingest.snapshot.match.reader import read_partitions
-
-
-def check_openalex_ids(config: OpenAlexConfig, reference_ids: list[str], check_abstract: bool = True) -> dict[str, str]:
-    fq = [f'id:({" OR ".join(reference_ids)})']
-    if check_abstract:
-        fq.append('-abstract:*')
-    res = httpx.post(
-        f'{config.solr_url}/select',
-        data={
-            'q': '*:*',
-            'fq': fq,
-            'fl': 'id,title',
-            'rows': len(reference_ids),
-        },
-        timeout=60,
-    )
-    return {
-        doc['id']: doc.get('title')
-        for doc in res.json()['response']['docs']
-    }
 
 
 def main(
@@ -55,8 +35,10 @@ def main(
             num_works_with_abstract += len(works)
 
             if (num_works % 250000) == 0:
-                logger.info(f'Processed {num_works:,} so far of which {num_works_with_abstract:,} had an abstract '
-                            f'of which {num_matched_ids:,} were found by ID in solr of which {num_updated:,} did not have an abstract in solr')
+                logger.info(
+                    f'Processed {num_works:,} so far of which {num_works_with_abstract:,} had an abstract '
+                    f'of which {num_matched_ids:,} were found by ID in solr of which {num_updated:,} did not have an abstract in solr',
+                )
 
             if len(works) == 0:
                 continue
@@ -64,7 +46,8 @@ def main(
             ids_matched = check_openalex_ids(settings.OPENALEX, list(works.keys()), check_abstract=False)
             num_matched_ids += len(ids_matched)
 
-            ids_missing_abstract = check_openalex_ids(settings.OPENALEX, list(works.keys()))
+            ids_missing_abstract_ = check_openalex_ids(settings.OPENALEX, list(works.keys()))
+            ids_missing_abstract = {doc['id']: doc.get('title') for doc in ids_missing_abstract_}
             num_updated += len(ids_missing_abstract)
 
             if len(ids_missing_abstract) == 0:
