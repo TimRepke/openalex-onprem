@@ -1,3 +1,4 @@
+import re
 import logging
 import uuid
 from typing import Generator
@@ -5,6 +6,7 @@ from datetime import datetime
 
 import pandas as pd
 from sqlalchemy import text
+from unidecode import unidecode
 from nacsos_data.util.academic.apis import APIMap, AbstractAPI, APIEnum
 from nacsos_data.util.academic.apis.dimensions import FIELDS as DIMENSIONS_FIELDS
 
@@ -13,6 +15,9 @@ from openalex_ingest.shared.schema import ApiKey, Request, Queue, QueueRequests
 
 ID_KEYS = ['doi', 'openalex_id', 'nacsos_id', 'pubmed_id', 's2_id', 'scopus_id', 'wos_id', 'dimensions_id', 'queue_id']
 
+DOI_STRIPPER = re.compile(r'(\?.*|[:="+;\[\]\\])')
+def clean_doi(doi:str) -> str:
+    return unidecode(DOI_STRIPPER.sub('', doi.strip())).replace('//', '/')
 
 def get_reference_df(queries: list[Queue]) -> pd.DataFrame:
     return pd.DataFrame(
@@ -47,7 +52,7 @@ def queries_to_scopus_str(queries: list[Queue]) -> str:
         if reference.scopus_id:
             parts.add(f'EID({reference.scopus_id})')
         if reference.doi:
-            parts.add(f'DOI({reference.doi})')
+            parts.add(f'DOI("{clean_doi(reference.doi)}")')
 
     if len(parts) == 0:
         raise ValueError('Found no scopus ids or DOIs to query scopus')
@@ -57,7 +62,7 @@ def queries_to_scopus_str(queries: list[Queue]) -> str:
 
 def queries_to_wos_str(queries: list[Queue]) -> str:
     wosids: set[str] = {query.wos_id for query in queries if query.wos_id}
-    dois: set[str] = {query.doi for query in queries if query.doi}
+    dois: set[str] = {f'"{clean_doi(query.doi)}"' for query in queries if query.doi}
     pmids: set[str] = {query.pubmed_id for query in queries if query.pubmed_id}
     parts: list[str] = []
     if len(dois) > 0:
@@ -77,7 +82,7 @@ def queries_to_dimensions_str(queries: list[Queue]) -> str:
     ids = pluck_ids(queries, 'dimensions_id', 'doi', 'pubmed_id')
     where = []
     if len(ids.get('doi', [])) > 0:
-        dois = [f'"{doi}"' for doi in ids['doi']]
+        dois = [f'"{clean_doi(doi)}"' for doi in ids['doi']]
         where.append(f'doi in [{",".join(dois)}]')
     if len(ids.get('dimensions_id', [])) > 0:
         dids = [f'"{did}"' for did in ids['dimensions_id']]
@@ -98,7 +103,7 @@ def queries_to_pubmed_str(queries: list[Queue]) -> str:
         if query.pubmed_id:
             parts.add(f'"{query.pubmed_id}"[PMID]')
         if query.doi:
-            parts.add(f'"{query.doi}"[DOI]')
+            parts.add(f'"{clean_doi(query.doi)}"[DOI]')
 
     if len(parts) == 0:
         raise ValueError('Found no pubmed ids or DOIs to query pubmed')
@@ -138,8 +143,11 @@ class APIWrapper:
         if len(queries) > api.PAGE_MAX:
             self.logger.warning(f'Going to ignore some queries because you requested too many at once! Maximum is {api.PAGE_MAX}')
 
-        results_raw = list(api.fetch_raw(query=self._queries_to_query_str(queries)))
+        query_str = self._queries_to_query_str(queries)
+        self.logger.debug(f'Query for {self.wrapper}: {query_str}')
+        results_raw = list(api.fetch_raw(query=query_str))
         results_trans = [api.translate_record(record) for record in results_raw]
+        self.logger.debug(f'Query returned {len(results_trans):,} records from {self.wrapper}')
 
         key.api_feedback = api.api_feedback
         self._log_api_key_use(key)

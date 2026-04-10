@@ -14,7 +14,7 @@ uv run src/openalex_ingest/scripts/queue_ids_for_backfill.py --source data/rando
 # Set up port forwarding for scopus
 ssh -D 1080 foote -t bash
 # Let queue worker rip
-uv run openalex_ingest queue-worker --config=conf/secret-local.env --max-runtime=36000 --batch-size=25  --sources=DIMENSIONS --sources=SCOPUS --sources=PUBMED --sources=WOS --loglevel=DEBUG --min-abstract-len=25 --created-after=2026-04-08
+uv run openalex_ingest queue-worker --config=conf/secret-local.env --max-runtime=36000 --batch-size=20  --sources=DIMENSIONS --sources=SCOPUS --sources=PUBMED --sources=WOS --loglevel=DEBUG --min-abstract-len=25 --created-after=2026-04-08
 ```
 
 Some queries to check how things are going
