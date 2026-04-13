@@ -15,7 +15,7 @@ from openalex_ingest.shared.schema import ApiKey, Request, Queue, QueueRequests
 
 ID_KEYS = ['doi', 'openalex_id', 'nacsos_id', 'pubmed_id', 's2_id', 'scopus_id', 'wos_id', 'dimensions_id', 'queue_id']
 
-DOI_STRIPPER = re.compile(r'(\?.*|[:="+;\[\]\\])')
+DOI_STRIPPER = re.compile(r'(\?.*|[%:="+;\[\]\\])')
 def clean_doi(doi:str) -> str:
     return unidecode(DOI_STRIPPER.sub('', doi.strip())).replace('//', '/')
 
@@ -66,11 +66,11 @@ def queries_to_wos_str(queries: list[Queue]) -> str:
     pmids: set[str] = {query.pubmed_id for query in queries if query.pubmed_id}
     parts: list[str] = []
     if len(dois) > 0:
-        parts.append(f'DO=({" ".join(dois)})')
+        parts.append(f'DO=({" OR ".join(dois)})')
     if len(pmids) > 0:
-        parts.append(f'PMID=({" ".join(pmids)})')
+        parts.append(f'PMID=({" OR ".join(pmids)})')
     if len(wosids) > 0:
-        parts.append(f'UT=({" ".join(wosids)})')
+        parts.append(f'UT=({" OR ".join(wosids)})')
 
     if len(parts) == 0:
         raise ValueError('Found no pubmed ids, wos ids, or DOIs to query the web of science')
