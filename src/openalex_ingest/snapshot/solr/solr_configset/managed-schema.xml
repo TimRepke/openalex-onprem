@@ -917,7 +917,8 @@
     <fieldType name="oa_text" class="solr.TextField" positionIncrementGap="100" docValues="false" multiValued="false" indexed="true" stored="true">
         <analyzer type="index">
             <!-- https://solr.apache.org/guide/solr/latest/indexing-guide/tokenizers.html -->
-            <tokenizer name="letter" maxTokenLen="127"/>
+            <!--tokenizer name="letter" maxTokenLen="127"/-->
+            <tokenizer name="standard" maxTokenLength="127"/>
             <filter name="stop" ignoreCase="true" words="stopwords.txt"/>
 
             <!-- If true, the original token is preserved: "thé" → "the", "thé" -->
@@ -926,7 +927,8 @@
             <filter name="lowercase"/>
         </analyzer>
         <analyzer type="query">
-            <tokenizer name="letter" maxTokenLen="127"/>
+            <!--tokenizer name="letter" maxTokenLen="127"/-->
+            <tokenizer name="standard" maxTokenLength="127"/>
             <!--filter name="stop" ignoreCase="true" words="stopwords.txt"/-->
             <!--filter expand="true" ignoreCase="true" synonyms="synonyms.txt" name="synonymGraph"/-->
             <filter name="lowercase"/>
