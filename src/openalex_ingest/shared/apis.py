@@ -16,8 +16,11 @@ from openalex_ingest.shared.schema import ApiKey, Request, Queue, QueueRequests
 ID_KEYS = ['doi', 'openalex_id', 'nacsos_id', 'pubmed_id', 's2_id', 'scopus_id', 'wos_id', 'dimensions_id', 'queue_id']
 
 DOI_STRIPPER = re.compile(r'(\?.*|[%:="+;\[\]\\])')
-def clean_doi(doi:str) -> str:
+
+
+def clean_doi(doi: str) -> str:
     return unidecode(DOI_STRIPPER.sub('', doi.strip())).replace('//', '/')
+
 
 def get_reference_df(queries: list[Queue]) -> pd.DataFrame:
     return pd.DataFrame(

@@ -62,10 +62,10 @@ def main(
 
     logger.info('All done, now run')
     logger.info(
-        f'  uv run openalex_ingest queue-worker --config={config} --max-runtime={n_queued*2} --batch-size=25  {" ".join(src_options)}'
+        f'  uv run openalex_ingest queue-worker --config={config} --max-runtime={n_queued * 2} --batch-size=25  {" ".join(src_options)}'
         f' --loglevel={loglevel} --min-abstract-len=25'
-        f' --created-after={start_time.strftime('%Y-%m-%dT%H:%M:%S')}'
-        f' --created-before={end_time.strftime('%Y-%m-%dT%H:%M:%S')}',
+        f' --created-after={start_time.strftime("%Y-%m-%dT%H:%M:%S")}'
+        f' --created-before={end_time.strftime("%Y-%m-%dT%H:%M:%S")}',
     )
 
 

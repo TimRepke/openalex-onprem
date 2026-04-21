@@ -214,15 +214,14 @@ def random_sample(
     params: dict[str, str | int] | None = None,
 ) -> list[dict[str, Any]]:
     """Get a random sample from OpenAlex."""
-    fq=[]
+    fq = []
     if ensure_abstract:
         fq.append('abstract:*')
     if not include_xpac:
         fq.append('is_xpac:false')  #  OR -is_xpac:*
     res = httpx.post(
         f'{config.solr_url}/select',
-        data={'q': '*:*', 'fq': fq, 'fl': return_fields, 'rows': sample_size, 'sort': f'random_{seed} asc'}
-        | (params or {}),
+        data={'q': '*:*', 'fq': fq, 'fl': return_fields, 'rows': sample_size, 'sort': f'random_{seed} asc'} | (params or {}),
         timeout=60,
     )
     return res.json()['response'].get('docs', [])

@@ -1,5 +1,6 @@
 import gzip
 import logging
+from enum import Enum
 from pathlib import Path
 from time import sleep
 
@@ -14,6 +15,12 @@ from typing_extensions import Annotated
 from nacsos_data.util.academic.apis.openalex import translate_work_to_solr
 from nacsos_data.util.conf import OpenAlexConfig
 from openalex_ingest.shared.config import load_settings
+
+
+class Collection(str, Enum):
+    all = 'all'
+    xpac = 'xpac'
+    base = 'base'
 
 
 def name_part(partition: Path):
@@ -37,6 +44,7 @@ def update_solr(
     read_batchsize: int = 50000,
     commit_interval: int = -1,
     max_retry: int = 10,
+    collection: Annotated[Collection, typer.Option(help='Which collection to filter')] = Collection.all,
     loglevel: str = 'INFO',
 ) -> None:
     logging.basicConfig(format='%(asctime)s [%(levelname)s] %(name)s (%(process)d): %(message)s', level=loglevel)
@@ -85,17 +93,15 @@ def update_solr(
             progress.set_description_str(f'READ ({pi:,} | -- | --)')
 
             for _bi, batch in enumerate(batched(f_in, batch_size=read_batchsize)):
-                works = [
-                    json.dumps(
-                        translate_work_to_solr(
-                            WorksSchema.model_validate(json.loads(line)),
-                            source='OpenAlex',
-                            authorship_limit=50,
-                        ),
-                    )
-                    for line in batch
-                ]
+                works = [WorksSchema.model_validate(json.loads(line)) for line in batch]
                 n_read += len(works)
+                works = [
+                    json.dumps(translate_work_to_solr(work, source='OpenAlex', authorship_limit=50))
+                    for work in works
+                    if (
+                        collection == Collection.all or (collection == Collection.base and not work.is_xpac) or (collection == Collection.xpac and work.is_xpac)
+                    )
+                ]
                 n_total += len(works)
                 n_uncommited += len(works)
 
