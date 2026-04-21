@@ -38,14 +38,14 @@ def commit(conf: OpenAlexConfig):
 def update_solr(
     snapshot: Annotated[Path, typer.Option(help='Path to openalex snapshot from S3')],
     config_file: Annotated[Path, typer.Option(help='Path to config file')],
-    skip_n_partitions: int = 0,
-    filter_since: str = '2000-01-01',
-    post_batchsize: int = 1000,
-    read_batchsize: int = 50000,
-    commit_interval: int = -1,
-    max_retry: int = 10,
+    skip_n_partitions: Annotated[int, typer.Option(help='')] = 0,
+    filter_since: Annotated[str, typer.Option(help='')] = '2000-01-01',
+    post_batchsize: Annotated[int, typer.Option(help='')] = 1000,
+    read_batchsize: Annotated[int, typer.Option(help='')] = 50000,
+    commit_interval: Annotated[int, typer.Option(help='')] = -1,
+    max_retry: Annotated[int, typer.Option(help='')] = 10,
     collection: Annotated[Collection, typer.Option(help='Which collection to filter')] = Collection.all,
-    loglevel: str = 'INFO',
+    loglevel: Annotated[str, typer.Option(help='')] = 'INFO',
 ) -> None:
     logging.basicConfig(format='%(asctime)s [%(levelname)s] %(name)s (%(process)d): %(message)s', level=loglevel)
     logging.getLogger('matplotlib').setLevel(logging.WARNING)
