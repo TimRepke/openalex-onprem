@@ -1,7 +1,8 @@
 # Solr snapshot
 
 ```bash
-
+uv run snapshot snapshot ingest --snapshot=/mnt/bulk/openalex/openalex-snapshot --config-file=conf/secret-prod.env
+ --post-batchsize=50000 --read-batchsize=100000 --commit-interval=100000 --collection=base
 ```
 
 Suggested/adapted

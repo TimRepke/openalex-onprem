@@ -48,13 +48,23 @@ def transfer_abstracts(
                 session.execute(
                     text(
                         f"""
-                    SELECT DISTINCT ON (openalex_id) openalex_id, upper(wrapper) as abstract_source, abstract, title
-                    FROM request
-                    WHERE (solarized = FALSE OR solarized IS NULL)
-                      AND abstract IS NOT NULL
-                      AND openalex_id IS NOT NULL {creation_filter}
-                    ORDER BY openalex_id, time_created DESC
-                    LIMIT :batch_size;
+                        SELECT DISTINCT ON (openalex_id) openalex_id,
+                                     upper(wrapper) as abstract_source,
+                                     abstract,
+                                     title,
+                                     (CASE
+                                          WHEN upper(wrapper) = 'WOS' THEN 10
+                                          WHEN upper(wrapper) = 'SCOPUS' THEN 8
+                                          WHEN upper(wrapper) = 'DIMENSIONS' THEN 6
+                                          WHEN upper(wrapper) = 'PUBMED' THEN 4
+                                          ELSE 1
+                                         END)       as source_rank
+                        FROM request
+                        WHERE (solarized = FALSE OR solarized IS NULL)
+                          AND abstract IS NOT NULL
+                          AND openalex_id IS NOT NULL {creation_filter}
+                        ORDER BY openalex_id, source_rank DESC, time_created DESC
+                        LIMIT :batch_size;
                     """,
                     ),
                     params={'created_before': created_before, 'created_after': created_after, 'batch_size': batch_size},

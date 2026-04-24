@@ -27,7 +27,11 @@ SELECT count(1)                                                                 
        count(1) filter ( where wrapper = 'DIMENSIONS' AND openalex_id IS NULL AND abstract IS NOT NULL ) as n_dimensions_no_oa,
        count(1) filter ( where wrapper = 'SCOPUS' AND openalex_id IS NULL  AND abstract IS NOT NULL)     as n_scopus_no_oa,
        count(1) filter ( where wrapper = 'PUBMED' AND openalex_id IS NULL AND abstract IS NOT NULL )     as n_pubmed_no_oa,
-       count(1) filter ( where wrapper = 'WOS' AND openalex_id IS NULL  AND abstract IS NOT NULL)        as n_wos_no_oa
+       count(1) filter ( where wrapper = 'WOS' AND openalex_id IS NULL  AND abstract IS NOT NULL)        as n_wos_no_oa,
+       count(1) filter ( where wrapper = 'DIMENSIONS' AND doi IS NULL AND abstract IS NOT NULL ) as n_dimensions_no_doi,
+       count(1) filter ( where wrapper = 'SCOPUS' AND doi IS NULL  AND abstract IS NOT NULL)     as n_scopus_no_doi,
+       count(1) filter ( where wrapper = 'PUBMED' AND doi IS NULL AND abstract IS NOT NULL )     as n_pubmed_no_doi,
+       count(1) filter ( where wrapper = 'WOS' AND doi IS NULL  AND abstract IS NOT NULL)        as n_wos_no_doi
 FROM request
 WHERE time_created >= '2026-04-05';
 
@@ -49,11 +53,49 @@ SELECT
   jsonb_path_query_first(
     raw,
     '$.dynamic_data.cluster_related.identifiers.identifier[*] ? (@.type == "xref_doi" || @.type == "doi").value'
-  )#>>'{}' AS raw_doi
+  )#>>'{}' AS raw_doi,
+    queue_id,
+    raw
 FROM request
 WHERE wrapper='WOS'
 LIMIT 100;
 
+-- UPDATE request SET doi = jsonb_path_query_first(
+--     raw,
+--     '$.dynamic_data.cluster_related.identifiers.identifier[*] ? (@.type == "xref_doi" || @.type == "doi").value'
+--   )#>>'{}'
+-- WHERE doi IS NULL AND wrapper='WOS' AND jsonb_path_query_first(
+--     raw,
+--     '$.dynamic_data.cluster_related.identifiers.identifier[*] ? (@.type == "xref_doi" || @.type == "doi").value'
+--   )#>>'{}' IS NOT NULL;
+
+SELECT *
+FROM request
+WHERE wrapper='SCOPUS' AND doi is null;
+
+SELECT
+  record_id,
+  openalex_id,
+  doi,
+  jsonb_path_query_first(
+    raw,
+    '$.PubmedData[*].ArticleIdList[*].ArticleId[*] ? (@."@IdType" == "doi")._text'
+  )#>>'{}' AS raw_doi,
+    queue_id,
+    raw
+FROM request
+WHERE wrapper='PUBMED'
+LIMIT 100;
+-- UPDATE request SET doi = jsonb_path_query_first(
+--     raw,
+--     '$.PubmedData[*].ArticleIdList[*].ArticleId[*] ? (@."@IdType" == "doi")._text'
+--   )#>>'{}'
+-- WHERE doi IS NULL AND wrapper='PUBMED' AND jsonb_path_query_first(
+--     raw,
+--     '$.PubmedData[*].ArticleIdList[*].ArticleId[*] ? (@."@IdType" == "doi")._text'
+--   )#>>'{}' IS NOT NULL;
+
+-- WOS with OpenAlex ID
 SELECT *from(SELECT
   record_id,
   openalex_id,
@@ -63,6 +105,23 @@ SELECT *from(SELECT
   jsonb_path_query_first(
     raw,
     '$.dynamic_data.cluster_related.identifiers.identifier[*] ? (@.type == "openalexworkID").value'
-  )#>>'{}' AS raw_doi
+  )#>>'{}' AS wos_oa_id
 FROM request
-WHERE wrapper='WOS') where raw_doi is not null;-- and abstract is not null;
+WHERE wrapper='WOS') where wos_oa_id is not null;-- and abstract is not null;
+
+SELECT *
+FROM request
+WHERE doi is not null and openalex_id is null AND wrapper='PUBMED'
+ORDER BY time_created desc ;
+
+SELECT count(1)
+FROM request
+WHERE doi is not null and openalex_id is null;
+
+UPDATE request SET solarized = null WHERE solarized is not null;
+
+select count(1) from request;
+
+SELECT count(1)
+from request
+where nacsos_id is not null;

@@ -61,7 +61,9 @@ def get_logger(logger_name: str, run_log_init=True, loglevel: str = 'INFO') -> l
     return logger
 
 
-def prepare_runner(config: Path, logger_name: str, run_log_init=True, loglevel: str = 'INFO') -> tuple[logging.Logger, Settings, DatabaseEngine]:
+def prepare_runner(
+    config: Path, logger_name: str, run_log_init=True, loglevel: str = 'INFO', db_debug: bool = False
+) -> tuple[logging.Logger, Settings, DatabaseEngine]:
     logger = get_logger(logger_name=logger_name, run_log_init=run_log_init, loglevel=loglevel)
 
     logger.info(f'Loading config from {config.resolve()}...')
@@ -70,7 +72,7 @@ def prepare_runner(config: Path, logger_name: str, run_log_init=True, loglevel: 
     settings = load_settings(config)
 
     logger.info('Connecting to database...')
-    db_engine = get_engine(settings=settings.CACHE_DB, debug=False)
+    db_engine = get_engine(settings=settings.CACHE_DB, debug=db_debug)
     return logger, settings, db_engine
 
 

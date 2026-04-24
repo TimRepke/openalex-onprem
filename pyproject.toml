@@ -7,20 +7,15 @@ dependencies = [
     "tqdm==4.67.3",
     "orjson>=3.11.8",
     "sqlmodel==0.0.38",
-    "msgspec==0.21.0",
+    "msgspec==0.21.1",
     "unidecode==1.4.0",
     # "nacsos_data[utils,scripts]",
-    "nacsos_data[utils,scripts] @ git+ssh://git@gitlab.pik-potsdam.de/mcc-apsis/nacsos/nacsos-data.git@v0.24.35"
+    "nacsos_data[utils,scripts] @ git+ssh://git@gitlab.pik-potsdam.de/mcc-apsis/nacsos/nacsos-data.git@v0.24.36"
 ]
 
 [project.optional-dependencies]
-server = [
-    "fastapi==0.135.1",
-    "hypercorn==0.18.0",
-    "rq-dashboard-fast==0.6.1",
-]
 evaluation = [
-    "notebook>=7.5.1",
+    "jupyter==1.1.1",
 ]
 
 [tool.uv.sources]
@@ -39,7 +34,7 @@ openalex_ingest = "openalex_ingest:main"
 
 [dependency-groups]
 dev = [
-    "ruff>=0.15.9",
+    "ruff>=0.15.11",
 ]
 
 [tool.ruff]
