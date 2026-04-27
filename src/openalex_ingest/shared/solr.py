@@ -114,7 +114,7 @@ def write_cache_records_to_solr(
                 f'{config.solr_url}/update/json?commit=true',
                 headers={'Content-Type': 'application/json'},
                 content=f'[{buffer.decode()}]',
-                timeout=120,
+                timeout=240,
             )
             res.raise_for_status()
         except Exception as e:

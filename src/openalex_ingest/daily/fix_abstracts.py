@@ -5,9 +5,11 @@ from pathlib import Path
 from typing import Annotated, Iterable
 
 import typer
+from tqdm import tqdm
+from sqlalchemy import text
 from nacsos_data.db import DatabaseEngine
 from nacsos_data.util.academic.apis import APIEnum
-from sqlalchemy import text
+
 
 from openalex_ingest.shared.models import OnConflict, SourcePriority
 from openalex_ingest.shared.schema import Request, Queue
@@ -25,6 +27,7 @@ def transfer_abstracts(
     created_after: Annotated[datetime | None, typer.Option(help='Filter queue to entries added after this date')] = None,
     created_before: Annotated[datetime | None, typer.Option(help='Filter queue to entries added before this date')] = None,
     loglevel: Annotated[str, typer.Option(help='Log level')] = 'INFO',
+    loglevel_solr: Annotated[str, typer.Option(help='Log level solr')] = 'WARN',
 ) -> None:
     """This method iterates through all entries in the meta-cache that have an abstract and are not yet written to solr to do just that.
 
@@ -34,7 +37,8 @@ def transfer_abstracts(
     4) Update solarized flag on success
     """
     logger, settings, db_engine = prepare_runner(config=config, loglevel=loglevel, logger_name='abstract-transfer', run_log_init=True)
-
+    solr_logger = logger.getChild('solr')
+    solr_logger.setLevel(loglevel_solr)
     creation_filter = ''
     if created_before is not None:
         creation_filter += ' AND time_created <= :created_before'
@@ -43,6 +47,7 @@ def transfer_abstracts(
 
     logger.info(f'Will use solr collection at: {settings.OPENALEX.solr_url}')
     with db_engine.session() as session:
+        progress = tqdm()
         while True:
             partition = (
                 session.execute(
@@ -74,15 +79,16 @@ def transfer_abstracts(
             )
 
             if len(partition) == 0:
+                progress.close()
                 logger.info('No more un-solarised entries with abstract found in meta-cache')
                 break
 
             # Prepare minimal `Request` info
             records = [Request(openalex_id=r['openalex_id'], wrapper=r['abstract_source'], title=r['title'], abstract=r['abstract']) for r in partition]
-            logger.info(f'Fetched {len(records):,} records to transfer to solr')
+            logger.debug(f'Fetched {len(records):,} records to transfer to solr')
 
             # Submit to solr (this handles setting the correct fields and skipping existing abstracts if in non-force mode)
-            write_cache_records_to_solr(config=settings.OPENALEX, records=records, batch_size=batch_size, force=force_overwrite, logger_=logger)
+            write_cache_records_to_solr(config=settings.OPENALEX, records=records, batch_size=batch_size, force=force_overwrite, logger_=solr_logger)
 
             # Set solarized flag for all records with the openalex_ids we just processed
             # Note, we don't limit this to the request.record_id that we processed on purpose.
@@ -92,6 +98,7 @@ def transfer_abstracts(
                 {'ids': [row['openalex_id'] for row in partition]},
             )
             session.commit()
+            progress.update(len(records))
 
 
 def _queue_missing_abstracts(

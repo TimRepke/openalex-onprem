@@ -118,10 +118,4 @@ SELECT count(1)
 FROM request
 WHERE doi is not null and openalex_id is null;
 
-UPDATE request SET solarized = null WHERE solarized is not null;
-
 select count(1) from request;
-
-SELECT count(1)
-from request
-where nacsos_id is not null;
