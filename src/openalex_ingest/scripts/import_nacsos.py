@@ -10,12 +10,13 @@ from openalex_ingest.shared.db import get_engine, DatabaseEngine
 from openalex_ingest.shared.schema import Request
 from openalex_ingest.shared.util import prepare_runner
 
-def read_nacsos_abstracts(db_engine: DatabaseEngine, min_len: int = 1000, batch_size:int=100):
+
+def read_nacsos_abstracts(db_engine: DatabaseEngine, min_len: int = 1000, batch_size: int = 100):
     with db_engine.session() as session:
         partitions = (
             session.execute(
                 sa.text(
-                    '''
+                    """
                     SELECT 'NACSOS'  as wrapper,
                            i.item_id as nacsos_id,
                            ai.doi,
@@ -37,7 +38,7 @@ def read_nacsos_abstracts(db_engine: DatabaseEngine, min_len: int = 1000, batch_
                     WHERE i.text IS NOT NULL
                       AND ai.openalex_id IS NOT NULL
                       --AND length(i.text) > :min_len;
-                    '''
+                    """
                 ),
                 params={'min_len': min_len},
                 execution_options={'yield_per': batch_size},
@@ -70,12 +71,18 @@ def main(
     progress = tqdm()
     with db_engine.session() as session:
         for batch in batched(read_nacsos_abstracts(db_engine=db_engine_nacsos, batch_size=bs_read, min_len=min_len), bs_write):
-            known_records = session.execute(sa.text('''
+            known_records = (
+                session.execute(
+                    sa.text("""
                 SELECT record_id, nacsos_id
                 FROM request
                 WHERE nacsos_id = ANY(:nacsos_ids) AND abstract IS NOT NULL
-            '''
-            ), {'nacsos_ids': [record['nacsos_id'] for record in batch]}).mappings().all()
+            """),
+                    {'nacsos_ids': [record['nacsos_id'] for record in batch]},
+                )
+                .mappings()
+                .all()
+            )
             known_records = list(known_records)
             known_ids = {record['nacsos_id'] for record in known_records}
 
@@ -88,11 +95,12 @@ def main(
                 raise e
 
             n_tested += len(batch)
-            n_added += len(batch)-len(known_ids)
+            n_added += len(batch) - len(known_ids)
             progress.set_postfix_str(f'Added {n_added} / {n_tested} records')
             progress.update(len(batch))
     progress.close()
     logger.info(f'Tested {n_tested:,} records and transferred {n_added:,} records')
+
 
 if __name__ == '__main__':
     typer.run(main)

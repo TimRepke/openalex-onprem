@@ -47,6 +47,8 @@ def transfer_abstracts(
 
     logger.info(f'Will use solr collection at: {settings.OPENALEX.solr_url}')
     with db_engine.session() as session:
+        n_total = 0
+        n_skipped = 0
         progress = tqdm()
         while True:
             partition = (
@@ -88,7 +90,15 @@ def transfer_abstracts(
             logger.debug(f'Fetched {len(records):,} records to transfer to solr')
 
             # Submit to solr (this handles setting the correct fields and skipping existing abstracts if in non-force mode)
-            write_cache_records_to_solr(config=settings.OPENALEX, records=records, batch_size=batch_size, force=force_overwrite, logger_=solr_logger)
+            n_total_, n_skipped_ = write_cache_records_to_solr(
+                config=settings.OPENALEX,
+                records=records,
+                batch_size=batch_size,
+                force=force_overwrite,
+                logger_=solr_logger,
+            )
+            n_total += n_total_
+            n_skipped += n_skipped_
 
             # Set solarized flag for all records with the openalex_ids we just processed
             # Note, we don't limit this to the request.record_id that we processed on purpose.
@@ -98,6 +108,8 @@ def transfer_abstracts(
                 {'ids': [row['openalex_id'] for row in partition]},
             )
             session.commit()
+
+            progress.set_postfix_str(f'Wrote {n_total-n_skipped:,} / {n_total:,} records to solr')
             progress.update(len(records))
 
 
