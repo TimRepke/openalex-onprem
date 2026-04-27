@@ -73,9 +73,9 @@ def main(
             known_records = session.execute(sa.text('''
                 SELECT record_id, nacsos_id
                 FROM request
-                WHERE nacsos_id::text = ANY(:nacsos_ids) AND abstract IS NOT NULL
+                WHERE nacsos_id = ANY(:nacsos_ids) AND abstract IS NOT NULL
             '''
-            ), {'nacsos_ids': [str(record['nacsos_id']) for record in batch]}).mappings().all()
+            ), {'nacsos_ids': [record['nacsos_id'] for record in batch]}).mappings().all()
             known_records = list(known_records)
             known_ids = {record['nacsos_id'] for record in known_records}
 
