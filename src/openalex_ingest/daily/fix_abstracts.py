@@ -22,7 +22,9 @@ app = typer.Typer()
 @app.command('transfer', short_help='Write abstract from cache to solr')
 def transfer_abstracts(
     config: Annotated[Path, typer.Option(help='Path to config file')],
-    batch_size: Annotated[int, typer.Option(help='Batch size')] = 200,
+    read_batch_size: Annotated[int, typer.Option(help='Batch size')] = 10000,
+    post_batch_size: Annotated[int, typer.Option(help='Batch size')] = 10000,
+    commit_interval: Annotated[int, typer.Option(help='Batch size')] = 50000,
     force_overwrite: Annotated[bool, typer.Option(help="Use this flag to overwrite existing abstracts in solr, otherwise we'll check first")] = False,
     created_after: Annotated[datetime | None, typer.Option(help='Filter queue to entries added after this date')] = None,
     created_before: Annotated[datetime | None, typer.Option(help='Filter queue to entries added before this date')] = None,
@@ -51,30 +53,33 @@ def transfer_abstracts(
         n_skipped = 0
         progress = tqdm()
         while True:
+            progress.set_description_str('FETCH')
             partition = (
                 session.execute(
                     text(
                         f"""
-                        SELECT DISTINCT ON (openalex_id) openalex_id,
-                                     upper(wrapper) as abstract_source,
-                                     abstract,
-                                     title,
-                                     (CASE
-                                          WHEN upper(wrapper) = 'WOS' THEN 10
-                                          WHEN upper(wrapper) = 'SCOPUS' THEN 8
-                                          WHEN upper(wrapper) = 'DIMENSIONS' THEN 6
-                                          WHEN upper(wrapper) = 'PUBMED' THEN 4
-                                          ELSE 1
-                                         END)       as source_rank
-                        FROM request
-                        WHERE (solarized = FALSE OR solarized IS NULL)
-                          AND abstract IS NOT NULL
-                          AND openalex_id IS NOT NULL {creation_filter}
-                        ORDER BY openalex_id, source_rank DESC, time_created DESC
-                        LIMIT :batch_size;
-                    """,
+                        SELECT DISTINCT ON (openalex_id) *
+                        FROM (
+                                 SELECT openalex_id,
+                                        upper(wrapper) as abstract_source,
+                                        abstract,
+                                        title,
+                                        time_created,
+                                        (CASE
+                                             WHEN upper(wrapper) = 'WOS' THEN 10
+                                             WHEN upper(wrapper) = 'SCOPUS' THEN 8
+                                             WHEN upper(wrapper) = 'DIMENSIONS' THEN 6
+                                             WHEN upper(wrapper) = 'PUBMED' THEN 4
+                                             ELSE 1
+                                            END)       as source_rank
+                                 FROM request
+                                 WHERE solarized IS NULL  -- (solarized IS FALSE OR solarized IS NULL)
+                                   AND abstract IS NOT NULL
+                                   AND openalex_id IS NOT NULL {creation_filter}
+                                 LIMIT :batch_size) t
+                        """,
                     ),
-                    params={'created_before': created_before, 'created_after': created_after, 'batch_size': batch_size},
+                    params={'created_before': created_before, 'created_after': created_after, 'batch_size': read_batch_size},
                 )
                 .mappings()
                 .all()
@@ -90,10 +95,12 @@ def transfer_abstracts(
             logger.debug(f'Fetched {len(records):,} records to transfer to solr')
 
             # Submit to solr (this handles setting the correct fields and skipping existing abstracts if in non-force mode)
+            progress.set_description_str('POST')
             n_total_, n_skipped_ = write_cache_records_to_solr(
                 config=settings.OPENALEX,
                 records=records,
-                batch_size=batch_size,
+                batch_size=post_batch_size,
+                commit_interval=commit_interval,
                 force=force_overwrite,
                 logger_=solr_logger,
             )
@@ -103,14 +110,16 @@ def transfer_abstracts(
             # Set solarized flag for all records with the openalex_ids we just processed
             # Note, we don't limit this to the request.record_id that we processed on purpose.
             #       Otherwise, we'd process the next older record next time the method is called.
+            progress.set_description_str('UPDATE')
             session.execute(
                 text('UPDATE request SET solarized = TRUE WHERE openalex_id = ANY(:ids)'),
                 {'ids': [row['openalex_id'] for row in partition]},
             )
             session.commit()
 
-            progress.set_postfix_str(f'Wrote {n_total-n_skipped:,} / {n_total:,} records to solr')
+            progress.set_postfix_str(f'Wrote {n_total - n_skipped:,} / {n_total:,} records to solr at {datetime.now()}')
             progress.update(len(records))
+        progress.close()
 
 
 def _queue_missing_abstracts(

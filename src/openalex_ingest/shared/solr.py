@@ -18,11 +18,18 @@ from .schema import Request
 logger = logging.getLogger('openalex.shared.solr')
 
 
+def commit(conf: OpenAlexConfig):
+    try:
+        httpx.post(f'{conf.SOLR_ENDPOINT}/api/collections/{conf.SOLR_COLLECTION}/update/json?commit=true', timeout=120, auth=conf.auth)
+    except Exception as e:
+        logging.warning(f'Timed out on commit ({e})')
+
+
 def get_entries_with_missing_abstracts(
     config: OpenAlexConfig,
     openalex_ids: list[str] | None = None,
-    created_since: Annotated[datetime | None, typer.Option(help='Get works created on or after')] = None,
-    created_until: Annotated[datetime | None, typer.Option(help='Get works created on or after')] = None,
+    created_since: Annotated[datetime | None, typer.Option(help='Get works created or updated on or after')] = None,
+    created_until: Annotated[datetime | None, typer.Option(help='Get works created or updated on or before')] = None,
     limit: int = 1000,
     logger_: logging.Logger | None = None,
 ) -> Generator[tuple[str, str, str], None, None]:
@@ -74,6 +81,7 @@ def write_cache_records_to_solr(
     records: list[Request],
     force: bool = False,
     batch_size: int = 200,
+    commit_interval: int = 1000,
     logger_: logging.Logger | None = None,
 ) -> tuple[int, int]:
     logger_ = logger_ or logger
@@ -81,6 +89,7 @@ def write_cache_records_to_solr(
     sl.setLevel(logging.WARNING)
     n_total = 0
     n_skipped = 0
+    n_uncommitted = 0
     for batch in batched(records, batch_size, strict=False):
         batch_records = list(batch)
         n_total += len(batch_records)
@@ -108,6 +117,7 @@ def write_cache_records_to_solr(
                 'abstract_date': {'set': timestamp},
             }
             buffer += json.dumps(rec) + b',\n'
+            n_uncommitted += 1
 
         try:
             res = httpx.post(
@@ -123,6 +133,14 @@ def write_cache_records_to_solr(
             raise e
 
         logger_.info(f'Partition posted to solr via {res}')
+
+        if (commit_interval > 0) and (n_uncommitted >= commit_interval):
+            logger_.info('Committing to solr')
+            commit(config)
+            n_uncommitted = 0
+
+    logger_.info('Committing to solr')
+    commit(config)
 
     return n_total, n_skipped
 

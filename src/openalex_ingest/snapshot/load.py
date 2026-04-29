@@ -13,8 +13,8 @@ from nacsos_data.models.openalex import WorksSchema
 from nacsos_data.util import batched
 from typing_extensions import Annotated
 from nacsos_data.util.academic.apis.openalex import translate_work_to_solr
-from nacsos_data.util.conf import OpenAlexConfig
 from openalex_ingest.shared.config import load_settings
+from openalex_ingest.shared.solr import commit
 
 
 class Collection(str, Enum):
@@ -26,13 +26,6 @@ class Collection(str, Enum):
 def name_part(partition: Path):
     update = str(partition.parent.name).replace('updated_date=', '')
     return f'{update}-{partition.stem}'
-
-
-def commit(conf: OpenAlexConfig):
-    try:
-        httpx.post(f'{conf.SOLR_ENDPOINT}/api/collections/{conf.SOLR_COLLECTION}/update/json?commit=true', timeout=120, auth=conf.auth)
-    except Exception as e:
-        logging.warning(f'Timed out on commit ({e})')
 
 
 def update_solr(

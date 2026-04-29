@@ -96,18 +96,20 @@ LIMIT 100;
 --   )#>>'{}' IS NOT NULL;
 
 -- WOS with OpenAlex ID
-SELECT *from(SELECT
-  record_id,
-  openalex_id,
-  doi,
-  raw,
-  abstract,
-  jsonb_path_query_first(
-    raw,
-    '$.dynamic_data.cluster_related.identifiers.identifier[*] ? (@.type == "openalexworkID").value'
-  )#>>'{}' AS wos_oa_id
-FROM request
-WHERE wrapper='WOS') where wos_oa_id is not null;-- and abstract is not null;
+SELECT *
+from (
+         SELECT record_id,
+                openalex_id,
+                doi,
+                raw,
+                abstract,
+                jsonb_path_query_first(
+                        raw,
+                        '$.dynamic_data.cluster_related.identifiers.identifier[*] ? (@.type == "openalexworkID").value'
+                ) #>> '{}' AS wos_oa_id
+         FROM request
+         WHERE wrapper = 'WOS') a
+where wos_oa_id is not null;-- and abstract is not null;
 
 SELECT *
 FROM request
@@ -119,3 +121,29 @@ FROM request
 WHERE doi is not null and openalex_id is null;
 
 select count(1) from request;
+
+SELECT wrapper, solarized, count(1)
+from request
+group by wrapper, solarized;
+
+EXPLAIN ANALYSE
+SELECT DISTINCT ON (openalex_id) *
+FROM (
+         SELECT openalex_id,
+                upper(wrapper) as abstract_source,
+                abstract,
+                title,
+                time_created,
+                (CASE
+                     WHEN upper(wrapper) = 'WOS' THEN 10
+                     WHEN upper(wrapper) = 'SCOPUS' THEN 8
+                     WHEN upper(wrapper) = 'DIMENSIONS' THEN 6
+                     WHEN upper(wrapper) = 'PUBMED' THEN 4
+                     ELSE 1
+                    END)       as source_rank
+         FROM request
+         WHERE (solarized IS FALSE OR solarized IS NULL)
+           AND abstract IS NOT NULL
+           AND openalex_id IS NOT NULL
+         LIMIT 1000) t
+ORDER BY openalex_id, source_rank DESC, time_created DESC;
