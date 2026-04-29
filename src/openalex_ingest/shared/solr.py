@@ -121,7 +121,7 @@ def write_cache_records_to_solr(
 
         try:
             res = httpx.post(
-                f'{config.solr_url}/update/json?commit=true',
+                f'{config.solr_url}/update/json',  # ?commit=true
                 headers={'Content-Type': 'application/json'},
                 content=f'[{buffer.decode()}]',
                 timeout=240,
