@@ -44,8 +44,7 @@ def get_entries_with_missing_abstracts(
                 'fl': 'id,doi',
                 'q.op': 'AND',
                 'useParams': '',
-                'defType': 'lucene',
-                'rows': len(openalex_ids)
+                'defType': 'lucene'
             },
         )
         logger_.info(f'Requested {len(openalex_ids):,} of which {client.num_found} (will limit to {limit:,}) have no abstract in solr.')
@@ -97,7 +96,8 @@ def write_cache_records_to_solr(
         needs_update: set[str] | None = None
         if not force:
             openalex_ids = [record.openalex_id for record in records]
-            needs_update = {oa_id for oa_id, _doi, _pmid in get_entries_with_missing_abstracts(config=config, openalex_ids=openalex_ids, logger_=sl)}
+            needs_update = {oa_id for oa_id, _doi, _pmid in get_entries_with_missing_abstracts(config=config, openalex_ids=openalex_ids, logger_=sl, limit=len(openalex_ids))}
+            logger.debug(f'{len(needs_update):,} of {len(openalex_ids):,} currently have no abstract in solr')
             n_skipped += len(batch_records) - len(needs_update)
             if len(needs_update) <= 0:
                 logger_.info('Partition skipped, seems complete')
