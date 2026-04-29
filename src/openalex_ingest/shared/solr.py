@@ -45,6 +45,7 @@ def get_entries_with_missing_abstracts(
                 'q.op': 'AND',
                 'useParams': '',
                 'defType': 'lucene',
+                'rows': len(openalex_ids)
             },
         )
         logger_.info(f'Requested {len(openalex_ids):,} of which {client.num_found} (will limit to {limit:,}) have no abstract in solr.')
