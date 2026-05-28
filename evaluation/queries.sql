@@ -16,6 +16,15 @@ WHERE abstract IS NOT NULL
   AND time_created >= '2026-04-05';
 
 -- Results with abstract
+SELECT wrapper,
+       count(1)                                                       as n_total,
+       count(1) filter ( where openalex_id IS NULL )                  as n_missing_oa_id,
+       count(1) filter ( where abstract IS NOT NULL )                 as n_has_abs,
+       count(1) filter ( where doi IS NOT NULL )                      as n_has_doi,
+       count(1) filter ( where doi IS NULL )                          as n_no_doi,
+       count(1) filter ( where doi IS NULL AND abstract IS NOT NULL ) as n_has_abs_no_doi
+FROM request
+GROUP BY wrapper;
 
 SELECT count(1)                                                                                   as n_total,
        count(1) filter ( where openalex_id IS NULL )                                              as n_missing_oa_id,
@@ -53,8 +62,8 @@ SELECT count(1)                                                                 
        filter ( where wrapper = 'WOS' AND doi IS NULL AND abstract IS NOT NULL)                   as n_wos_no_doi,
        count(1) filter ( where wrapper = 'NACSOS' AND doi IS NULL AND abstract IS NOT NULL)       as n_nacsos_no_doi,
        count(1) filter ( where wrapper = 'OpenAlex_old' AND doi IS NULL AND abstract IS NOT NULL) as n_old_no_doi
-FROM request;
---WHERE time_created >= '2026-04-05';
+FROM request
+WHERE time_created >= '2026-04-05';
 
 SELECT *
 FROM request
