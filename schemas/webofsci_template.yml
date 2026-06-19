@@ -1,25 +1,26 @@
 schema_type: dataframe
 columns:
   Journal title:
-    dtype: object
+    dtype: string[python]
   ISSN:
-    dtype: object
+    dtype: string[python]
     nullable: true
   eISSN:
-    dtype: object
+    dtype: string[python]
     nullable: true
   Publisher name:
-    dtype: object
+    dtype: string[python]
   Publisher address:
-    dtype: object
+    dtype: string[python]
   Languages:
-    dtype: object
+    dtype: string[python]
     nullable: true
   Web of Science Categories:
-    dtype: object
+    dtype: string[python]
     nullable: true
 index:
 - dtype: int64
   greater_than_or_equal_to: 0.0
   less_than_or_equal_to: 9429.0
 coerce: true
+drop_invalid_rows: false

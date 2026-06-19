@@ -5,221 +5,222 @@ columns:
     greater_than_or_equal_to: 12000.0
     less_than_or_equal_to: 21101441801.0
   Source Title:
-    dtype: object
+    dtype: string[python]
   ISSN:
-    dtype: object
+    dtype: string[python]
     nullable: true
   EISSN:
-    dtype: object
+    dtype: string[python]
     nullable: true
   Active or Inactive:
-    dtype: object
+    dtype: string[python]
   Coverage:
-    dtype: object
+    dtype: string[python]
     nullable: true
   Titles Discontinued by Scopus:
-    dtype: object
+    dtype: string[python]
     nullable: true
   Article Language in Source (Three-Letter ISO Language Codes):
-    dtype: object
+    dtype: string[python]
     nullable: true
   Medline-sourced Title? (See additional details under separate tab.):
-    dtype: object
+    dtype: string[python]
     nullable: true
   Open Access Status:
-    dtype: object
+    dtype: string[python]
     nullable: true
   Articles in Press Included?:
-    dtype: object
+    dtype: string[python]
     nullable: true
   Added to List May 2026:
-    dtype: object
+    dtype: string[python]
     nullable: true
   Source Type:
-    dtype: object
+    dtype: string[python]
   Title History Indication:
-    dtype: object
+    dtype: string[python]
     nullable: true
   Related Title 1:
-    dtype: object
+    dtype: string[python]
     nullable: true
   Other Related Title 2:
-    dtype: object
+    dtype: string[python]
     nullable: true
   Other Related Title 3:
-    dtype: object
+    dtype: string[python]
     nullable: true
   Other Related Title 4:
-    dtype: object
+    dtype: string[python]
     nullable: true
   Publisher:
-    dtype: object
+    dtype: string[python]
     nullable: true
   Publisher Imprints Grouped to Main Publisher:
-    dtype: object
+    dtype: string[python]
     nullable: true
   All Science Journal Classification Codes (ASJC):
-    dtype: object
+    dtype: string[python]
     nullable: true
   ? 'Top level:
 
 
     Life Sciences'
-  : dtype: object
+  : dtype: string[python]
     nullable: true
   ? 'Top level:
 
 
     Social Sciences'
-  : dtype: object
+  : dtype: string[python]
     nullable: true
   ? 'Top level:
 
 
     Physical Sciences'
-  : dtype: object
+  : dtype: string[python]
     nullable: true
   ? 'Top level:
 
 
     Health Sciences'
-  : dtype: object
+  : dtype: string[python]
     nullable: true
   ? "1000 \nGeneral"
-  : dtype: object
+  : dtype: string[python]
     nullable: true
   ? '1100
 
     Agricultural and Biological Sciences'
-  : dtype: object
+  : dtype: string[python]
     nullable: true
   ? '1200
 
     Arts and Humanities'
-  : dtype: object
+  : dtype: string[python]
     nullable: true
   ? '1300
 
     Biochemistry, Genetics and Molecular Biology'
-  : dtype: object
+  : dtype: string[python]
     nullable: true
   ? '1400
 
     Business, Management and Accounting'
-  : dtype: object
+  : dtype: string[python]
     nullable: true
   ? '1500
 
     Chemical Engineering'
-  : dtype: object
+  : dtype: string[python]
     nullable: true
   ? '1600
 
     Chemistry'
-  : dtype: object
+  : dtype: string[python]
     nullable: true
   ? '1700
 
     Computer Science'
-  : dtype: object
+  : dtype: string[python]
     nullable: true
   ? '1800
 
     Decision Sciences'
-  : dtype: object
+  : dtype: string[python]
     nullable: true
   ? '1900
 
     Earth and Planetary Sciences'
-  : dtype: object
+  : dtype: string[python]
     nullable: true
   ? '2000
 
     Economics, Econometrics and Finance'
-  : dtype: object
+  : dtype: string[python]
     nullable: true
   ? '2100
 
     Energy'
-  : dtype: object
+  : dtype: string[python]
     nullable: true
   ? '2200
 
     Engineering'
-  : dtype: object
+  : dtype: string[python]
     nullable: true
   ? '2300
 
     Environmental Science'
-  : dtype: object
+  : dtype: string[python]
     nullable: true
   ? '2400
 
     Immunology and Microbiology'
-  : dtype: object
+  : dtype: string[python]
     nullable: true
   ? '2500
 
     Materials Science'
-  : dtype: object
+  : dtype: string[python]
     nullable: true
   ? '2600
 
     Mathematics'
-  : dtype: object
+  : dtype: string[python]
     nullable: true
   ? '2700
 
     Medicine'
-  : dtype: object
+  : dtype: string[python]
     nullable: true
   ? '2800
 
     Neuroscience'
-  : dtype: object
+  : dtype: string[python]
     nullable: true
   ? '2900
 
     Nursing'
-  : dtype: object
+  : dtype: string[python]
     nullable: true
   ? '3000
 
     Pharmacology, Toxicology and Pharmaceutics'
-  : dtype: object
+  : dtype: string[python]
     nullable: true
   ? '3100
 
     Physics and Astronomy'
-  : dtype: object
+  : dtype: string[python]
     nullable: true
   ? '3200
 
     Psychology'
-  : dtype: object
+  : dtype: string[python]
     nullable: true
   ? '3300
 
     Social Sciences'
-  : dtype: object
+  : dtype: string[python]
     nullable: true
   ? '3400
 
     Veterinary'
-  : dtype: object
+  : dtype: string[python]
     nullable: true
   ? '3500
 
     Dentistry'
-  : dtype: object
+  : dtype: string[python]
     nullable: true
   ? '3600
 
     Health Professions'
-  : dtype: object
+  : dtype: string[python]
     nullable: true
 index:
 - dtype: int64
   greater_than_or_equal_to: 0.0
   less_than_or_equal_to: 48579.0
 coerce: true
+drop_invalid_rows: false
