@@ -20,7 +20,7 @@ if not logger.handlers:  # avoid duplicate handlers on re-import
     handler.setFormatter(formatter)
     logger.addHandler(handler)
 
-# TODO fix openalex schema, refactor to simple read and write
+# TODO refactor to simple read and write
 # add docstrings, type annotations, 
 # rerun with full list of files, add readme
 setattr(pa.Check, "unique_ignore_na", classmethod(unique_ignore_na))
@@ -173,11 +173,14 @@ class OpenAlexToCitationIndexMap:
         scopus["EISSN"]= scopus["EISSN"].astype("string")
         scopus["ISSN"] = scopus["ISSN"].str.slice(0,4) + "-" + scopus["ISSN"].str.slice(4,8)
         scopus["EISSN"] = scopus["EISSN"].str.slice(0,4) + "-" + scopus["EISSN"].str.slice(4,8)
-        scopus["ISSN_all"] = scopus[["ISSN", "EISSN"]].apply(lambda r: [v for v in r.tolist() if pd.notna(v)], axis=1)
         scopus["ISSN_filled"] = scopus["ISSN"]
         scopus.loc[scopus.ISSN_filled.isna(), "ISSN_filled"] = scopus.loc[scopus.ISSN_filled.isna(), "EISSN"]
+        scopus = scopus.dropna(subset="ISSN_filled")
+        scopus["ISSN_all"] = scopus[["ISSN", "EISSN"]].apply(lambda r: [v for v in r.tolist() if pd.notna(v)], axis=1)
+        # import pandera.pandas as pa
+        # schema = pa.infer_schema(scopus)
+        # schema.to_yaml("schemas/scopus_preprocessed_template.yml")
         return scopus
-
 
     def read_and_match_scopus_files(self, base_dir):
         for fn in base_dir.rglob("*"):
@@ -194,6 +197,12 @@ class OpenAlexToCitationIndexMap:
                 continue
             logger.info(f"Schema validation done for {citation_index} source file.")
             df = self.preprocess_scopus(df)
+            # one more schema validation after preprociessing, because we want some uniqueness checks with id columns to avoid duplications
+            df = check_schema(df, "schemas/scopus_preprocessed.yml")
+            if df is None: 
+                logger.info(f"Skipping file {fn} because schema validation failed after cleaning the raw data.")
+                self.index_names.pop(fn)
+                continue
             merged, merge_stats = merge_by_bidirectional_preference(df, self.open_alex, left_id_col="ISSN_filled",
                 left_list_col="ISSN_all", right_id_col="id_issn_l", right_list_col="id_issn")
             logger.info(merge_stats)
@@ -238,7 +247,7 @@ if __name__ == "__main__":
 
     base = Path("data/journal_indices")
     citation_index_map.check_unique_citation_index_ids(base)
-    # citation_index_map.read_and_match_web_of_science_files(base / Path("webofsci"))
+    citation_index_map.read_and_match_web_of_science_files(base / Path("webofsci"))
     citation_index_map.read_and_match_scopus_files(base / Path("scopus"))
 
     logger.info(json.dumps(citation_index_map.index_names, indent=2))
