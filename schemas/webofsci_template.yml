@@ -1,0 +1,25 @@
+schema_type: dataframe
+columns:
+  Journal title:
+    dtype: object
+  ISSN:
+    dtype: object
+    nullable: true
+  eISSN:
+    dtype: object
+    nullable: true
+  Publisher name:
+    dtype: object
+  Publisher address:
+    dtype: object
+  Languages:
+    dtype: object
+    nullable: true
+  Web of Science Categories:
+    dtype: object
+    nullable: true
+index:
+- dtype: int64
+  greater_than_or_equal_to: 0.0
+  less_than_or_equal_to: 9429.0
+coerce: true

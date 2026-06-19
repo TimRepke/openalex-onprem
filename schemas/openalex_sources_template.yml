@@ -1,9 +1,8 @@
 schema_type: dataframe
 columns:
-  ids:
-    dtype: object
   display_name:
     dtype: object
+    nullable: true
   host_organization:
     dtype: object
     nullable: true
@@ -12,8 +11,23 @@ columns:
     nullable: true
   host_organization_lineage:
     dtype: object
+  id_openalex:
+    dtype: object
+  id_issn_l:
+    dtype: object
+    nullable: true
+  id_issn:
+    dtype: object
+    nullable: true
+  id_mag:
+    dtype: int64
+    greater_than_or_equal_to: 61661.0
+    less_than_or_equal_to: 7407058948.0
+  id_wikidata:
+    dtype: object
+    nullable: true
 index:
 - dtype: int64
   greater_than_or_equal_to: 0.0
-  less_than_or_equal_to: 999.0
+  less_than_or_equal_to: 283521.0
 coerce: true

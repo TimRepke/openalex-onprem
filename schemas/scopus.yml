@@ -2,15 +2,16 @@ schema_type: dataframe
 columns:
   Sourcerecord ID:
     dtype: int64
-    greater_than_or_equal_to: 12000.0
-    less_than_or_equal_to: 21101441801.0
   Source Title:
     dtype: object
+    required: true
   ISSN:
     dtype: object
+    required: true
     nullable: true
   EISSN:
     dtype: object
+    required: true
     nullable: true
   Active or Inactive:
     dtype: object
@@ -221,5 +222,5 @@ columns:
 index:
 - dtype: int64
   greater_than_or_equal_to: 0.0
-  less_than_or_equal_to: 48579.0
+  less_than_or_equal_to: 150000.0
 coerce: true

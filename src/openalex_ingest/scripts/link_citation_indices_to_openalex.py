@@ -1,13 +1,17 @@
 from pathlib import Path
 import re
 import json
+import logging
 import pandas as pd
 import pandera as pa
 from pandera.io.pandas_io import from_yaml as pa_from_yaml
-from infer_citation_index_schemas import unique_ignore_na, at_least_one_key_present
+from src.openalex_ingest.scripts.infer_citation_index_schemas import unique_ignore_na, at_least_one_key_present
 
-# TODO update pandera/pandas requirements, prints to logs, fix openalex source file & schema
-# check setattr hack works, add docstrings, type annotations, error handling, etc.
+logger = logging.getLogger("copy")
+logger.setLevel(logging.DEBUG)
+
+# TODO prints to logs, fix openalex source file & schema
+# add docstrings, type annotations, error handling, etc.
 # rerun with full list of files
 setattr(pa.Check, "unique_ignore_na", classmethod(unique_ignore_na))
 setattr(pa.Check, "at_least_one_key_present", classmethod(at_least_one_key_present))
@@ -15,8 +19,6 @@ setattr(pa.Check, "at_least_one_key_present", classmethod(at_least_one_key_prese
 def make_citation_index_id(fn, overrides=None):
     if overrides is None:
         overrides = {
-            "data/journal_indices/webofsci/Science Citation Index Expanded (SCIE).csv": "SCIE",
-            "data/journal_indices/webofsci/Current Contents Life Sciences.csv": "CCLS",
             "data/journal_indices/scopus/ext_list_May_2026.xlsx": "SCOPUS_EXTLIST_2026-05"
         }
     name = fn.rsplit("/", 1)[1]
@@ -42,9 +44,7 @@ def check_schema(df, schema_path):
         schema(df)
         return df
     except pa.errors.SchemaError as err:
-        print(err)
-        # raise Exception(f"Schema validation failed for {schema_path}")
-    
+        logger.error(err)    
 
 def merge_by_bidirectional_preference(dfL, dfR,
                                       left_id_col, left_list_col,
@@ -129,7 +129,7 @@ def merge_by_bidirectional_preference(dfL, dfR,
     return result, stats
 
 
-class OpenAlexToCitationIndexMap():
+class OpenAlexToCitationIndexMap:
     def __init__(self):
         self.index_names = dict()
         # seems like solr should be able to search columns with lists, 
@@ -140,13 +140,13 @@ class OpenAlexToCitationIndexMap():
         self.load_openalex_sources()
 
     def check_unique_citation_index_ids(self, base_dir):
-        for fn in base_dir.rglob("*"):
+        for fn in base_dir.rglob("*/*"):
             fn = str(fn)
             id = make_citation_index_id(fn)
             if id in self.index_names.values():
                 raise Exception(f"Duplicate citation index id {id} generated from {fn} (already used for {list(self.index_names.keys())[list(self.index_names.values()).index(id)]}). Create a manual override in make_citation_index_id() to resolve.")
             self.index_names[fn] = id
-        print("All generated citation index ids are unique.")
+        logger.info("All generated citation index ids are unique.")
 
     def load_openalex_sources(self):
         oa = pd.read_json("abstract_validation/openalex_sources.json")
@@ -158,19 +158,53 @@ class OpenAlexToCitationIndexMap():
         oa = pd.concat([oa.drop(columns=["ids"]), ids], axis=1)
         self.open_alex = oa
         self.source_id_to_index_ids = {row["id_mag"]: [] for _, row in oa.iterrows()}
+
+    def preprocess_scopus(self, scopus):
+        scopus = scopus.drop_duplicates(subset=['ISSN', "EISSN"], keep="last")
+        scopus.loc["ISSN"] = scopus["ISSN"].astype("string")
+        scopus.loc["EISSN"]= scopus["EISSN"].astype("string")
+        scopus.loc["ISSN"] = scopus["ISSN"].str.slice(0,4) + "-" + scopus["ISSN"].str.slice(4,8)
+        scopus.loc["EISSN"] = scopus["EISSN"].str.slice(0,4) + "-" + scopus["EISSN"].str.slice(4,8)
+        scopus["ISSN_all"] = scopus[["ISSN", "EISSN"]].apply(lambda r: [v for v in r.tolist() if pd.notna(v)], axis=1)
+        scopus["ISSN_filled"] = scopus["ISSN"]
+        scopus.loc[scopus.ISSN_filled.isna(), "ISSN_filled"] = scopus.loc[scopus.ISSN_filled.isna(), "EISSN"]
+        return scopus
+
+
+    def read_and_match_scopus_files(self, base_dir):
+        for fn in base_dir.rglob("*"):
+            fn = str(fn)
+            citation_index = self.index_names.get(fn)
+            if citation_index is None:
+                logger.info(f"Skipping file {fn} because it does not have a generated citation index id. If this is an oversight, add an override in make_citation_index_id().")
+                continue
+            df = pd.read_excel(fn)
+            df = check_schema(df, "schemas/scopus.yml")
+            if df is None: 
+                logger.info(f"Skipping file {fn} because schema validation failed.")
+                self.index_names.pop(fn)
+                continue
+            df = self.preprocess_scopus(df)
+            merged, merge_stats = merge_by_bidirectional_preference(df, self.open_alex, left_id_col="ISSN_filled",
+                left_list_col="ISSN_all", right_id_col="id_issn_l", right_list_col="id_issn")
+            logger.info(merge_stats)
+            for _, row in merged[["_key_value", "id_mag"]].dropna().iterrows():
+                source_id = row["id_mag"]
+                self.source_id_to_index_ids[source_id].append(citation_index)
+            logger.info(f"After processing {citation_index}, source_id_to_index_ids has {sum(len(v) for v in self.source_id_to_index_ids.values())} total matches")
      
     def read_and_match_web_of_science_files(self, base_dir):
         for fn in base_dir.rglob("*"):
             fn = str(fn)
             citation_index = self.index_names.get(fn)
             if citation_index is None:
-                print(f"Skipping file {fn} because it does not have a generated citation index id. If this is an oversight, add an override in make_citation_index_id().")
+                logger.info(f"Skipping file {fn} because it does not have a generated citation index id. If this is an oversight, add an override in make_citation_index_id().")
                 continue
             df = pd.read_csv(fn)
             df = check_schema(df, "schemas/webofsci_final.yml")
             if df is None: 
-                print("Nope:")
-                print(fn)
+                logger.info(f"Skipping file {fn} because schema validation failed.")
+                self.index_names.pop(fn)
                 continue
 
             # combined ISSN columns for deduplication and matching                                                    
@@ -180,11 +214,11 @@ class OpenAlexToCitationIndexMap():
 
             merged, merge_stats = merge_by_bidirectional_preference(df, self.open_alex, left_id_col="ISSN_filled",
                 left_list_col="ISSN_all", right_id_col="id_issn_l", right_list_col="id_issn")
-            print(merge_stats)
+            logger.info(merge_stats)
             for _, row in merged[["_key_value", "id_mag"]].dropna().iterrows():
                 source_id = row["id_mag"]
                 self.source_id_to_index_ids[source_id].append(citation_index)
-            print(f"After processing {citation_index}, source_id_to_index_ids has {sum(len(v) for v in self.source_id_to_index_ids.values())} total matches")
+            logger.info(f"After processing {citation_index}, source_id_to_index_ids has {sum(len(v) for v in self.source_id_to_index_ids.values())} total matches")
             
 
 
@@ -192,11 +226,12 @@ class OpenAlexToCitationIndexMap():
 if __name__ == "__main__":
     citation_index_map = OpenAlexToCitationIndexMap()
 
-    base = Path("data/journal_indices/webofsci")
+    base = Path("data/journal_indices")
     citation_index_map.check_unique_citation_index_ids(base)
-    citation_index_map.read_and_match_web_of_science_files(base)
+    citation_index_map.read_and_match_web_of_science_files(base / Path("webofsci"))
+    citation_index_map.read_and_match_scopus_files(base / Path("scopus"))
 
-    print(json.dumps(citation_index_map.index_names, indent=2))
+    logger.info(json.dumps(citation_index_map.index_names, indent=2))
     with open("data/journal_indices/INDEX_NAMES_MAP.json", "w") as fp:
         json.dump(citation_index_map.index_names, fp, indent=2)
     with open("data/journal_indices/SOURCE_ID_TO_CITATION_INDEX_MAP.json", "w") as fp:
