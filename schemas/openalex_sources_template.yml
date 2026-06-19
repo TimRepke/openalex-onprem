@@ -1,8 +1,9 @@
 schema_type: dataframe
 columns:
+  id_issn_l:
+    dtype: string[python]
   display_name:
     dtype: string[python]
-    nullable: true
   host_organization:
     dtype: string[python]
     nullable: true
@@ -10,15 +11,12 @@ columns:
     dtype: string[python]
     nullable: true
   host_organization_lineage:
-    dtype: string[python]
+    dtype: object
+    nullable: true
   id_openalex:
     dtype: string[python]
-  id_issn_l:
-    dtype: string[python]
-    nullable: true
   id_issn:
-    dtype: string[python]
-    nullable: true
+    dtype: object
   id_mag:
     dtype: int64
     greater_than_or_equal_to: 61661.0
@@ -29,6 +27,6 @@ columns:
 index:
 - dtype: int64
   greater_than_or_equal_to: 0.0
-  less_than_or_equal_to: 283547.0
+  less_than_or_equal_to: 166528.0
 coerce: true
 drop_invalid_rows: false

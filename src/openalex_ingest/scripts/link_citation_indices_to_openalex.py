@@ -1,6 +1,7 @@
 from pathlib import Path
 import re
 import json
+import sys
 import logging
 import pandas as pd
 import pandera as pa
@@ -10,9 +11,18 @@ from src.openalex_ingest.scripts.infer_citation_index_schemas import unique_igno
 logger = logging.getLogger("copy")
 logger.setLevel(logging.DEBUG)
 
-# TODO prints to logs, fix openalex source file & schema
-# add docstrings, type annotations, error handling, etc.
-# rerun with full list of files
+if not logger.handlers:  # avoid duplicate handlers on re-import
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setLevel(logging.DEBUG)
+    formatter = logging.Formatter(
+        "%(asctime)s %(name)s %(levelname)s: %(message)s"
+    )
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+
+# TODO fix openalex schema, refactor to simple read and write
+# add docstrings, type annotations, 
+# rerun with full list of files, add readme
 setattr(pa.Check, "unique_ignore_na", classmethod(unique_ignore_na))
 setattr(pa.Check, "at_least_one_key_present", classmethod(at_least_one_key_present))
 
@@ -149,22 +159,20 @@ class OpenAlexToCitationIndexMap:
         logger.info("All generated citation index ids are unique.")
 
     def load_openalex_sources(self):
-        oa = pd.read_json("abstract_validation/openalex_sources.json")
+        oa = pd.read_json("data/openalex_sources/oa_sources_2026-06-19.json")
         oa = check_schema(oa, "schemas/openalex_sources.yml")
         if oa is None:
             self.open_alex = None
             return
-        ids = pd.json_normalize(oa["ids"]).add_prefix("id_")
-        oa = pd.concat([oa.drop(columns=["ids"]), ids], axis=1)
         self.open_alex = oa
         self.source_id_to_index_ids = {row["id_mag"]: [] for _, row in oa.iterrows()}
 
     def preprocess_scopus(self, scopus):
         scopus = scopus.drop_duplicates(subset=['ISSN', "EISSN"], keep="last")
-        scopus.loc["ISSN"] = scopus["ISSN"].astype("string")
-        scopus.loc["EISSN"]= scopus["EISSN"].astype("string")
-        scopus.loc["ISSN"] = scopus["ISSN"].str.slice(0,4) + "-" + scopus["ISSN"].str.slice(4,8)
-        scopus.loc["EISSN"] = scopus["EISSN"].str.slice(0,4) + "-" + scopus["EISSN"].str.slice(4,8)
+        scopus["ISSN"] = scopus["ISSN"].astype("string")
+        scopus["EISSN"]= scopus["EISSN"].astype("string")
+        scopus["ISSN"] = scopus["ISSN"].str.slice(0,4) + "-" + scopus["ISSN"].str.slice(4,8)
+        scopus["EISSN"] = scopus["EISSN"].str.slice(0,4) + "-" + scopus["EISSN"].str.slice(4,8)
         scopus["ISSN_all"] = scopus[["ISSN", "EISSN"]].apply(lambda r: [v for v in r.tolist() if pd.notna(v)], axis=1)
         scopus["ISSN_filled"] = scopus["ISSN"]
         scopus.loc[scopus.ISSN_filled.isna(), "ISSN_filled"] = scopus.loc[scopus.ISSN_filled.isna(), "EISSN"]
@@ -184,6 +192,7 @@ class OpenAlexToCitationIndexMap:
                 logger.info(f"Skipping file {fn} because schema validation failed.")
                 self.index_names.pop(fn)
                 continue
+            logger.info(f"Schema validation done for {citation_index} source file.")
             df = self.preprocess_scopus(df)
             merged, merge_stats = merge_by_bidirectional_preference(df, self.open_alex, left_id_col="ISSN_filled",
                 left_list_col="ISSN_all", right_id_col="id_issn_l", right_list_col="id_issn")
@@ -201,11 +210,12 @@ class OpenAlexToCitationIndexMap:
                 logger.info(f"Skipping file {fn} because it does not have a generated citation index id. If this is an oversight, add an override in make_citation_index_id().")
                 continue
             df = pd.read_csv(fn)
-            df = check_schema(df, "schemas/webofsci_final.yml")
+            df = check_schema(df, "schemas/webofsci.yml")
             if df is None: 
                 logger.info(f"Skipping file {fn} because schema validation failed.")
                 self.index_names.pop(fn)
                 continue
+            logger.info(f"Schema validation done for {citation_index} source file.")
 
             # combined ISSN columns for deduplication and matching                                                    
             df["ISSN_filled"] = df.ISSN
@@ -228,7 +238,7 @@ if __name__ == "__main__":
 
     base = Path("data/journal_indices")
     citation_index_map.check_unique_citation_index_ids(base)
-    citation_index_map.read_and_match_web_of_science_files(base / Path("webofsci"))
+    # citation_index_map.read_and_match_web_of_science_files(base / Path("webofsci"))
     citation_index_map.read_and_match_scopus_files(base / Path("scopus"))
 
     logger.info(json.dumps(citation_index_map.index_names, indent=2))

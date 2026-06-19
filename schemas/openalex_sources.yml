@@ -1,21 +1,34 @@
 schema_type: dataframe
 columns:
-  ids:
-    dtype: object
-    # unique: true
+  id_issn_l:
+    dtype: string[python]
+    required: true
+    unique: true
   display_name:
-    dtype: object
-    nullable: true
+    dtype: string[python]
   host_organization:
-    dtype: object
+    dtype: string[python]
     nullable: true
   host_organization_name:
-    dtype: object
+    dtype: string[python]
     nullable: true
   host_organization_lineage:
     dtype: object
+    nullable: true
+  id_openalex:
+    dtype: string[python]
+    unique: true
+  id_issn:
+    dtype: object
+  id_mag:
+    dtype: int64
+    unique: true
+  id_wikidata:
+    dtype: string[python]
+    nullable: true
 index:
 - dtype: int64
   greater_than_or_equal_to: 0.0
-  less_than_or_equal_to: 1500000.0
+  less_than_or_equal_to: 250000.0
 coerce: true
+drop_invalid_rows: false
