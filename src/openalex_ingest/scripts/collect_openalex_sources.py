@@ -8,7 +8,6 @@ import pandas as pd
 from typing import Optional, Dict, Any, List
 from pathlib import Path
 
-
 logger = logging.getLogger('copy')
 logger.setLevel(logging.DEBUG)
 
@@ -31,28 +30,28 @@ SELECT_FIELDS = ','.join(
 )
 PER_PAGE = 200  # OpenAlex max
 # assumes script will be executed on project root, adjust if not
-OUTPUT_DIR = 'data/openalex_sources/tmp'
+OUTPUT_DIR = Path('data/openalex_sources/tmp2')
 CHUNK_SIZE = 5000
 MAX_RETRIES = 5
 BACKOFF_FACTOR = 1.5
 API_KEY = os.getenv('NACSOS_OPENALEX__API_KEY')
-STATE_FILE = os.path.join(OUTPUT_DIR, 'state.json')
+STATE_FILE = OUTPUT_DIR / 'state.json'
 
-os.makedirs(OUTPUT_DIR, exist_ok=True)
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def load_state() -> Dict[str, Any]:
-    if os.path.exists(STATE_FILE):
-        with open(STATE_FILE, 'r', encoding='utf-8') as f:
+    if STATE_FILE.exists():
+        with STATE_FILE.open('r', encoding='utf-8') as f:
             return json.load(f)
     return {'last_cursor': None, 'chunk_index': 0, 'fetched': 0}
 
 
 def save_state(state: Dict[str, Any]) -> None:
-    tmp = STATE_FILE + '.tmp'
-    with open(tmp, 'w', encoding='utf-8') as f:
+    tmp = STATE_FILE.with_suffix(STATE_FILE.suffix + '.tmp')
+    with tmp.open('w', encoding='utf-8') as f:
         json.dump(state, f)
-    os.replace(tmp, STATE_FILE)
+    tmp.replace(STATE_FILE)
 
 
 def build_params(cursor: Optional[str]) -> Dict[str, str]:
@@ -91,12 +90,12 @@ def request_page(cursor: Optional[str]) -> Dict[str, Any]:
 
 
 def write_chunk(chunk_records: List[Dict[str, Any]], chunk_index: int) -> None:
-    path = os.path.join(OUTPUT_DIR, f'chunk_{chunk_index:05d}.jsonl')
-    tmp = path + '.tmp'
-    with open(tmp, 'a', encoding='utf-8') as f:
+    path = OUTPUT_DIR / f'chunk_{chunk_index:05d}.jsonl'
+    tmp = path.with_suffix(path.suffix + '.tmp')
+    with tmp.open('a', encoding='utf-8') as f:
         for r in chunk_records:
             f.write(json.dumps(r, ensure_ascii=False) + '\n')
-    os.replace(tmp, path)
+    tmp.replace(path)
 
 
 def clean_data(oa: pd.DataFrame) -> pd.DataFrame:
@@ -114,8 +113,8 @@ def clean_data(oa: pd.DataFrame) -> pd.DataFrame:
 
 
 def combine_chunks() -> None:
-    output_dir = Path(OUTPUT_DIR)
-    chunks = [str(fp) for fp in output_dir.rglob('*') if fp.suffix == '.jsonl']
+    output_dir = OUTPUT_DIR
+    chunks = [fp for fp in output_dir.rglob('*') if fp.suffix == '.jsonl']
     df = pd.read_json(chunks[0], lines=True, orient='records')
 
     for chunk in chunks[1:]:
@@ -124,7 +123,7 @@ def combine_chunks() -> None:
 
     df = clean_data(df)
 
-    out_path = f'{output_dir.parent}/oa_sources_{time.strftime("%Y-%m-%d")}.json'
+    out_path = output_dir.parent / f'oa_sources_{time.strftime("%Y-%m-%d")}.json'
     df.to_json(out_path, index=False, orient='records')
 
 
