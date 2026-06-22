@@ -8,8 +8,8 @@ This is a script to generate base schema files. They are then modified by hand.
 """
 
 files = [
-    Path('data/journal_indices/webofsci/Science Citation Index Expanded (SCIE).csv'),
-    Path('data/journal_indices/scopus/ext_list_May_2026.xlsx'),
+    Path('data/citation_indexes/webofsci/Science Citation Index Expanded (SCIE).csv'),
+    Path('data/citation_indexes/scopus/ext_list_May_2026.xlsx'),
     Path('data/openalex_sources/oa_sources_2026-06-19.json'),
 ]
 

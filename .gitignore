@@ -34,6 +34,8 @@ cyth/
 !cyth/setup.py
 !cyth/*.pyx
 data/
+!data/citation_indexes/INDEX_NAMES_MAP.json
+!data/citation_indexes/SOURCE_ID_TO_CITATION_INDEX_MAP.json
 config/
 
 ### VS Code ###
