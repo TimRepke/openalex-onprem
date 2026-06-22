@@ -39,6 +39,7 @@ class OpenAlexToCitationIndex:
         self.source_id_to_index_ids = dict()
         self.open_alex = None
         self._load_openalex_sources()
+        self.skipped_files = set()
 
     def _make_citation_index_id(self, fn: str, overrides: dict = None) -> str | None:
         """
@@ -57,7 +58,7 @@ class OpenAlexToCitationIndex:
         :rtype: str | None
         """
         if overrides is None:
-            overrides = {'data/journal_indices/scopus/ext_list_May_2026.xlsx': 'SCOPUS_EXTLIST_2026-05'}
+            overrides = {'data/citation_indexes/scopus/ext_list_May_2026.xlsx': 'SCOPUS_EXTLIST_2026-05'}
         name = fn.rsplit('/', 1)[1]
         name = name.rsplit('.', 1)[0]
         if fn in overrides:
@@ -75,7 +76,7 @@ class OpenAlexToCitationIndex:
 
         return candidate or None
 
-    def _validate_schema(self, df: pd.DataFrame, schema_path: str) -> pd.DataFrame | None:
+    def _validate_schema(self, df: pd.DataFrame, schema_path: str, lazy: bool=False) -> pd.DataFrame | None:
         """
         Docstring for _validate_schema
 
@@ -86,12 +87,14 @@ class OpenAlexToCitationIndex:
         :type df: pd.DataFrame
         :param schema_path: Path to the yml file where schema is saved
         :type schema_path: str
+        :param lazy: Set to `True` to drop rows that do not fit with the schema but include the rest. Works if schema has `drop_invalid_rows: true`
+        :type schema_path: bool
         :return: Dataframe if validation is succesfull, nothing otherwise
         :rtype: DataFrame | None
         """
         schema = from_yaml(schema_path)
         try:
-            schema(df)
+            schema(df, lazy=lazy)
             return df
         except pa.errors.SchemaError as err:
             logger.error(err)
@@ -279,6 +282,7 @@ class OpenAlexToCitationIndex:
             if df is None:
                 logger.info(f'Skipping file {fn} because schema validation failed.')
                 self.index_names.pop(fn)
+                self.skipped_files.add(fn)
                 continue
             logger.info(f'Schema validation done for {citation_index} source file.')
             df = self._preprocess_scopus(df)
@@ -287,6 +291,7 @@ class OpenAlexToCitationIndex:
             if df is None:
                 logger.info(f'Skipping file {fn} because schema validation failed after cleaning the raw data.')
                 self.index_names.pop(fn)
+                self.skipped_files.add(fn)
                 continue
             merged, merge_stats = self._merge_by_bidirectional_preference(
                 df, self.open_alex, left_id_col='ISSN_filled', left_list_col='ISSN_all', right_id_col='id_issn_l', right_list_col='id_issn'
@@ -318,10 +323,11 @@ class OpenAlexToCitationIndex:
                 )
                 continue
             df = pd.read_csv(fn)
-            df = self._validate_schema(df, 'schemas/webofsci.yml')
+            df = self._validate_schema(df, 'schemas/webofsci.yml', lazy=True)
             if df is None:
                 logger.info(f'Skipping file {fn} because schema validation failed.')
                 self.index_names.pop(fn)
+                self.skipped_files.add(fn)
                 continue
             logger.info(f'Schema validation done for {citation_index} source file.')
 
@@ -366,14 +372,15 @@ class OpenAlexToCitationIndex:
         :param self: Description
         """
         logger.info(json.dumps(citation_index_map.index_names, indent=2))
-        with open('data/journal_indices/INDEX_NAMES_MAP.json', 'w') as fp:
+        with open('data/citation_indexes/INDEX_NAMES_MAP.json', 'w') as fp:
             json.dump(citation_index_map.index_names, fp, indent=2)
-        with open('data/journal_indices/SOURCE_ID_TO_CITATION_INDEX_MAP.json', 'w') as fp:
+        with open('data/citation_indexes/SOURCE_ID_TO_CITATION_INDEX_MAP.json', 'w') as fp:
             json.dump(citation_index_map.source_id_to_index_ids, fp, indent=2)
 
 
 if __name__ == '__main__':
     citation_index_map = OpenAlexToCitationIndex()
-    base = Path('data/journal_indices')
+    base = Path('data/citation_indexes')
     citation_index_map.read_and_match(base)
     citation_index_map.write()
+    logger.warning(f'Skipped files: {citation_index_map.skipped_files}')
