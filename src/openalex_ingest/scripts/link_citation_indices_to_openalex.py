@@ -18,7 +18,6 @@ if not logger.handlers:  # avoid duplicate handlers on re-import
     handler.setFormatter(formatter)
     logger.addHandler(handler)
 
-# TODO rerun with full list of files, add readme
 setattr(pa.Check, 'unique_ignore_na', classmethod(unique_ignore_na))
 setattr(pa.Check, 'at_least_one_key_present', classmethod(at_least_one_key_present))
 
@@ -76,7 +75,7 @@ class OpenAlexToCitationIndex:
 
         return candidate or None
 
-    def _validate_schema(self, df: pd.DataFrame, schema_path: str, lazy: bool=False) -> pd.DataFrame | None:
+    def _validate_schema(self, df: pd.DataFrame, schema_path: str, lazy: bool = False) -> pd.DataFrame | None:
         """
         Docstring for _validate_schema
 
