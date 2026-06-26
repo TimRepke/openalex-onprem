@@ -13,7 +13,7 @@ files = [
     Path('data/openalex_sources/oa_sources_2026-06-19.json'),
 ]
 
-out_dir = Path('schemas')
+out_dir = Path('src/openalex_ingest/shared/source_schema')
 out_dir.mkdir(exist_ok=True)
 
 

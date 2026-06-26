@@ -57,7 +57,7 @@ class OpenAlexToCitationIndex:
         :rtype: str | None
         """
         if overrides is None:
-            overrides = {'data/citation_indexes/scopus/ext_list_May_2026.xlsx': 'SCOPUS_EXTLIST_2026-05'}
+            overrides = {'data/citation_indexes/scopus/ext_list_May_2026.xlsx': 'SCOPUS_EXTLIST'}
         name = fn.rsplit('/', 1)[1]
         name = name.rsplit('.', 1)[0]
         if fn in overrides:
@@ -223,7 +223,7 @@ class OpenAlexToCitationIndex:
          to be saved at specific locations
         """
         oa = pd.read_json('data/openalex_sources/oa_sources_2026-06-19.json')
-        oa = self._validate_schema(oa, 'schemas/openalex_sources.yml')
+        oa = self._validate_schema(oa, 'src/openalex_ingest/shared/source_schema/openalex_sources.yml')
         if oa is None:
             self.open_alex = None
             return
@@ -255,7 +255,7 @@ class OpenAlexToCitationIndex:
         scopus['ISSN_all'] = scopus[['ISSN', 'EISSN']].apply(lambda r: [v for v in r.tolist() if pd.notna(v)], axis=1)
         # import pandera.pandas as pa
         # schema = pa.infer_schema(scopus)
-        # schema.to_yaml("schemas/scopus_preprocessed_template.yml")
+        # schema.to_yaml("src/openalex_ingest/shared/source_schema/scopus_preprocessed_template.yml")
         return scopus
 
     def _read_and_match_scopus_files(self, base_dir: Path) -> None:
@@ -277,7 +277,7 @@ class OpenAlexToCitationIndex:
                 )
                 continue
             df = pd.read_excel(fn)
-            df = self._validate_schema(df, 'schemas/scopus.yml')
+            df = self._validate_schema(df, 'src/openalex_ingest/shared/source_schema/scopus.yml')
             if df is None:
                 logger.info(f'Skipping file {fn} because schema validation failed.')
                 self.index_names.pop(fn)
@@ -286,7 +286,7 @@ class OpenAlexToCitationIndex:
             logger.info(f'Schema validation done for {citation_index} source file.')
             df = self._preprocess_scopus(df)
             # one more schema validation after preprociessing, because we want some uniqueness checks with id columns to avoid duplications
-            df = self._validate_schema(df, 'schemas/scopus_preprocessed.yml')
+            df = self._validate_schema(df, 'src/openalex_ingest/shared/source_schema/scopus_preprocessed.yml')
             if df is None:
                 logger.info(f'Skipping file {fn} because schema validation failed after cleaning the raw data.')
                 self.index_names.pop(fn)
@@ -322,7 +322,7 @@ class OpenAlexToCitationIndex:
                 )
                 continue
             df = pd.read_csv(fn)
-            df = self._validate_schema(df, 'schemas/webofsci.yml', lazy=True)
+            df = self._validate_schema(df, 'src/openalex_ingest/shared/source_schema/webofsci.yml', lazy=True)
             if df is None:
                 logger.info(f'Skipping file {fn} because schema validation failed.')
                 self.index_names.pop(fn)
