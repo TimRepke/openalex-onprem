@@ -1,5 +1,5 @@
 {
-  "data/citation_indexes/scopus/ext_list_May_2026.xlsx": "SCOPUS_EXTLIST_2026-05",
+  "data/citation_indexes/scopus/ext_list_May_2026.xlsx": "SCOPUS_EXTLIST",
   "data/citation_indexes/webofsci/Science Citation Index Expanded (SCIE).csv": "SCIE",
   "data/citation_indexes/webofsci/Social Sciences Citation Index (SSCI).csv": "SSCI",
   "data/citation_indexes/webofsci/Index Chemicus.csv": "IC",
@@ -8,7 +8,7 @@
   "data/citation_indexes/webofsci/Zoological Record.csv": "ZR",
   "data/citation_indexes/webofsci/Biological Abstracts.csv": "BA",
   "data/citation_indexes/webofsci/Current Contents Clinical Medicine.csv": "CCCM",
-  "data/citation_indexes/webofsci/BIOSIS Previews_BIOSIS Citation Index.csv": "BIOSISPBIOSISCI",
+  "data/citation_indexes/webofsci/BIOSIS Previews_BIOSIS Citation Index.csv": "PBIOSISCI",
   "data/citation_indexes/webofsci/Current Contents Business Collection.csv": "CCBC",
   "data/citation_indexes/webofsci/Essential Science Indicators.csv": "ESI",
   "data/citation_indexes/webofsci/Current Contents Engineering, Computing & Technology.csv": "CCECT",

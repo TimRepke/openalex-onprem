@@ -39,6 +39,7 @@ class OpenAlexToCitationIndex:
         self.open_alex = None
         self._load_openalex_sources()
         self.skipped_files = set()
+        self.merge_stats = list()
 
     def _make_citation_index_id(self, fn: str, overrides: dict = None) -> str | None:
         """
@@ -57,7 +58,10 @@ class OpenAlexToCitationIndex:
         :rtype: str | None
         """
         if overrides is None:
-            overrides = {'data/citation_indexes/scopus/ext_list_May_2026.xlsx': 'SCOPUS_EXTLIST'}
+            overrides = {
+                'data/citation_indexes/scopus/ext_list_May_2026.xlsx': 'SCOPUS_EXTLIST',
+                'data/citation_indexes/webofsci/BIOSIS Previews_BIOSIS Citation Index.csv': 'PBIOSISCI',
+            }
         name = fn.rsplit('/', 1)[1]
         name = name.rsplit('.', 1)[0]
         if fn in overrides:
@@ -227,8 +231,9 @@ class OpenAlexToCitationIndex:
         if oa is None:
             self.open_alex = None
             return
+        oa['id_openalex'] = oa['id_openalex'].str.replace('https://openalex.org/', '')
         self.open_alex = oa
-        self.source_id_to_index_ids = {row['id_mag']: [] for _, row in oa.iterrows()}
+        self.source_id_to_index_ids = {item: [] for _, item in oa['id_openalex'].items()}
 
     def _preprocess_scopus(self, scopus: pd.DataFrame) -> pd.DataFrame:
         """
@@ -296,9 +301,17 @@ class OpenAlexToCitationIndex:
                 df, self.open_alex, left_id_col='ISSN_filled', left_list_col='ISSN_all', right_id_col='id_issn_l', right_list_col='id_issn'
             )
             logger.info(merge_stats)
-            for _, row in merged[['_key_value', 'id_mag']].dropna().iterrows():
-                source_id = row['id_mag']
+            for _, row in merged[['_key_value', 'id_openalex']].dropna().iterrows():
+                source_id = row['id_openalex']
                 self.source_id_to_index_ids[source_id].append(citation_index)
+            stats = {
+                'filename': fn,
+                'citation index ID': citation_index,
+                'total sources': merge_stats.get('total_left_rows'),
+                'matched sources': merge_stats.get('matched_rows'),
+                'match percentage': merge_stats.get('matched_rows') / merge_stats.get('total_left_rows'),
+            }
+            self.merge_stats.append(stats)
             logger.info(
                 f'After processing {citation_index}, source_id_to_index_ids has {sum(len(v) for v in self.source_id_to_index_ids.values())} total matches'
             )
@@ -339,9 +352,17 @@ class OpenAlexToCitationIndex:
                 df, self.open_alex, left_id_col='ISSN_filled', left_list_col='ISSN_all', right_id_col='id_issn_l', right_list_col='id_issn'
             )
             logger.info(merge_stats)
-            for _, row in merged[['_key_value', 'id_mag']].dropna().iterrows():
-                source_id = row['id_mag']
+            for _, row in merged[['_key_value', 'id_openalex']].dropna().iterrows():
+                source_id = row['id_openalex']
                 self.source_id_to_index_ids[source_id].append(citation_index)
+            stats = {
+                'filename': fn,
+                'citation index ID': citation_index,
+                'total sources': merge_stats.get('total_left_rows'),
+                'matched sources': merge_stats.get('matched_rows'),
+                'match percentage': merge_stats.get('matched_rows') / merge_stats.get('total_left_rows'),
+            }
+            self.merge_stats.append(stats)
             logger.info(
                 f'After processing {citation_index}, source_id_to_index_ids has {sum(len(v) for v in self.source_id_to_index_ids.values())} total matches'
             )
@@ -375,7 +396,8 @@ class OpenAlexToCitationIndex:
             json.dump(citation_index_map.index_names, fp, indent=2)
         with open('data/citation_indexes/SOURCE_ID_TO_CITATION_INDEX_MAP.json', 'w') as fp:
             json.dump(citation_index_map.source_id_to_index_ids, fp, indent=2)
-
+        merge_stats = pd.DataFrame(self.merge_stats)
+        merge_stats.to_csv('data/citation_indexes/match_stats.csv', index=False)
 
 if __name__ == '__main__':
     citation_index_map = OpenAlexToCitationIndex()
