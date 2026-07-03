@@ -1,0 +1,22 @@
+filename,citation index ID,total sources,matched sources,match percentage,works missing abstracts,total works,missing abstract percentage
+data/citation_indexes/webofsci/Science Citation Index Expanded (SCIE).csv,SCIE,9430,9405,0.9973488865323435,15686563.0,65376295.0,0.23994267341090528
+data/citation_indexes/webofsci/Social Sciences Citation Index (SSCI).csv,SSCI,3538,3526,0.996608253250424,3323851.0,10184141.0,0.3263751945303978
+data/citation_indexes/webofsci/Index Chemicus.csv,IC,82,82,1.0,740181.0,2693048.0,0.27484879586253197
+data/citation_indexes/webofsci/Current Contents Social And Behavioral Sciences.csv,CCSABS,3057,3049,0.9973830552829572,3039979.0,9278391.0,0.3276407515052987
+"data/citation_indexes/webofsci/Current Contents Physical, Chemical & Earth Sciences.csv",CCPCES,1697,1694,0.9982321744254566,3135007.0,16464138.0,0.19041428102704192
+data/citation_indexes/webofsci/Zoological Record.csv,ZR,3431,2275,0.663071990673273,4045665.0,12442496.0,0.3251489893989116
+data/citation_indexes/webofsci/Biological Abstracts.csv,BA,4679,4423,0.9452874545843128,9561074.0,33475742.0,0.28561201122890717
+data/citation_indexes/webofsci/Current Contents Clinical Medicine.csv,CCCM,1897,1896,0.999472851871376,5743864.0,17374710.0,0.3305876184408258
+data/citation_indexes/webofsci/BIOSIS Previews_BIOSIS Citation Index.csv,PBIOSISCI,4942,4675,0.9459732901659248,9997278.0,34411508.0,0.29052135698325104
+data/citation_indexes/webofsci/Current Contents Business Collection.csv,CCBC,203,201,0.9901477832512317,267616.0,730361.0,0.36641606000320387
+data/citation_indexes/webofsci/Essential Science Indicators.csv,ESI,12264,12227,0.996983039791259,18058142.0,72458693.0,0.24921981410843277
+"data/citation_indexes/webofsci/Current Contents Engineering, Computing & Technology.csv",CCECT,1642,1637,0.9969549330085262,2390068.0,10368767.0,0.230506481628915
+data/citation_indexes/webofsci/Current Contents Electronics & Telecommunications Collection.csv,CCETC,167,166,0.994011976047904,305611.0,2301452.0,0.1327905165956101
+data/citation_indexes/webofsci/Current Contents Life Sciences.csv,CCLS,1452,1452,1.0,5752711.0,20310734.0,0.2832350125800476
+data/citation_indexes/webofsci/Arts & Humanities Citation Index (AHCI).csv,AHCI,1799,1759,0.9777654252362424,1889386.0,4489609.0,0.42083531104824495
+data/citation_indexes/webofsci/Current Contents Arts & Humanities.csv,CCAH,1513,1481,0.9788499669530734,1769615.0,4151343.0,0.4262753041606054
+"data/citation_indexes/webofsci/Current Contents Agriculture, Biology & Environmental Sciences.csv",CCABES,1468,1460,0.994550408719346,2291068.0,8603577.0,0.2662924967138668
+data/citation_indexes/webofsci/Emerging Sources Citation Index (ESCI).csv,ESCI,9356,9021,0.9641941000427532,1934042.0,7762468.0,0.24915297557426325
+data/citation_indexes/webofsci/BIOSIS Reviews Reports And Meetings.csv,BIOSISRRAM,263,254,0.9657794676806084,526794.0,1054964.0,0.4993478450449494
+data/citation_indexes/webofsci/Chemical Reactions.csv,CR,80,80,1.0,740020.0,2689717.0,0.27512931657865863
+data/citation_indexes/scopus/ext_list_May_2026.xlsx,SCOPUS_EXTLIST,48498,42275,0.8716854303270238,28119342.0,103790376.0,0.27092436778531376

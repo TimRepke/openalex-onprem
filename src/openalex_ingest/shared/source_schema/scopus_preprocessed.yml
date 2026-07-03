@@ -1,0 +1,29 @@
+schema_type: dataframe
+columns:
+  Source Title:
+    dtype: string[python]
+  ISSN:
+    dtype: string[python]
+    nullable: true
+  EISSN:
+    dtype: string[python]
+    nullable: true
+  Active or Inactive:
+    dtype: string[python]
+  ISSN_all:
+    dtype: object
+    required: true
+  ISSN_filled:
+    dtype: string[python]
+    unique: true
+    required: true
+checks:
+- options:
+    check_name: at_least_one_key_present
+    error: one of ISSN/EISSN must be present
+index:
+- dtype: int64
+  greater_than_or_equal_to: 0.0
+  less_than_or_equal_to: 100000.0
+coerce: true
+drop_invalid_rows: false

@@ -10,7 +10,7 @@ dependencies = [
     "msgspec==0.21.1",
     "unidecode==1.4.0",
     # "nacsos_data[utils,scripts]",
-    "nacsos_data[utils,scripts] @ git+ssh://git@gitlab.pik-potsdam.de/mcc-apsis/nacsos/nacsos-data.git@v0.24.36"
+    "nacsos_data[utils,scripts] @ git+ssh://git@gitlab.pik-potsdam.de/mcc-apsis/nacsos/nacsos-data.git@v0.24.36",
 ]
 
 [project.optional-dependencies]
@@ -19,7 +19,7 @@ evaluation = [
 ]
 
 [tool.uv.sources]
-nacsos_data = { path = "../nacsos_data", editable = true }
+nacsos_data = { path = "../nacsos-data", editable = true }
 
 
 [build-system]
@@ -34,6 +34,7 @@ openalex_ingest = "openalex_ingest:main"
 
 [dependency-groups]
 dev = [
+    "pandera[io,pandas]>=0.32.0",
     "ruff>=0.15.11",
 ]
 
