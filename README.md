@@ -1,8 +1,11 @@
 # Self-hosted OpenAlex snapshot
+
+Check the `docs/` directory for more documentation!
+
 ```bash
-uv sync --extra server
+uv sync 
 # to install nacsos-data from remote
-uv sync --no-sources --extra server
+#uv sync --no-sources
 ```
 
 ## solr / ingest
@@ -35,7 +38,6 @@ Group=??
 
 [Install]
 WantedBy=multi-user.target
-
 ```
 
 #### REST service
@@ -102,18 +104,6 @@ gitlab-runner ALL= NOPASSWD: /usr/bin/systemctl restart openalex-cache.service
 gitlab-runner ALL= NOPASSWD: /usr/bin/systemctl stop openalex-cache.service
 gitlab-runner ALL= NOPASSWD: /usr/bin/systemctl start openalex-cache.service
 gitlab-runner ALL= NOPASSWD: /usr/bin/systemctl status openalex-cache.service
-```
-
-### Scripts
-Bulk-importing from a nacsos project:
-```
-cd path/to/nacsos-academic-search/meta_cache/
-export PYTHONPATH=$PYTHONPATH:$(pwd)/..:$(pwd)/../meta_cache:$(pwd)/../openalex-ingest && export OACACHE_CONFIG=$(pwd)/config/scripts.env && python scripts/nacsos.py [project-id]
-```
-
-Writing full cache to solr
-```
-export PYTHONPATH=$PYTHONPATH:/var/www/openalex-cache/nacsos-academic-search:/var/www/openalex-cache/nacsos-academic-search/meta_cache && export OACACHE_CONFIG=/var/www/openalex-cache/nacsos-academic-search/meta_cache/config/scripts.env && python scripts/fill_solr.py
 ```
 
 ## Notes

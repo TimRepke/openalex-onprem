@@ -60,9 +60,13 @@ NACSOS_OPENALEX__SOLR_ZOO_PORT=8984
 Run `/mnt/bulk/openalex/nacsos-academic-search/src/openalex_ingest/snapshot/scripts/02_solr_setup.sh --config /mnt/bulk/openalex/nacsos-academic-search/conf/secret-temp.env`
 
 #### 3. Ingest snapshot
+```bash
+cd /mnt/bulk/openalex/nacsos-academic-search
+uv run snapshot snapshot ingest --snapshot=/mnt/bulk/openalex/openalex-snapshot --config-file=conf/secret-test.env \
+ --post-batchsize=50000 --read-batchsize=100000 --commit-interval=100000 --collection=base
+```
 
-
-#### 4. Reset meta-cache
+#### 4. Gap filling
 We have a few "fixed" abstracts in a database for where they are missing in openalex.
 We keep track of what was already transferred to the snapshot.
 On rebuild, this also needs to be reset.
@@ -98,14 +102,37 @@ from request
 group by wrapper, solarized;
 ```
 
-#### 5. Ingest gap filling data
-
-
-
+First, we want to make sure we are not loosing more, so we are processing our snapshot to check against the current solr
+instance if we are not missing something.
 ```bash
-uv run snapshot snapshot ingest --snapshot=/mnt/bulk/openalex/openalex-snapshot --config-file=conf/secret-prod.env
- --post-batchsize=50000 --read-batchsize=100000 --commit-interval=100000 --collection=base
+rm /mnt/bulk/openalex/retained.txt
+cd /mnt/bulk/openalex/nacsos-academic-search
+uv run snapshot snapshot retain-old --snapshot=/mnt/bulk/openalex/openalex-snapshot --config=conf/secret-prod.env \
+ --processed-partitions=/mnt/bulk/openalex/retained.txt --batch-size=10000
 ```
+
+Now, we can fill the gaps in the temporary solr index.
+```bash
+cd /mnt/bulk/openalex/nacsos-academic-search
+uv run snapshot fix transfer --config=conf/secret-test.env \
+   --read-batch-size=10000 --post-batch-size=10000 --commit-interval=50000 \
+   --no-force-overwrite
+```
+
+#### 6. Swap
+```bash
+sudo systemctl stop solr
+cd /srv/solr
+mv solr-home solr-home.bak
+cp -r /mnt/bulk/openalex/openalex-snapshot/tmp_data/solr-home .
+sudo systemctl start solr
+
+# after verifying things are working properly, drop backup
+rm -r solr-home.bak
+```
+
+
+
 
 Suggested/adapted
 ```
