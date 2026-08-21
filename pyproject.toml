@@ -1,16 +1,15 @@
 [project]
 name = "openalex-ingest"
 version = "2.0.0"
-requires-python = ">=3.13"
+requires-python = ">=3.14"
 
 dependencies = [
-    "tqdm==4.67.3",
-    "orjson>=3.11.8",
-    "sqlmodel==0.0.38",
-    "msgspec==0.21.1",
-    "unidecode==1.4.0",
-    # "nacsos_data[utils,scripts]",
-    "nacsos_data[utils,scripts] @ git+ssh://git@gitlab.pik-potsdam.de/mcc-apsis/nacsos/nacsos-data.git@v0.24.36"
+    "orjson>=3,<4",
+    "sqlmodel>=0.0.38,<0.1",
+    "msgspec>=0.21.1,<1",
+    "unidecode>=1.4.0,<2",
+    #"nacsos_data[utils,scripts] @ git+ssh://git@gitlab.pik-potsdam.de/mcc-apsis/nacsos/nacsos-data.git@v0.24.50"
+    "nacsos_data[utils,scripts]"
 ]
 
 [project.optional-dependencies]
@@ -19,7 +18,8 @@ evaluation = [
 ]
 
 [tool.uv.sources]
-nacsos_data = { path = "../nacsos_data", editable = true }
+#nacsos_data = { path = "../nacsos-data", editable = true }
+nacsos_data =  { git = "https://gitlab.pik-potsdam.de/mcc-apsis/nacsos/nacsos-data.git", tag = "v0.24.55" }
 
 
 [build-system]
@@ -34,7 +34,7 @@ openalex_ingest = "openalex_ingest:main"
 
 [dependency-groups]
 dev = [
-    "ruff>=0.15.11",
+    "ruff>=0.15.17",
 ]
 
 [tool.ruff]

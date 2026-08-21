@@ -122,9 +122,18 @@ WHERE doi is not null and openalex_id is null;
 
 select count(1) from request;
 
-SELECT wrapper, solarized, count(1)
-from request
-group by wrapper, solarized;
+EXPLAIN ANALYSE
+SELECT wrapper, count(1) as cnt_records, count(1) filter ( where solarized IS TRUE ) as cnt_solarized
+FROM request
+WHERE abstract IS NOT NULL
+GROUP BY wrapper;
+
+SELECT count(1)
+FROM request
+WHERE wrapper = 'NACSOS';
+
+drop index public.ix_request_wrapper;
+create index ix_request_wrapper on request using hash (wrapper);
 
 EXPLAIN ANALYSE
 SELECT DISTINCT ON (openalex_id) *

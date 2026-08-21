@@ -54,10 +54,10 @@ def update_solr(
     logging.info(f'Will use solr collection at: {config.OPENALEX.solr_url}')
 
     logging.info(
-        'Please ensure you synced the snapshot via\n   $  aws s3 sync "s3://openalex/data" "data" --no-sign-request --delete',
+        'Please ensure you synced the snapshot via\n   $  aws s3 sync "s3://openalex/data/jsonl/works" "openalex-snapshot/data/jsonl/works" --no-sign-request --delete',
     )
 
-    partitions = sorted(snapshot.glob('data/works/**/*.gz'))
+    partitions = sorted(snapshot.glob('data/jsonl/works/**/*.gz'))
     logging.info(f'Looks like there are {len(partitions):,} partitions.')
     partitions = [p for p in partitions if p.parent.name >= f'updated_date={filter_since}']
     logging.info(f'Looks like there are {len(partitions):,} partitions after filtering for update >= {filter_since}.')

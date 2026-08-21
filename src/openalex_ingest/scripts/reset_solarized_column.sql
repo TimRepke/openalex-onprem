@@ -11,8 +11,8 @@ BEGIN
         SET solarized = NULL
         WHERE record_id IN (
             SELECT record_id FROM request
-            WHERE solarized IS NOT NULL
-            LIMIT 10000
+            WHERE solarized IS NOT NULL-- AND wrapper IN ('OpenAlex_old', 'NACSOS')
+            LIMIT 100000
         );
 
         GET DIAGNOSTICS rows_updated = ROW_COUNT;

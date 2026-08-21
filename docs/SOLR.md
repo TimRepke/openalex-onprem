@@ -1,5 +1,107 @@
 # Solr snapshot
 
+## Steps to update snapshot
+#### 1. Update S3 bucket
+```
+# connect to 
+ssh srv-mcc-apsis  # 10.10.12.41 or srv-mcc-apsis-rechner
+# open tmux session
+
+cd /mnt/bulk/openalex
+
+aws s3 sync "s3://openalex/data/jsonl/works" "openalex-snapshot/data/jsonl/works" --no-sign-request --delete
+```
+
+#### 2. Create an empty solr instance with all configurations
+Make sure the binaries are up-to-date or the same as current production.
+
+Relevant config in `/mnt/bulk/openalex/tmp_data/solr/bin/solr.in.sh`
+```
+SOLR_HEAP="2g"
+SOLR_PID_DIR=/mnt/bulk/openalex/tmp_data/solr-home
+SOLR_HOME=/mnt/bulk/openalex/tmp_data/solr-home
+SOLR_DATA_HOME=/mnt/bulk/openalex/tmp_data/solr-home/data
+SOLR_LOGS_DIR=/mnt/bulk/openalex/tmp_data/solr-home/logs
+SOLR_PORT=8984
+SOLR_MODULES=sql,clustering
+SOLR_OPTS="$SOLR_OPTS -Denable.packages=true -Dsolr.modules=sql,clustering"
+SOLR_OPTS="$SOLR_OPTS -Dsolr.max.booleanClauses=10000"
+SOLR_OPTS="$SOLR_OPTS -DdistribUpdateConnTimeout=120000"
+SOLR_OPTS="$SOLR_OPTS -DdistribUpdateSoTimeout=120000"
+SOLR_OPTS="$SOLR_OPTS -DzkClientTimeout=120000"
+SOLR_OPTS="$SOLR_OPTS -DsocketTimeout=120000"
+SOLR_OPTS="$SOLR_OPTS -DconnTimeout=120000"
+```
+
+Start instance
+```bash
+% cd /mnt/bulk/openalex/tmp_data
+% mkdir -p solr-home/data
+% mkdir -p solr-home/logs
+% solr/bin/solr start
+```
+
+Using `/mnt/bulk/openalex/nacsos-academic-search/conf/secret-temp.env`
+```
+NACSOS_OPENALEX__SNAPSHOT_DIR="/mnt/bulk/openalex/openalex-snapshot"
+
+NACSOS_OPENALEX__SOLR_ENDPOINT="http://localhost:8984"
+NACSOS_OPENALEX__SOLR_COLLECTION="openalex"
+NACSOS_OPENALEX__SOLR_USER=
+NACSOS_OPENALEX__SOLR_PASSWORD=
+
+NACSOS_OPENALEX__SOLR_BIN="/mnt/bulk/openalex/tmp_data/solr/bin"
+NACSOS_OPENALEX__SOLR_HOME="/mnt/bulk/openalex/tmp_data/solr-home"
+NACSOS_OPENALEX__SOLR_HOST="127.0.0.1"
+NACSOS_OPENALEX__SOLR_PORT=8984
+NACSOS_OPENALEX__SOLR_ZOO_PORT=8984
+```
+
+Run `/mnt/bulk/openalex/nacsos-academic-search/src/openalex_ingest/snapshot/scripts/02_solr_setup.sh --config /mnt/bulk/openalex/nacsos-academic-search/conf/secret-temp.env`
+
+#### 3. Ingest snapshot
+
+
+#### 4. Reset meta-cache
+We have a few "fixed" abstracts in a database for where they are missing in openalex.
+We keep track of what was already transferred to the snapshot.
+On rebuild, this also needs to be reset.
+This takes a *long* time (an hour or so).
+```sql
+DO $$
+DECLARE
+    rows_updated INT;
+BEGIN
+    LOOP
+        -- Update a chunk of 10,000 rows
+        UPDATE request
+        SET solarized = NULL
+        WHERE record_id IN (
+            SELECT record_id FROM request
+            WHERE solarized IS NOT NULL-- AND wrapper IN ('OpenAlex_old', 'NACSOS')
+            LIMIT 10000
+        );
+
+        GET DIAGNOSTICS rows_updated = ROW_COUNT;
+
+        -- Exit if there's nothing left to do
+        EXIT WHEN rows_updated = 0;
+
+        -- Commit the current batch so logs can clear
+        COMMIT;
+    END LOOP;
+END $$;
+
+-- Check statistics
+SELECT wrapper, solarized, count(1)
+from request
+group by wrapper, solarized;
+```
+
+#### 5. Ingest gap filling data
+
+
+
 ```bash
 uv run snapshot snapshot ingest --snapshot=/mnt/bulk/openalex/openalex-snapshot --config-file=conf/secret-prod.env
  --post-batchsize=50000 --read-batchsize=100000 --commit-interval=100000 --collection=base

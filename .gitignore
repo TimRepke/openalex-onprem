@@ -45,6 +45,6 @@ config/
 *.error
 *.access
 builds
-uv.lock
+conf/
 
 alembic.secret.ini
