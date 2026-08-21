@@ -1,0 +1,227 @@
+schema_type: dataframe
+columns:
+  Sourcerecord ID:
+    dtype: int64
+  Source Title:
+    dtype: object
+    required: true
+  ISSN:
+    dtype: object
+    required: true
+    nullable: true
+  EISSN:
+    dtype: object
+    required: true
+    nullable: true
+  Active or Inactive:
+    dtype: object
+  Coverage:
+    dtype: object
+    nullable: true
+  Titles Discontinued by Scopus:
+    dtype: object
+    nullable: true
+  Article Language in Source (Three-Letter ISO Language Codes):
+    dtype: object
+    nullable: true
+  Medline-sourced Title? (See additional details under separate tab.):
+    dtype: object
+    nullable: true
+  Open Access Status:
+    dtype: object
+    nullable: true
+  Articles in Press Included?:
+    dtype: object
+    nullable: true
+  Added to List May 2026:
+    dtype: object
+    nullable: true
+  Source Type:
+    dtype: object
+  Title History Indication:
+    dtype: object
+    nullable: true
+  Related Title 1:
+    dtype: object
+    nullable: true
+  Other Related Title 2:
+    dtype: object
+    nullable: true
+  Other Related Title 3:
+    dtype: object
+    nullable: true
+  Other Related Title 4:
+    dtype: object
+    nullable: true
+  Publisher:
+    dtype: object
+    nullable: true
+  Publisher Imprints Grouped to Main Publisher:
+    dtype: object
+    nullable: true
+  All Science Journal Classification Codes (ASJC):
+    dtype: object
+    nullable: true
+  ? 'Top level:
+
+
+    Life Sciences'
+  : dtype: object
+    nullable: true
+  ? 'Top level:
+
+
+    Social Sciences'
+  : dtype: object
+    nullable: true
+  ? 'Top level:
+
+
+    Physical Sciences'
+  : dtype: object
+    nullable: true
+  ? 'Top level:
+
+
+    Health Sciences'
+  : dtype: object
+    nullable: true
+  ? "1000 \nGeneral"
+  : dtype: object
+    nullable: true
+  ? '1100
+
+    Agricultural and Biological Sciences'
+  : dtype: object
+    nullable: true
+  ? '1200
+
+    Arts and Humanities'
+  : dtype: object
+    nullable: true
+  ? '1300
+
+    Biochemistry, Genetics and Molecular Biology'
+  : dtype: object
+    nullable: true
+  ? '1400
+
+    Business, Management and Accounting'
+  : dtype: object
+    nullable: true
+  ? '1500
+
+    Chemical Engineering'
+  : dtype: object
+    nullable: true
+  ? '1600
+
+    Chemistry'
+  : dtype: object
+    nullable: true
+  ? '1700
+
+    Computer Science'
+  : dtype: object
+    nullable: true
+  ? '1800
+
+    Decision Sciences'
+  : dtype: object
+    nullable: true
+  ? '1900
+
+    Earth and Planetary Sciences'
+  : dtype: object
+    nullable: true
+  ? '2000
+
+    Economics, Econometrics and Finance'
+  : dtype: object
+    nullable: true
+  ? '2100
+
+    Energy'
+  : dtype: object
+    nullable: true
+  ? '2200
+
+    Engineering'
+  : dtype: object
+    nullable: true
+  ? '2300
+
+    Environmental Science'
+  : dtype: object
+    nullable: true
+  ? '2400
+
+    Immunology and Microbiology'
+  : dtype: object
+    nullable: true
+  ? '2500
+
+    Materials Science'
+  : dtype: object
+    nullable: true
+  ? '2600
+
+    Mathematics'
+  : dtype: object
+    nullable: true
+  ? '2700
+
+    Medicine'
+  : dtype: object
+    nullable: true
+  ? '2800
+
+    Neuroscience'
+  : dtype: object
+    nullable: true
+  ? '2900
+
+    Nursing'
+  : dtype: object
+    nullable: true
+  ? '3000
+
+    Pharmacology, Toxicology and Pharmaceutics'
+  : dtype: object
+    nullable: true
+  ? '3100
+
+    Physics and Astronomy'
+  : dtype: object
+    nullable: true
+  ? '3200
+
+    Psychology'
+  : dtype: object
+    nullable: true
+  ? '3300
+
+    Social Sciences'
+  : dtype: object
+    nullable: true
+  ? '3400
+
+    Veterinary'
+  : dtype: object
+    nullable: true
+  ? '3500
+
+    Dentistry'
+  : dtype: object
+    nullable: true
+  ? '3600
+
+    Health Professions'
+  : dtype: object
+    nullable: true
+index:
+- dtype: int64
+  greater_than_or_equal_to: 0.0
+  less_than_or_equal_to: 150000.0
+coerce: true
+drop_invalid_rows: false

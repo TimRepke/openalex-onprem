@@ -1,0 +1,41 @@
+schema_type: dataframe
+columns:
+  Journal title:
+    dtype: object
+    nullable: false
+  ISSN:
+    dtype: object
+    nullable: true
+    required: true
+    checks:
+    - options:
+        check_name: unique_ignore_na
+  eISSN:
+    dtype: object
+    nullable: true
+    required: true
+    checks:
+    - options:
+        check_name: unique_ignore_na
+  Publisher name:
+    dtype: object
+    nullable: true
+  Publisher address:
+    dtype: object
+    nullable: true
+  Languages:
+    dtype: object
+    nullable: true
+  Web of Science Categories:
+    dtype: object
+    nullable: true
+checks:
+- options:
+    check_name: at_least_one_key_present
+    error: one of ISSN/eISSN must be present
+index:
+- dtype: int64
+  greater_than_or_equal_to: 0.0
+  less_than_or_equal_to: 100000.0
+coerce: true
+drop_invalid_rows: true

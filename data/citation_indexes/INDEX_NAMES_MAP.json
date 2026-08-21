@@ -1,0 +1,23 @@
+{
+  "data/citation_indexes/scopus/ext_list_May_2026.xlsx": "SCOPUS_EXTLIST",
+  "data/citation_indexes/webofsci/Science Citation Index Expanded (SCIE).csv": "SCIE",
+  "data/citation_indexes/webofsci/Social Sciences Citation Index (SSCI).csv": "SSCI",
+  "data/citation_indexes/webofsci/Index Chemicus.csv": "IC",
+  "data/citation_indexes/webofsci/Current Contents Social And Behavioral Sciences.csv": "CCSABS",
+  "data/citation_indexes/webofsci/Current Contents Physical, Chemical & Earth Sciences.csv": "CCPCES",
+  "data/citation_indexes/webofsci/Zoological Record.csv": "ZR",
+  "data/citation_indexes/webofsci/Biological Abstracts.csv": "BA",
+  "data/citation_indexes/webofsci/Current Contents Clinical Medicine.csv": "CCCM",
+  "data/citation_indexes/webofsci/BIOSIS Previews_BIOSIS Citation Index.csv": "PBIOSISCI",
+  "data/citation_indexes/webofsci/Current Contents Business Collection.csv": "CCBC",
+  "data/citation_indexes/webofsci/Essential Science Indicators.csv": "ESI",
+  "data/citation_indexes/webofsci/Current Contents Engineering, Computing & Technology.csv": "CCECT",
+  "data/citation_indexes/webofsci/Current Contents Electronics & Telecommunications Collection.csv": "CCETC",
+  "data/citation_indexes/webofsci/Current Contents Life Sciences.csv": "CCLS",
+  "data/citation_indexes/webofsci/Arts & Humanities Citation Index (AHCI).csv": "AHCI",
+  "data/citation_indexes/webofsci/Current Contents Arts & Humanities.csv": "CCAH",
+  "data/citation_indexes/webofsci/Current Contents Agriculture, Biology & Environmental Sciences.csv": "CCABES",
+  "data/citation_indexes/webofsci/Emerging Sources Citation Index (ESCI).csv": "ESCI",
+  "data/citation_indexes/webofsci/BIOSIS Reviews Reports And Meetings.csv": "BIOSISRRAM",
+  "data/citation_indexes/webofsci/Chemical Reactions.csv": "CR"
+}

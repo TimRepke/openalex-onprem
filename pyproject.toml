@@ -34,6 +34,7 @@ openalex_ingest = "openalex_ingest:main"
 
 [dependency-groups]
 dev = [
+    "pandera[io,pandas]>=0.32.0",
     "ruff>=0.15.17",
 ]
 

@@ -5,6 +5,8 @@ SELECT count(1)                                                                 
        count(1) filter ( where wrapper = 'SCOPUS' )                             as n_scopus,
        count(1) filter ( where wrapper = 'PUBMED' )                             as n_pubmed,
        count(1) filter ( where wrapper = 'WOS' )                                as n_wos,
+       count(1) filter ( where wrapper = 'NACSOS' )                             as n_nacsos,
+       count(1) filter ( where wrapper = 'OpenAlex_old' )                                as n_old,
        count(1) filter ( where wrapper = 'DIMENSIONS' AND openalex_id IS NULL ) as n_dimensions_no_oa,
        count(1) filter ( where wrapper = 'SCOPUS' AND openalex_id IS NULL )     as n_scopus_no_oa,
        count(1) filter ( where wrapper = 'PUBMED' AND openalex_id IS NULL )     as n_pubmed_no_oa,
@@ -14,24 +16,52 @@ WHERE abstract IS NOT NULL
   AND time_created >= '2026-04-05';
 
 -- Results with abstract
-SELECT count(1)                                                                  as n_total,
-       count(1) filter ( where openalex_id IS NULL )                             as n_missing_oa_id,
-       count(1) filter ( where wrapper = 'DIMENSIONS' )                          as n_dimensions,
-       count(1) filter ( where wrapper = 'SCOPUS' )                              as n_scopus,
-       count(1) filter ( where wrapper = 'PUBMED' )                              as n_pubmed,
-       count(1) filter ( where wrapper = 'WOS' )                                 as n_wos,
-       count(1) filter ( where wrapper = 'DIMENSIONS' AND abstract IS NOT NULL ) as n_dimensions_abs,
-       count(1) filter ( where wrapper = 'SCOPUS' AND abstract IS NOT NULL )     as n_scopus_abs,
-       count(1) filter ( where wrapper = 'PUBMED' AND abstract IS NOT NULL )     as n_pubmed_abs,
-       count(1) filter ( where wrapper = 'WOS' AND abstract IS NOT NULL )        as n_wos_abs,
-       count(1) filter ( where wrapper = 'DIMENSIONS' AND openalex_id IS NULL AND abstract IS NOT NULL ) as n_dimensions_no_oa,
-       count(1) filter ( where wrapper = 'SCOPUS' AND openalex_id IS NULL  AND abstract IS NOT NULL)     as n_scopus_no_oa,
-       count(1) filter ( where wrapper = 'PUBMED' AND openalex_id IS NULL AND abstract IS NOT NULL )     as n_pubmed_no_oa,
-       count(1) filter ( where wrapper = 'WOS' AND openalex_id IS NULL  AND abstract IS NOT NULL)        as n_wos_no_oa,
-       count(1) filter ( where wrapper = 'DIMENSIONS' AND doi IS NULL AND abstract IS NOT NULL ) as n_dimensions_no_doi,
-       count(1) filter ( where wrapper = 'SCOPUS' AND doi IS NULL  AND abstract IS NOT NULL)     as n_scopus_no_doi,
-       count(1) filter ( where wrapper = 'PUBMED' AND doi IS NULL AND abstract IS NOT NULL )     as n_pubmed_no_doi,
-       count(1) filter ( where wrapper = 'WOS' AND doi IS NULL  AND abstract IS NOT NULL)        as n_wos_no_doi
+SELECT wrapper,
+       count(1)                                                       as n_total,
+       count(1) filter ( where openalex_id IS NULL )                  as n_missing_oa_id,
+       count(1) filter ( where abstract IS NOT NULL )                 as n_has_abs,
+       count(1) filter ( where doi IS NOT NULL )                      as n_has_doi,
+       count(1) filter ( where doi IS NULL )                          as n_no_doi,
+       count(1) filter ( where doi IS NULL AND abstract IS NOT NULL ) as n_has_abs_no_doi
+FROM request
+GROUP BY wrapper;
+
+SELECT count(1)                                                                                   as n_total,
+       count(1) filter ( where openalex_id IS NULL )                                              as n_missing_oa_id,
+       count(1) filter ( where wrapper = 'DIMENSIONS' )                                           as n_dimensions,
+       count(1) filter ( where wrapper = 'SCOPUS' )                                               as n_scopus,
+       count(1) filter ( where wrapper = 'PUBMED' )                                               as n_pubmed,
+       count(1) filter ( where wrapper = 'WOS' )                                                  as n_wos,
+       count(1) filter ( where wrapper = 'NACSOS' )                                               as n_nacsos,
+       count(1) filter ( where wrapper = 'OpenAlex_old' )                                         as n_old,
+       count(1) filter ( where wrapper = 'DIMENSIONS' AND abstract IS NOT NULL )                  as n_dimensions_abs,
+       count(1) filter ( where wrapper = 'SCOPUS' AND abstract IS NOT NULL )                      as n_scopus_abs,
+       count(1) filter ( where wrapper = 'PUBMED' AND abstract IS NOT NULL )                      as n_pubmed_abs,
+       count(1) filter ( where wrapper = 'WOS' AND abstract IS NOT NULL )                         as n_wos_abs,
+       count(1) filter ( where wrapper = 'NACSOS' AND abstract IS NOT NULL )                      as n_nacsos_abs,
+       count(1) filter ( where wrapper = 'OpenAlex_old' AND abstract IS NOT NULL)                 as n_old_abs,
+       count(1)
+       filter ( where wrapper = 'DIMENSIONS' AND openalex_id IS NULL AND abstract IS NOT NULL )   as n_dimensions_no_oa,
+       count(1)
+       filter ( where wrapper = 'SCOPUS' AND openalex_id IS NULL AND abstract IS NOT NULL)        as n_scopus_no_oa,
+       count(1)
+       filter ( where wrapper = 'PUBMED' AND openalex_id IS NULL AND abstract IS NOT NULL )       as n_pubmed_no_oa,
+       count(1)
+       filter ( where wrapper = 'WOS' AND openalex_id IS NULL AND abstract IS NOT NULL)           as n_wos_no_oa,
+       count(1)
+       filter ( where wrapper = 'NACSOS' AND openalex_id IS NULL AND abstract IS NOT NULL)        as n_nacsos_no_oa,
+       count(1)
+       filter ( where wrapper = 'OpenAlex_old' AND openalex_id IS NULL AND abstract IS NOT NULL ) as n_old_no_oa,
+       count(1)
+       filter ( where wrapper = 'DIMENSIONS' AND doi IS NULL AND abstract IS NOT NULL )           as n_dimensions_no_doi,
+       count(1)
+       filter ( where wrapper = 'SCOPUS' AND doi IS NULL AND abstract IS NOT NULL)                as n_scopus_no_doi,
+       count(1)
+       filter ( where wrapper = 'PUBMED' AND doi IS NULL AND abstract IS NOT NULL )               as n_pubmed_no_doi,
+       count(1)
+       filter ( where wrapper = 'WOS' AND doi IS NULL AND abstract IS NOT NULL)                   as n_wos_no_doi,
+       count(1) filter ( where wrapper = 'NACSOS' AND doi IS NULL AND abstract IS NOT NULL)       as n_nacsos_no_doi,
+       count(1) filter ( where wrapper = 'OpenAlex_old' AND doi IS NULL AND abstract IS NOT NULL) as n_old_no_doi
 FROM request
 WHERE time_created >= '2026-04-05';
 
