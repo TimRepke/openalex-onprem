@@ -62,7 +62,7 @@ Run `/mnt/bulk/openalex/nacsos-academic-search/src/openalex_ingest/snapshot/scri
 #### 3. Ingest snapshot
 ```bash
 cd /mnt/bulk/openalex/nacsos-academic-search
-uv run snapshot snapshot ingest --snapshot=/mnt/bulk/openalex/openalex-snapshot --config-file=conf/secret-test.env \
+uv run snapshot snapshot ingest --snapshot=/mnt/bulk/openalex/openalex-snapshot --config-file=conf/secret-temp.env \
  --post-batchsize=50000 --read-batchsize=100000 --commit-interval=100000 --collection=base
 ```
 
@@ -114,7 +114,7 @@ uv run snapshot snapshot retain-old --snapshot=/mnt/bulk/openalex/openalex-snaps
 Now, we can fill the gaps in the temporary solr index.
 ```bash
 cd /mnt/bulk/openalex/nacsos-academic-search
-uv run snapshot fix transfer --config=conf/secret-test.env \
+uv run snapshot fix transfer --config=conf/secret-temp.env \
    --read-batch-size=10000 --post-batch-size=10000 --commit-interval=50000 \
    --no-force-overwrite
 ```

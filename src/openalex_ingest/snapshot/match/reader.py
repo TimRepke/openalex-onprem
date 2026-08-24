@@ -37,13 +37,15 @@ def read_partition(in_file: str | Path, logger: logging.Logger) -> Generator[tup
 
 
 def read_partitions(snapshot: Path, logger: logging.Logger, seen_file: Path) -> Generator[tuple[str, str | None], None, None]:
+    logger.info(f'Looking for works partitions in {snapshot.resolve()}')
     works_files = set(snapshot.glob(f'jsonl/works/**/*.gz'))
+    logging.info(f'Found there are {len(works_files)} works partitions.')
     if seen_file is not None and seen_file.exists():
         with open(seen_file, 'r') as seen_f:
             seen_files = set([Path(line.strip()) for line in seen_f])
         works_files -= seen_files
 
-    logging.info(f'Found there are {len(works_files)} works partitions.')
+    logging.info(f'Proceeding with {len(works_files)} works partitions after filtering.')
     with open(seen_file, 'a') as seen_f:
         for fi, work_file in enumerate(sorted(works_files)):
             logger.info(f'Reading {fi:,}/{len(works_files):,} works partition: {work_file}')
