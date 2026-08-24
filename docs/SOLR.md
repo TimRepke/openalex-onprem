@@ -103,11 +103,11 @@ group by wrapper, solarized;
 ```
 
 First, we want to make sure we are not loosing more, so we are processing our snapshot to check against the current solr
-instance if we are not missing something.
+instance if we are not missing something. This can can actually run in parallel to the ingestion.
 ```bash
 rm /mnt/bulk/openalex/retained.txt
 cd /mnt/bulk/openalex/nacsos-academic-search
-uv run snapshot snapshot retain-old --snapshot=/mnt/bulk/openalex/openalex-snapshot --config=conf/secret-prod.env \
+uv run snapshot snapshot retain-solr --snapshot=/mnt/bulk/openalex/openalex-snapshot/data --config=conf/secret-prod.env \
  --processed-partitions=/mnt/bulk/openalex/retained.txt --batch-size=10000
 ```
 
