@@ -47,7 +47,17 @@ exclude = []
 
 [tool.ruff.lint]
 select = ["C", "E", "F", "W", "B", "B9"]
-ignore = ["E203", "E501", "E712", "E741", "B010", "B009", "B904", "B008"]  # , "E126", "W503",
+ignore = [
+    "E203",
+    "E501",
+    "E712",
+    "E741",
+    "B010",
+    "B009",
+    "B904",
+    "B008",
+    "C403",
+]  # , "E126", "W503",
 
 # Allow fix for all enabled rules (when `--fix`) is provided.
 fixable = ["ALL"]
@@ -58,7 +68,7 @@ dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
 [tool.ruff.lint.mccabe]
 # Flag errors (`C901`) whenever the complexity level exceeds 5.
-max-complexity = 12
+max-complexity = 15
 
 [tool.ruff.format]
 # Like Black, use double quotes for strings.

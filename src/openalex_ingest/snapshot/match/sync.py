@@ -94,3 +94,63 @@ def main(
             session.commit()
 
     logger.info(f'Done after processing {num_works:,}  of which {num_works_with_abstract:,} had an abstract of which {num_updated:,} were not in solr')
+
+
+def keep_from_solr(
+    snapshot: Annotated[Path, typer.Option(help='Path to snapshot')],
+    processed_partitions: Annotated[Path, typer.Option(help='Path to memory file to keep track of which partitions are already processed')],
+    config: Annotated[Path, typer.Option(help='Path to config file')],
+    batch_size: int = 500,
+    loglevel: str = 'INFO',
+):
+    logger, settings, db_engine = prepare_runner(config=config, loglevel=loglevel, logger_name='openalex-backup', run_log_init=True)
+
+    num_works = 0
+    num_matched = 0
+    with db_engine.session() as session:
+        partitions = read_partitions(snapshot=snapshot, logger=logger, seen_file=processed_partitions)
+        for batch in batched(partitions, n=batch_size, strict=False):
+            # We only check works without an abstract
+            batch_ids = [openalex_id for openalex_id, abstract in batch if abstract is None]
+
+            # Check IDs that have no abstract in the latest snapshot against solr
+            matched_works = check_openalex_ids(
+                config=settings.OPENALEX,
+                reference_ids=batch_ids,
+                # Filter for OpenAlex as abstract source, otherwise we'd repeatedly track data we already have
+                fq=['abstract:*', 'abstract_source:"OpenAlex"'],  # TODO: Do we want to do this filtering later so we can track ID misses?
+                check_abstract=False,
+                return_fields='id,doi,id_pmid,title,abstract',
+            )
+
+            # Retain work where abstract disappeared
+            remember_works = [
+                Request(
+                    wrapper='OpenAlex_old',
+                    openalex_id=work.get('id'),
+                    doi=work.get('doi'),
+                    pubmed_id=work.get('id_pmid'),
+                    title=work.get('title'),
+                    abstract=work.get('abstract'),
+                    solarized=None,
+                )
+                for work in matched_works
+                # if work.get('abstract') is not None
+            ]
+
+            num_works += len(batch)
+            num_matched += len(remember_works)
+
+            if (num_works % 250000) == 0:
+                logger.info(
+                    f'Processed {num_works:,} abstract-free works from snapshot partitions. Of those, {num_matched:,} are matched to a record in solr that '
+                    f'has an abstract that previously was in OpenAlex.',
+                )
+
+            if len(remember_works) == 0:
+                continue
+
+            session.add_all(remember_works)
+            session.commit()
+
+    logger.info(f'Done after processing {num_works:,} works. Stored info for {num_matched:,} works that are now missing an abstract.')

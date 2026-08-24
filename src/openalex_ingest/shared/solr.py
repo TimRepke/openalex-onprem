@@ -39,13 +39,7 @@ def get_entries_with_missing_abstracts(
         logger_.debug('Asking solr for which IDs are missing abstracts.')
         it = client.fetch_raw(
             query='-abstract:*',  # -abstract:[* TO ""],
-            params={
-                'fq': f'id:({" OR ".join(openalex_ids)})',
-                'fl': 'id,doi',
-                'q.op': 'AND',
-                'useParams': '',
-                'defType': 'lucene'
-            },
+            params={'fq': f'id:({" OR ".join(openalex_ids)})', 'fl': 'id,doi', 'q.op': 'AND', 'useParams': '', 'defType': 'lucene'},
         )
         logger_.info(f'Requested {len(openalex_ids):,} of which {client.num_found} (will limit to {limit:,}) have no abstract in solr.')
     elif created_since is not None:
@@ -96,7 +90,10 @@ def write_cache_records_to_solr(
         needs_update: set[str] | None = None
         if not force:
             openalex_ids = [record.openalex_id for record in records]
-            needs_update = {oa_id for oa_id, _doi, _pmid in get_entries_with_missing_abstracts(config=config, openalex_ids=openalex_ids, logger_=sl, limit=len(openalex_ids))}
+            needs_update = {
+                oa_id
+                for oa_id, _doi, _pmid in get_entries_with_missing_abstracts(config=config, openalex_ids=openalex_ids, logger_=sl, limit=len(openalex_ids))
+            }
             logger.debug(f'{len(needs_update):,} of {len(openalex_ids):,} currently have no abstract in solr')
             n_skipped += len(batch_records) - len(needs_update)
             if len(needs_update) <= 0:
@@ -205,9 +202,11 @@ def write_api_update_to_solr(
         logger.exception(e)
 
 
-def check_openalex_ids(config: OpenAlexConfig, reference_ids: list[str], check_abstract: bool = True, return_fields: str = 'id,title') -> list[dict[str, Any]]:
+def check_openalex_ids(
+    config: OpenAlexConfig, reference_ids: list[str], check_abstract: bool = True, return_fields: str = 'id,title', fq: list[str] | None = None
+) -> list[dict[str, Any]]:
     """Check if IDs are in solr and optionally if those have an abstract."""
-    fq = [f'id:({" OR ".join(reference_ids)})']
+    fq = (fq or []) + [f'id:({" OR ".join(reference_ids)})']
     if check_abstract:
         fq.append('-abstract:*')
     res = httpx.post(

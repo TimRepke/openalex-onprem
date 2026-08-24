@@ -61,7 +61,7 @@ def main(
     logger, settings, db_engine = prepare_runner(config=config, loglevel=loglevel, logger_name='openalex-backup', run_log_init=True, db_debug=False)
     db_engine_nacsos = get_engine(settings=settings.DB, debug=False)
 
-    logger.info(f'Proceeding to transfer abstracts from NACSOS to the meta-cache')
+    logger.info('Proceeding to transfer abstracts from NACSOS to the meta-cache')
     logger.info('If you need to forward a remote port, maybe this helps:')
     logger.info('  (with one jump)   ssh -N -J ts01 -L 5000:localhost:5432 se164')
     logger.info('  (directly)        ssh -N -L 5000:localhost:5432 se164')
@@ -70,7 +70,7 @@ def main(
     n_added = 0
     progress = tqdm()
     with db_engine.session() as session:
-        for batch in batched(read_nacsos_abstracts(db_engine=db_engine_nacsos, batch_size=bs_read, min_len=min_len), bs_write):
+        for batch in batched(read_nacsos_abstracts(db_engine=db_engine_nacsos, batch_size=bs_read, min_len=min_len), bs_write, strict=False):
             known_records = (
                 session.execute(
                     sa.text("""

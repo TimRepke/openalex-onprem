@@ -31,15 +31,15 @@ class OpenAlexToCitationIndex:
 
         :param self:
         """
-        self.index_names = dict()
+        self.index_names = {}
         # seems like solr should be able to search columns with lists,
         # if indexed as a multiValued, non-tokenized (or keyword) field or as a string field or use a text field with exact matching
         # so {source_id:[citation_index1, citation_index2]} structure should work.
-        self.source_id_to_index_ids = dict()
+        self.source_id_to_index_ids = {}
         self.open_alex = None
         self._load_openalex_sources()
         self.skipped_files = set()
-        self.merge_stats = list()
+        self.merge_stats = []
 
     def _make_citation_index_id(self, fn: str, overrides: dict = None) -> str | None:
         """
@@ -398,6 +398,7 @@ class OpenAlexToCitationIndex:
             json.dump(citation_index_map.source_id_to_index_ids, fp, indent=2)
         merge_stats = pd.DataFrame(self.merge_stats)
         merge_stats.to_csv('data/citation_indexes/match_stats.csv', index=False)
+
 
 if __name__ == '__main__':
     citation_index_map = OpenAlexToCitationIndex()

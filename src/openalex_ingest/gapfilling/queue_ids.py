@@ -31,7 +31,7 @@ def main(
     n_missing_abstract = 0
     n_queued = 0
     with open(source) as f_in, db_engine.session() as session:
-        for lines in batched(f_in, batch_size):
+        for lines in batched(f_in, batch_size, strict=False):
             ids = [line.strip() for line in lines]
             missing_abstract_ids = check_openalex_ids(config=settings.OPENALEX, check_abstract=True, reference_ids=ids, return_fields='id,doi')
             queue_entries = [

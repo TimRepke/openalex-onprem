@@ -171,7 +171,7 @@ def main():
             page_start = time.perf_counter()
             j = request_page(cursor)
             page_elapsed = time.perf_counter() - page_start
-        except Exception as e:
+        except Exception:
             state.update({'last_cursor': cursor, 'chunk_index': chunk_index, 'fetched': fetched})
             save_state(state)
             logger.error(f'Error after fetching {fetched} records. State saved. Cursor: {cursor}')
