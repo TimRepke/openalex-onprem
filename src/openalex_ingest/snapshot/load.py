@@ -126,7 +126,7 @@ def update_solr(
                         n_uncommited = 0
 
                 progress.set_description_str(f'READ ({pi:,} | {n_read:,} | {n_posted:,})')
-        progress_file.write(f'{pi:,} | {n_read:,} | {n_posted:,}\n')
+            progress_file.write(f'{pi:,} | {n_read:,} | {n_posted:,}\n')
 
         progress.update()
 
