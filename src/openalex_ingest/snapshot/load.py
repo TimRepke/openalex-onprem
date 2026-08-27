@@ -78,7 +78,7 @@ def update_solr(
             f'partition={"/".join(partition.parts[-2:])}',
         )
 
-        with gzip.open(partition, 'rb') as f_in, progress_file.open(mode='a') as progress_file:
+        with gzip.open(partition, 'rb') as f_in, progress_file.open(mode='a') as f_progress:
             n_read = 0
             n_posted = 0
             progress.set_description_str(f'READ ({pi:,} | -- | --)')
@@ -126,7 +126,7 @@ def update_solr(
                         n_uncommited = 0
 
                 progress.set_description_str(f'READ ({pi:,} | {n_read:,} | {n_posted:,})')
-            progress_file.write(f'{pi:,} | {n_read:,} | {n_posted:,}\n')
+            f_progress.write(f'{pi:,} | {n_read:,} | {n_posted:,}\n')
 
         progress.update()
 
