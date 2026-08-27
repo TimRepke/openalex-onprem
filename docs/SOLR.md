@@ -62,8 +62,11 @@ Run `/mnt/bulk/openalex/nacsos-academic-search/src/openalex_ingest/snapshot/scri
 #### 3. Ingest snapshot
 ```bash
 cd /mnt/bulk/openalex/nacsos-academic-search
-uv run snapshot snapshot ingest --snapshot=/mnt/bulk/openalex/openalex-snapshot --config-file=conf/secret-temp.env \
- --post-batchsize=50000 --read-batchsize=100000 --commit-interval=100000 --collection=base
+ uv run snapshot snapshot ingest --snapshot=/mnt/bulk/openalex/openalex-snapshot --config-file=conf/secret-temp.env \
+ --post-batchsize=10000 --read-batchsize=10000 --commit-interval=100000 --collection=base \
+ --progress-file="../ingest-progress.log" --log-file="../ingest.log" \
+ --filter-since="2026-01-08" --skip-n-partitions=14
+
 ```
 
 #### 4. Gap filling

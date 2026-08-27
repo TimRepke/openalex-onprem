@@ -84,7 +84,8 @@ def update_solr(
             progress.set_description_str(f'READ ({pi:,} | -- | --)')
 
             for _bi, batch in enumerate(batched(f_in, batch_size=read_batchsize)):
-                works = [WorksSchema.model_validate(json.loads(line)) for line in batch]
+                # Parse lines in this batch (set of lines from file) but skip excessively long lines (>= 1MB)
+                works = [WorksSchema.model_validate(json.loads(line)) for line in batch if len(line) < 1048576]
                 n_read += len(works)
                 works = [
                     json.dumps(translate_work_to_solr(work, source='OpenAlex', authorship_limit=50))
