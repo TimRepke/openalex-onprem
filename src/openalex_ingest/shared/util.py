@@ -48,17 +48,34 @@ class rate_limit(ContextDecorator):
             sleep(self.min_time - self.time)
 
 
-def get_logger(logger_name: str, run_log_init=True, loglevel: str = 'INFO') -> logging.Logger:
+def get_logger(logger_name: str, run_log_init=True, loglevel: str = 'INFO', log_file: Path | None = None) -> logging.Logger:
     if run_log_init:
-        logging.basicConfig(format='%(asctime)s [%(levelname)s] %(name)s (%(process)d): %(message)s', level=loglevel)
+        log_format = '%(asctime)s [%(levelname)s] %(name)s (%(process)d): %(message)s'
+
+        logging.getLogger('matplotlib').setLevel(logging.WARNING)
         logging.getLogger('urllib3').setLevel(logging.WARNING)
         logging.getLogger('httpcore').setLevel(logging.WARNING)
         logging.getLogger('httpx').setLevel(logging.WARNING)
-        logging.getLogger('root').setLevel(loglevel)
+        logging.getLogger('root').setLevel(logging.DEBUG)
 
-    logger = logging.getLogger(logger_name)
-    logger.setLevel(loglevel)
-    return logger
+        # Configure root logger
+        root_logger = logging.getLogger()
+        root_logger.setLevel(loglevel)
+
+        # Console handler (stdout)
+        console_handler = logging.StreamHandler()
+        console_handler.setFormatter(logging.Formatter(log_format))
+        root_logger.addHandler(console_handler)
+
+        # Optional file handler
+        if log_file is not None:
+            file_handler = logging.FileHandler(log_file)
+            file_handler.setFormatter(logging.Formatter(log_format))
+            root_logger.addHandler(file_handler)
+
+    _logger = logging.getLogger(logger_name)
+    _logger.setLevel(loglevel)
+    return _logger
 
 
 def prepare_runner(

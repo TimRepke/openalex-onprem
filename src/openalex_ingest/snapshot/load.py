@@ -15,6 +15,7 @@ from typing_extensions import Annotated
 from nacsos_data.util.academic.apis.openalex import translate_work_to_solr
 from openalex_ingest.shared.config import load_settings
 from openalex_ingest.shared.solr import commit
+from openalex_ingest.shared.util import get_logger
 
 
 class Collection(str, Enum):
@@ -38,14 +39,11 @@ def update_solr(
     commit_interval: Annotated[int, typer.Option(help='')] = -1,
     max_retry: Annotated[int, typer.Option(help='')] = 10,
     collection: Annotated[Collection, typer.Option(help='Which collection to filter')] = Collection.all,
+    log_file: Annotated[Path, typer.Option(help='File where we keep track of log')] = Path('ingest.log'),
+    progress_file: Annotated[Path, typer.Option(help='File where we keep track of progress')] = Path('ingest-progress.log'),
     loglevel: Annotated[str, typer.Option(help='')] = 'INFO',
 ) -> None:
-    logging.basicConfig(format='%(asctime)s [%(levelname)s] %(name)s (%(process)d): %(message)s', level=loglevel)
-    logging.getLogger('matplotlib').setLevel(logging.WARNING)
-    logging.getLogger('urllib3').setLevel(logging.WARNING)
-    logging.getLogger('httpcore').setLevel(logging.WARNING)
-    logging.getLogger('httpx').setLevel(logging.WARNING)
-    logging.getLogger('root').setLevel(logging.DEBUG)
+    logger = get_logger(loglevel=loglevel, log_file=log_file, logger_name='ingest')
 
     logging.info(f'Loading config from {config_file.resolve()}...')
     if not config_file.exists():
@@ -80,7 +78,7 @@ def update_solr(
             f'partition={"/".join(partition.parts[-2:])}',
         )
 
-        with gzip.open(partition, 'rb') as f_in:
+        with gzip.open(partition, 'rb') as f_in, progress_file.open(mode='a') as progress_file:
             n_read = 0
             n_posted = 0
             progress.set_description_str(f'READ ({pi:,} | -- | --)')
@@ -128,6 +126,7 @@ def update_solr(
                         n_uncommited = 0
 
                 progress.set_description_str(f'READ ({pi:,} | {n_read:,} | {n_posted:,})')
+        progress_file.write(f'{pi:,} | {n_read:,} | {n_posted:,}\n')
 
         progress.update()
 
