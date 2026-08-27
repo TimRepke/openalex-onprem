@@ -129,11 +129,11 @@ def update_solr(
             f_progress.write(
                 f'{pi:,}'
                 f' | partition={"/".join(partition.parts[-2:])}'
-                f' | filesize={partition.stat().st_size / 1024 / 1024 / 1024:,.2f}GB, '
+                f' | filesize={partition.stat().st_size / 1024 / 1024 / 1024:,.2f}GB'
                 f' | read={n_read:,}'
-                f' | postred={n_posted:,}\n'
+                f' | postred={n_posted:,}'
                 f' | total={n_total:,}'
-                f' | failed={n_failed:,}'
+                f' | failed={n_failed:,}\n'
             )
 
         progress.update()
