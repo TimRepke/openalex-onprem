@@ -126,7 +126,15 @@ def update_solr(
                         n_uncommited = 0
 
                 progress.set_description_str(f'READ ({pi:,} | {n_read:,} | {n_posted:,})')
-            f_progress.write(f'{pi:,} | {n_read:,} | {n_posted:,}\n')
+            f_progress.write(
+                f'{pi:,}'
+                f' | partition={"/".join(partition.parts[-2:])}'
+                f' | filesize={partition.stat().st_size / 1024 / 1024 / 1024:,.2f}GB, '
+                f' | read={n_read:,}'
+                f' | postred={n_posted:,}\n'
+                f' | total={n_total:,}'
+                f' | failed={n_failed:,}'
+            )
 
         progress.update()
 
